@@ -1,0 +1,2138 @@
+[
+  {
+    "name": "Devin Reed",
+    "position": "G",
+    "avg_ppg": 19.5,
+    "espn_team_name": "Duke"
+  },
+  {
+    "name": "Isaac Morris",
+    "position": "G",
+    "avg_ppg": 15.5,
+    "espn_team_name": "Duke"
+  },
+  {
+    "name": "Justin Jordan",
+    "position": "F",
+    "avg_ppg": 13.8,
+    "espn_team_name": "Duke"
+  },
+  {
+    "name": "Cole Mitchell",
+    "position": "F",
+    "avg_ppg": 11.1,
+    "espn_team_name": "Duke"
+  },
+  {
+    "name": "Nathan Taylor",
+    "position": "C",
+    "avg_ppg": 8.2,
+    "espn_team_name": "Duke"
+  },
+  {
+    "name": "Marcus Roberts",
+    "position": "G",
+    "avg_ppg": 6.8,
+    "espn_team_name": "Duke"
+  },
+  {
+    "name": "Trevor Fisher",
+    "position": "G",
+    "avg_ppg": 18.5,
+    "espn_team_name": "Kansas"
+  },
+  {
+    "name": "Caleb Adams",
+    "position": "G",
+    "avg_ppg": 17.7,
+    "espn_team_name": "Kansas"
+  },
+  {
+    "name": "Jordan Simmons",
+    "position": "F",
+    "avg_ppg": 12.6,
+    "espn_team_name": "Kansas"
+  },
+  {
+    "name": "Ryan Thompson",
+    "position": "F",
+    "avg_ppg": 11.9,
+    "espn_team_name": "Kansas"
+  },
+  {
+    "name": "Zachary Ross",
+    "position": "C",
+    "avg_ppg": 9.7,
+    "espn_team_name": "Kansas"
+  },
+  {
+    "name": "Zachary Hall",
+    "position": "G",
+    "avg_ppg": 4.3,
+    "espn_team_name": "Kansas"
+  },
+  {
+    "name": "Trevor Mitchell",
+    "position": "G",
+    "avg_ppg": 18.2,
+    "espn_team_name": "Marquette"
+  },
+  {
+    "name": "DeShawn Henderson",
+    "position": "G",
+    "avg_ppg": 16.6,
+    "espn_team_name": "Marquette"
+  },
+  {
+    "name": "Cole Baker",
+    "position": "F",
+    "avg_ppg": 13.4,
+    "espn_team_name": "Marquette"
+  },
+  {
+    "name": "Jaylen King",
+    "position": "F",
+    "avg_ppg": 8.5,
+    "espn_team_name": "Marquette"
+  },
+  {
+    "name": "Garrett Smith",
+    "position": "C",
+    "avg_ppg": 5.9,
+    "espn_team_name": "Marquette"
+  },
+  {
+    "name": "Blake Ross",
+    "position": "G",
+    "avg_ppg": 5.6,
+    "espn_team_name": "Marquette"
+  },
+  {
+    "name": "Zachary Murphy",
+    "position": "G",
+    "avg_ppg": 18.3,
+    "espn_team_name": "Auburn"
+  },
+  {
+    "name": "Isaac Taylor",
+    "position": "G",
+    "avg_ppg": 14.5,
+    "espn_team_name": "Auburn"
+  },
+  {
+    "name": "Brandon Ross",
+    "position": "F",
+    "avg_ppg": 12.2,
+    "espn_team_name": "Auburn"
+  },
+  {
+    "name": "Jalen Fisher",
+    "position": "F",
+    "avg_ppg": 9.7,
+    "espn_team_name": "Auburn"
+  },
+  {
+    "name": "Frank Jordan",
+    "position": "C",
+    "avg_ppg": 7.6,
+    "espn_team_name": "Auburn"
+  },
+  {
+    "name": "Brandon Baker",
+    "position": "G",
+    "avg_ppg": 3.1,
+    "espn_team_name": "Auburn"
+  },
+  {
+    "name": "Xavier Johnson",
+    "position": "G",
+    "avg_ppg": 16.8,
+    "espn_team_name": "Iowa St"
+  },
+  {
+    "name": "Logan Foster",
+    "position": "G",
+    "avg_ppg": 15.6,
+    "espn_team_name": "Iowa St"
+  },
+  {
+    "name": "Mason Martinez",
+    "position": "F",
+    "avg_ppg": 12.4,
+    "espn_team_name": "Iowa St"
+  },
+  {
+    "name": "Devin Hayes",
+    "position": "F",
+    "avg_ppg": 10.3,
+    "espn_team_name": "Iowa St"
+  },
+  {
+    "name": "Cameron Thompson",
+    "position": "C",
+    "avg_ppg": 5.6,
+    "espn_team_name": "Iowa St"
+  },
+  {
+    "name": "Owen Cooper",
+    "position": "G",
+    "avg_ppg": 17.8,
+    "espn_team_name": "Baylor"
+  },
+  {
+    "name": "Devin Fisher",
+    "position": "G",
+    "avg_ppg": 14.6,
+    "espn_team_name": "Baylor"
+  },
+  {
+    "name": "DeShawn Simmons",
+    "position": "F",
+    "avg_ppg": 12.8,
+    "espn_team_name": "Baylor"
+  },
+  {
+    "name": "Xavier Hayes",
+    "position": "F",
+    "avg_ppg": 8.0,
+    "espn_team_name": "Baylor"
+  },
+  {
+    "name": "Jaylen Harris",
+    "position": "C",
+    "avg_ppg": 6.2,
+    "espn_team_name": "Baylor"
+  },
+  {
+    "name": "Marcus Cooper",
+    "position": "G",
+    "avg_ppg": 15.0,
+    "espn_team_name": "Dayton"
+  },
+  {
+    "name": "Nathan Murphy",
+    "position": "G",
+    "avg_ppg": 14.5,
+    "espn_team_name": "Dayton"
+  },
+  {
+    "name": "Miles Davis",
+    "position": "F",
+    "avg_ppg": 9.7,
+    "espn_team_name": "Dayton"
+  },
+  {
+    "name": "Spencer Parker",
+    "position": "F",
+    "avg_ppg": 8.6,
+    "espn_team_name": "Dayton"
+  },
+  {
+    "name": "Spencer Mitchell",
+    "position": "C",
+    "avg_ppg": 5.3,
+    "espn_team_name": "Dayton"
+  },
+  {
+    "name": "Cole Rogers",
+    "position": "G",
+    "avg_ppg": 16.7,
+    "espn_team_name": "Wyoming"
+  },
+  {
+    "name": "Isaac Gray",
+    "position": "G",
+    "avg_ppg": 11.9,
+    "espn_team_name": "Wyoming"
+  },
+  {
+    "name": "Wesley Henderson",
+    "position": "F",
+    "avg_ppg": 11.3,
+    "espn_team_name": "Wyoming"
+  },
+  {
+    "name": "Ethan Anderson",
+    "position": "F",
+    "avg_ppg": 8.4,
+    "espn_team_name": "Wyoming"
+  },
+  {
+    "name": "Frank Henderson",
+    "position": "C",
+    "avg_ppg": 4.9,
+    "espn_team_name": "Wyoming"
+  },
+  {
+    "name": "Garrett Martinez",
+    "position": "G",
+    "avg_ppg": 15.8,
+    "espn_team_name": "Colgate"
+  },
+  {
+    "name": "Elijah Lee",
+    "position": "G",
+    "avg_ppg": 13.7,
+    "espn_team_name": "Colgate"
+  },
+  {
+    "name": "Caleb Smith",
+    "position": "F",
+    "avg_ppg": 10.6,
+    "espn_team_name": "Colgate"
+  },
+  {
+    "name": "Tre Powell",
+    "position": "F",
+    "avg_ppg": 9.0,
+    "espn_team_name": "Colgate"
+  },
+  {
+    "name": "Cole Foster",
+    "position": "C",
+    "avg_ppg": 5.9,
+    "espn_team_name": "Colgate"
+  },
+  {
+    "name": "Alex Mitchell",
+    "position": "G",
+    "avg_ppg": 15.3,
+    "espn_team_name": "NC St"
+  },
+  {
+    "name": "Patrick Foster",
+    "position": "G",
+    "avg_ppg": 11.8,
+    "espn_team_name": "NC St"
+  },
+  {
+    "name": "Jordan Jordan",
+    "position": "F",
+    "avg_ppg": 9.5,
+    "espn_team_name": "NC St"
+  },
+  {
+    "name": "Samuel Davis",
+    "position": "F",
+    "avg_ppg": 6.4,
+    "espn_team_name": "NC St"
+  },
+  {
+    "name": "Blake Cooper",
+    "position": "C",
+    "avg_ppg": 4.5,
+    "espn_team_name": "NC St"
+  },
+  {
+    "name": "Tre Smith",
+    "position": "G",
+    "avg_ppg": 14.3,
+    "espn_team_name": "UConn"
+  },
+  {
+    "name": "Garrett Anderson",
+    "position": "G",
+    "avg_ppg": 11.9,
+    "espn_team_name": "UConn"
+  },
+  {
+    "name": "Elijah Evans",
+    "position": "F",
+    "avg_ppg": 10.4,
+    "espn_team_name": "UConn"
+  },
+  {
+    "name": "Nathan Adams",
+    "position": "F",
+    "avg_ppg": 6.3,
+    "espn_team_name": "UConn"
+  },
+  {
+    "name": "William Foster",
+    "position": "C",
+    "avg_ppg": 4.2,
+    "espn_team_name": "UConn"
+  },
+  {
+    "name": "Jaylen Thompson",
+    "position": "G",
+    "avg_ppg": 14.1,
+    "espn_team_name": "Mississippi St"
+  },
+  {
+    "name": "Brandon Cooper",
+    "position": "G",
+    "avg_ppg": 10.5,
+    "espn_team_name": "Mississippi St"
+  },
+  {
+    "name": "Xavier Wilson",
+    "position": "F",
+    "avg_ppg": 9.9,
+    "espn_team_name": "Mississippi St"
+  },
+  {
+    "name": "Nathan Foster",
+    "position": "F",
+    "avg_ppg": 3.8,
+    "espn_team_name": "Mississippi St"
+  },
+  {
+    "name": "Spencer Miller",
+    "position": "C",
+    "avg_ppg": 2.1,
+    "espn_team_name": "Mississippi St"
+  },
+  {
+    "name": "Ethan Green",
+    "position": "G",
+    "avg_ppg": 12.5,
+    "espn_team_name": "Providence"
+  },
+  {
+    "name": "Jalen Robinson",
+    "position": "G",
+    "avg_ppg": 10.4,
+    "espn_team_name": "Providence"
+  },
+  {
+    "name": "Jeremiah King",
+    "position": "F",
+    "avg_ppg": 9.2,
+    "espn_team_name": "Providence"
+  },
+  {
+    "name": "Justin Evans",
+    "position": "F",
+    "avg_ppg": 4.4,
+    "espn_team_name": "Providence"
+  },
+  {
+    "name": "William Wilson",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Providence"
+  },
+  {
+    "name": "Tre Carter",
+    "position": "G",
+    "avg_ppg": 11.6,
+    "espn_team_name": "USC"
+  },
+  {
+    "name": "Samuel Reed",
+    "position": "G",
+    "avg_ppg": 10.0,
+    "espn_team_name": "USC"
+  },
+  {
+    "name": "Xavier Mitchell",
+    "position": "F",
+    "avg_ppg": 6.9,
+    "espn_team_name": "USC"
+  },
+  {
+    "name": "Davis Garcia",
+    "position": "F",
+    "avg_ppg": 2.8,
+    "espn_team_name": "USC"
+  },
+  {
+    "name": "Jaylen Fisher",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "USC"
+  },
+  {
+    "name": "Owen Kelly",
+    "position": "G",
+    "avg_ppg": 10.6,
+    "espn_team_name": "Kennesaw St"
+  },
+  {
+    "name": "Tre Jordan",
+    "position": "G",
+    "avg_ppg": 8.9,
+    "espn_team_name": "Kennesaw St"
+  },
+  {
+    "name": "Caleb Long",
+    "position": "F",
+    "avg_ppg": 7.5,
+    "espn_team_name": "Kennesaw St"
+  },
+  {
+    "name": "Reggie Ross",
+    "position": "F",
+    "avg_ppg": 3.3,
+    "espn_team_name": "Kennesaw St"
+  },
+  {
+    "name": "Davis Morris",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Kennesaw St"
+  },
+  {
+    "name": "Tre Taylor",
+    "position": "G",
+    "avg_ppg": 11.2,
+    "espn_team_name": "Yale"
+  },
+  {
+    "name": "Tre Fisher",
+    "position": "G",
+    "avg_ppg": 9.3,
+    "espn_team_name": "Yale"
+  },
+  {
+    "name": "Caleb Carter",
+    "position": "F",
+    "avg_ppg": 7.4,
+    "espn_team_name": "Yale"
+  },
+  {
+    "name": "Tyler Thompson",
+    "position": "F",
+    "avg_ppg": 2.5,
+    "espn_team_name": "Yale"
+  },
+  {
+    "name": "Lucas Powell",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Yale"
+  },
+  {
+    "name": "Tyler Jenkins",
+    "position": "G",
+    "avg_ppg": 19.1,
+    "espn_team_name": "Alabama"
+  },
+  {
+    "name": "Blake Simmons",
+    "position": "G",
+    "avg_ppg": 15.6,
+    "espn_team_name": "Alabama"
+  },
+  {
+    "name": "Lucas Taylor",
+    "position": "F",
+    "avg_ppg": 12.3,
+    "espn_team_name": "Alabama"
+  },
+  {
+    "name": "Logan Reed",
+    "position": "F",
+    "avg_ppg": 13.4,
+    "espn_team_name": "Alabama"
+  },
+  {
+    "name": "DeShawn Mitchell",
+    "position": "C",
+    "avg_ppg": 6.4,
+    "espn_team_name": "Alabama"
+  },
+  {
+    "name": "Elijah Kelly",
+    "position": "G",
+    "avg_ppg": 8.5,
+    "espn_team_name": "Alabama"
+  },
+  {
+    "name": "Kevin Miller",
+    "position": "G",
+    "avg_ppg": 19.3,
+    "espn_team_name": "Iowa"
+  },
+  {
+    "name": "Jalen Roberts",
+    "position": "G",
+    "avg_ppg": 16.7,
+    "espn_team_name": "Iowa"
+  },
+  {
+    "name": "Alex Nelson",
+    "position": "F",
+    "avg_ppg": 14.6,
+    "espn_team_name": "Iowa"
+  },
+  {
+    "name": "Brandon Campbell",
+    "position": "F",
+    "avg_ppg": 12.3,
+    "espn_team_name": "Iowa"
+  },
+  {
+    "name": "Noah Mitchell",
+    "position": "C",
+    "avg_ppg": 9.2,
+    "espn_team_name": "Iowa"
+  },
+  {
+    "name": "Cameron Reed",
+    "position": "G",
+    "avg_ppg": 7.6,
+    "espn_team_name": "Iowa"
+  },
+  {
+    "name": "William White",
+    "position": "G",
+    "avg_ppg": 19.2,
+    "espn_team_name": "Penn St"
+  },
+  {
+    "name": "Davis Carter",
+    "position": "G",
+    "avg_ppg": 16.3,
+    "espn_team_name": "Penn St"
+  },
+  {
+    "name": "Victor Gray",
+    "position": "F",
+    "avg_ppg": 11.6,
+    "espn_team_name": "Penn St"
+  },
+  {
+    "name": "Devin Harris",
+    "position": "F",
+    "avg_ppg": 11.5,
+    "espn_team_name": "Penn St"
+  },
+  {
+    "name": "Trevor Ross",
+    "position": "C",
+    "avg_ppg": 6.9,
+    "espn_team_name": "Penn St"
+  },
+  {
+    "name": "Isaac Jordan",
+    "position": "G",
+    "avg_ppg": 3.6,
+    "espn_team_name": "Penn St"
+  },
+  {
+    "name": "Grant Hall",
+    "position": "G",
+    "avg_ppg": 17.5,
+    "espn_team_name": "Creighton"
+  },
+  {
+    "name": "Jeremiah Gray",
+    "position": "G",
+    "avg_ppg": 15.7,
+    "espn_team_name": "Creighton"
+  },
+  {
+    "name": "Frank Martinez",
+    "position": "F",
+    "avg_ppg": 12.1,
+    "espn_team_name": "Creighton"
+  },
+  {
+    "name": "Cole Johnson",
+    "position": "F",
+    "avg_ppg": 11.1,
+    "espn_team_name": "Creighton"
+  },
+  {
+    "name": "Garrett Rogers",
+    "position": "C",
+    "avg_ppg": 6.0,
+    "espn_team_name": "Creighton"
+  },
+  {
+    "name": "Samuel Brown",
+    "position": "G",
+    "avg_ppg": 4.3,
+    "espn_team_name": "Creighton"
+  },
+  {
+    "name": "William Anderson",
+    "position": "G",
+    "avg_ppg": 17.4,
+    "espn_team_name": "Texas A&M"
+  },
+  {
+    "name": "Hunter Rogers",
+    "position": "G",
+    "avg_ppg": 13.5,
+    "espn_team_name": "Texas A&M"
+  },
+  {
+    "name": "Trevor Adams",
+    "position": "F",
+    "avg_ppg": 12.1,
+    "espn_team_name": "Texas A&M"
+  },
+  {
+    "name": "Reggie Richardson",
+    "position": "F",
+    "avg_ppg": 10.5,
+    "espn_team_name": "Texas A&M"
+  },
+  {
+    "name": "Nathan Harris",
+    "position": "C",
+    "avg_ppg": 8.6,
+    "espn_team_name": "Texas A&M"
+  },
+  {
+    "name": "William Powell",
+    "position": "G",
+    "avg_ppg": 16.4,
+    "espn_team_name": "Saint Mary's"
+  },
+  {
+    "name": "Grant Garcia",
+    "position": "G",
+    "avg_ppg": 14.9,
+    "espn_team_name": "Saint Mary's"
+  },
+  {
+    "name": "Ryan Green",
+    "position": "F",
+    "avg_ppg": 10.1,
+    "espn_team_name": "Saint Mary's"
+  },
+  {
+    "name": "Chase Parker",
+    "position": "F",
+    "avg_ppg": 10.0,
+    "espn_team_name": "Saint Mary's"
+  },
+  {
+    "name": "Brandon Coleman",
+    "position": "C",
+    "avg_ppg": 9.0,
+    "espn_team_name": "Saint Mary's"
+  },
+  {
+    "name": "Jalen Garcia",
+    "position": "G",
+    "avg_ppg": 16.9,
+    "espn_team_name": "UNC"
+  },
+  {
+    "name": "Davis Jenkins",
+    "position": "G",
+    "avg_ppg": 12.2,
+    "espn_team_name": "UNC"
+  },
+  {
+    "name": "Lucas Henderson",
+    "position": "F",
+    "avg_ppg": 10.7,
+    "espn_team_name": "UNC"
+  },
+  {
+    "name": "Marcus Hall",
+    "position": "F",
+    "avg_ppg": 8.3,
+    "espn_team_name": "UNC"
+  },
+  {
+    "name": "Jalen Harris",
+    "position": "C",
+    "avg_ppg": 7.4,
+    "espn_team_name": "UNC"
+  },
+  {
+    "name": "Owen Long",
+    "position": "G",
+    "avg_ppg": 15.0,
+    "espn_team_name": "Purdue"
+  },
+  {
+    "name": "Aaron Lee",
+    "position": "G",
+    "avg_ppg": 14.0,
+    "espn_team_name": "Purdue"
+  },
+  {
+    "name": "Reggie Taylor",
+    "position": "F",
+    "avg_ppg": 11.0,
+    "espn_team_name": "Purdue"
+  },
+  {
+    "name": "Lucas Jordan",
+    "position": "F",
+    "avg_ppg": 9.4,
+    "espn_team_name": "Purdue"
+  },
+  {
+    "name": "Tre Foster",
+    "position": "C",
+    "avg_ppg": 5.9,
+    "espn_team_name": "Purdue"
+  },
+  {
+    "name": "Jordan Brown",
+    "position": "G",
+    "avg_ppg": 14.7,
+    "espn_team_name": "Akron"
+  },
+  {
+    "name": "William Richardson",
+    "position": "G",
+    "avg_ppg": 12.8,
+    "espn_team_name": "Akron"
+  },
+  {
+    "name": "Devin Jordan",
+    "position": "F",
+    "avg_ppg": 10.1,
+    "espn_team_name": "Akron"
+  },
+  {
+    "name": "Aaron Richardson",
+    "position": "F",
+    "avg_ppg": 8.9,
+    "espn_team_name": "Akron"
+  },
+  {
+    "name": "Samuel Martinez",
+    "position": "C",
+    "avg_ppg": 2.8,
+    "espn_team_name": "Akron"
+  },
+  {
+    "name": "Wesley Green",
+    "position": "G",
+    "avg_ppg": 13.9,
+    "espn_team_name": "Xavier"
+  },
+  {
+    "name": "Khalil Adams",
+    "position": "G",
+    "avg_ppg": 11.3,
+    "espn_team_name": "Xavier"
+  },
+  {
+    "name": "Justin Richardson",
+    "position": "F",
+    "avg_ppg": 9.9,
+    "espn_team_name": "Xavier"
+  },
+  {
+    "name": "Patrick Taylor",
+    "position": "F",
+    "avg_ppg": 5.7,
+    "espn_team_name": "Xavier"
+  },
+  {
+    "name": "Malik Fisher",
+    "position": "C",
+    "avg_ppg": 5.8,
+    "espn_team_name": "Xavier"
+  },
+  {
+    "name": "Isaac White",
+    "position": "G",
+    "avg_ppg": 14.3,
+    "espn_team_name": "Charlotte"
+  },
+  {
+    "name": "Lucas Evans",
+    "position": "G",
+    "avg_ppg": 11.0,
+    "espn_team_name": "Charlotte"
+  },
+  {
+    "name": "Trevor Baker",
+    "position": "F",
+    "avg_ppg": 9.2,
+    "espn_team_name": "Charlotte"
+  },
+  {
+    "name": "Tre Campbell",
+    "position": "F",
+    "avg_ppg": 8.4,
+    "espn_team_name": "Charlotte"
+  },
+  {
+    "name": "Cole Roberts",
+    "position": "C",
+    "avg_ppg": 4.8,
+    "espn_team_name": "Charlotte"
+  },
+  {
+    "name": "Spencer Jenkins",
+    "position": "G",
+    "avg_ppg": 14.5,
+    "espn_team_name": "Oakland"
+  },
+  {
+    "name": "Reggie White",
+    "position": "G",
+    "avg_ppg": 10.6,
+    "espn_team_name": "Oakland"
+  },
+  {
+    "name": "Samuel Johnson",
+    "position": "F",
+    "avg_ppg": 9.1,
+    "espn_team_name": "Oakland"
+  },
+  {
+    "name": "Kevin White",
+    "position": "F",
+    "avg_ppg": 7.0,
+    "espn_team_name": "Oakland"
+  },
+  {
+    "name": "Brandon Gray",
+    "position": "C",
+    "avg_ppg": 2.9,
+    "espn_team_name": "Oakland"
+  },
+  {
+    "name": "Isaac Parker",
+    "position": "G",
+    "avg_ppg": 11.8,
+    "espn_team_name": "Grambling St"
+  },
+  {
+    "name": "Xavier Long",
+    "position": "G",
+    "avg_ppg": 11.6,
+    "espn_team_name": "Grambling St"
+  },
+  {
+    "name": "Andre Henderson",
+    "position": "F",
+    "avg_ppg": 8.2,
+    "espn_team_name": "Grambling St"
+  },
+  {
+    "name": "Nathan Jordan",
+    "position": "F",
+    "avg_ppg": 6.2,
+    "espn_team_name": "Grambling St"
+  },
+  {
+    "name": "Marcus Wilson",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Grambling St"
+  },
+  {
+    "name": "Andre Robinson",
+    "position": "G",
+    "avg_ppg": 13.5,
+    "espn_team_name": "Boise St"
+  },
+  {
+    "name": "Frank Brown",
+    "position": "G",
+    "avg_ppg": 8.8,
+    "espn_team_name": "Boise St"
+  },
+  {
+    "name": "Tre Mitchell",
+    "position": "F",
+    "avg_ppg": 7.5,
+    "espn_team_name": "Boise St"
+  },
+  {
+    "name": "Xavier Campbell",
+    "position": "F",
+    "avg_ppg": 3.4,
+    "espn_team_name": "Boise St"
+  },
+  {
+    "name": "Devin Nelson",
+    "position": "C",
+    "avg_ppg": 4.3,
+    "espn_team_name": "Boise St"
+  },
+  {
+    "name": "Spencer Richardson",
+    "position": "G",
+    "avg_ppg": 12.8,
+    "espn_team_name": "LIU"
+  },
+  {
+    "name": "Logan Gray",
+    "position": "G",
+    "avg_ppg": 9.0,
+    "espn_team_name": "LIU"
+  },
+  {
+    "name": "William Davis",
+    "position": "F",
+    "avg_ppg": 8.1,
+    "espn_team_name": "LIU"
+  },
+  {
+    "name": "Brandon Hall",
+    "position": "F",
+    "avg_ppg": 2.6,
+    "espn_team_name": "LIU"
+  },
+  {
+    "name": "Xavier Henderson",
+    "position": "C",
+    "avg_ppg": 3.2,
+    "espn_team_name": "LIU"
+  },
+  {
+    "name": "Hunter Mitchell",
+    "position": "G",
+    "avg_ppg": 11.0,
+    "espn_team_name": "Howard"
+  },
+  {
+    "name": "Aaron Reed",
+    "position": "G",
+    "avg_ppg": 9.0,
+    "espn_team_name": "Howard"
+  },
+  {
+    "name": "Frank Gray",
+    "position": "F",
+    "avg_ppg": 6.1,
+    "espn_team_name": "Howard"
+  },
+  {
+    "name": "Garrett Morris",
+    "position": "F",
+    "avg_ppg": 3.9,
+    "espn_team_name": "Howard"
+  },
+  {
+    "name": "Patrick Hall",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Howard"
+  },
+  {
+    "name": "Samuel Fisher",
+    "position": "G",
+    "avg_ppg": 20.7,
+    "espn_team_name": "Houston"
+  },
+  {
+    "name": "Garrett Howard",
+    "position": "G",
+    "avg_ppg": 17.4,
+    "espn_team_name": "Houston"
+  },
+  {
+    "name": "Logan Robinson",
+    "position": "F",
+    "avg_ppg": 13.7,
+    "espn_team_name": "Houston"
+  },
+  {
+    "name": "Devin Robinson",
+    "position": "F",
+    "avg_ppg": 12.8,
+    "espn_team_name": "Houston"
+  },
+  {
+    "name": "Zachary Hayes",
+    "position": "C",
+    "avg_ppg": 7.1,
+    "espn_team_name": "Houston"
+  },
+  {
+    "name": "Davis Hall",
+    "position": "G",
+    "avg_ppg": 9.1,
+    "espn_team_name": "Houston"
+  },
+  {
+    "name": "Miles Simmons",
+    "position": "G",
+    "avg_ppg": 18.7,
+    "espn_team_name": "Wisconsin"
+  },
+  {
+    "name": "Jeremiah Ross",
+    "position": "G",
+    "avg_ppg": 15.5,
+    "espn_team_name": "Wisconsin"
+  },
+  {
+    "name": "Kevin Richardson",
+    "position": "F",
+    "avg_ppg": 13.1,
+    "espn_team_name": "Wisconsin"
+  },
+  {
+    "name": "Cameron Evans",
+    "position": "F",
+    "avg_ppg": 11.6,
+    "espn_team_name": "Wisconsin"
+  },
+  {
+    "name": "Samuel Anderson",
+    "position": "C",
+    "avg_ppg": 8.2,
+    "espn_team_name": "Wisconsin"
+  },
+  {
+    "name": "Caleb Anderson",
+    "position": "G",
+    "avg_ppg": 7.4,
+    "espn_team_name": "Wisconsin"
+  },
+  {
+    "name": "Blake Miller",
+    "position": "G",
+    "avg_ppg": 17.6,
+    "espn_team_name": "Virginia Tech"
+  },
+  {
+    "name": "Miles Hayes",
+    "position": "G",
+    "avg_ppg": 15.4,
+    "espn_team_name": "Virginia Tech"
+  },
+  {
+    "name": "Frank Nelson",
+    "position": "F",
+    "avg_ppg": 13.3,
+    "espn_team_name": "Virginia Tech"
+  },
+  {
+    "name": "Tre Stewart",
+    "position": "F",
+    "avg_ppg": 11.5,
+    "espn_team_name": "Virginia Tech"
+  },
+  {
+    "name": "Alex Ross",
+    "position": "C",
+    "avg_ppg": 9.4,
+    "espn_team_name": "Virginia Tech"
+  },
+  {
+    "name": "Blake Wilson",
+    "position": "G",
+    "avg_ppg": 5.3,
+    "espn_team_name": "Virginia Tech"
+  },
+  {
+    "name": "Wesley Fisher",
+    "position": "G",
+    "avg_ppg": 18.7,
+    "espn_team_name": "Utah St"
+  },
+  {
+    "name": "Devin Martinez",
+    "position": "G",
+    "avg_ppg": 14.3,
+    "espn_team_name": "Utah St"
+  },
+  {
+    "name": "Spencer Coleman",
+    "position": "F",
+    "avg_ppg": 10.8,
+    "espn_team_name": "Utah St"
+  },
+  {
+    "name": "Victor Nelson",
+    "position": "F",
+    "avg_ppg": 12.0,
+    "espn_team_name": "Utah St"
+  },
+  {
+    "name": "Mason Garcia",
+    "position": "C",
+    "avg_ppg": 6.7,
+    "espn_team_name": "Utah St"
+  },
+  {
+    "name": "Aaron Coleman",
+    "position": "G",
+    "avg_ppg": 5.5,
+    "espn_team_name": "Utah St"
+  },
+  {
+    "name": "Hunter Powell",
+    "position": "G",
+    "avg_ppg": 17.0,
+    "espn_team_name": "Oklahoma"
+  },
+  {
+    "name": "Jeremiah Morris",
+    "position": "G",
+    "avg_ppg": 14.4,
+    "espn_team_name": "Oklahoma"
+  },
+  {
+    "name": "Hunter Stewart",
+    "position": "F",
+    "avg_ppg": 13.1,
+    "espn_team_name": "Oklahoma"
+  },
+  {
+    "name": "Caleb Ross",
+    "position": "F",
+    "avg_ppg": 11.2,
+    "espn_team_name": "Oklahoma"
+  },
+  {
+    "name": "Lucas Miller",
+    "position": "C",
+    "avg_ppg": 6.5,
+    "espn_team_name": "Oklahoma"
+  },
+  {
+    "name": "DeShawn Smith",
+    "position": "G",
+    "avg_ppg": 16.6,
+    "espn_team_name": "Syracuse"
+  },
+  {
+    "name": "Noah Evans",
+    "position": "G",
+    "avg_ppg": 13.2,
+    "espn_team_name": "Syracuse"
+  },
+  {
+    "name": "Marcus Gray",
+    "position": "F",
+    "avg_ppg": 11.7,
+    "espn_team_name": "Syracuse"
+  },
+  {
+    "name": "Caleb Hayes",
+    "position": "F",
+    "avg_ppg": 9.8,
+    "espn_team_name": "Syracuse"
+  },
+  {
+    "name": "Alex Jordan",
+    "position": "C",
+    "avg_ppg": 3.1,
+    "espn_team_name": "Syracuse"
+  },
+  {
+    "name": "Elijah Morris",
+    "position": "G",
+    "avg_ppg": 15.9,
+    "espn_team_name": "Washington St"
+  },
+  {
+    "name": "Wesley Richardson",
+    "position": "G",
+    "avg_ppg": 12.4,
+    "espn_team_name": "Washington St"
+  },
+  {
+    "name": "Tre Brown",
+    "position": "F",
+    "avg_ppg": 11.5,
+    "espn_team_name": "Washington St"
+  },
+  {
+    "name": "Owen Evans",
+    "position": "F",
+    "avg_ppg": 8.2,
+    "espn_team_name": "Washington St"
+  },
+  {
+    "name": "Cameron Lee",
+    "position": "C",
+    "avg_ppg": 5.8,
+    "espn_team_name": "Washington St"
+  },
+  {
+    "name": "Owen Adams",
+    "position": "G",
+    "avg_ppg": 15.5,
+    "espn_team_name": "Wichita St"
+  },
+  {
+    "name": "Andre Murphy",
+    "position": "G",
+    "avg_ppg": 13.4,
+    "espn_team_name": "Wichita St"
+  },
+  {
+    "name": "Davis Anderson",
+    "position": "F",
+    "avg_ppg": 9.4,
+    "espn_team_name": "Wichita St"
+  },
+  {
+    "name": "Ethan Jenkins",
+    "position": "F",
+    "avg_ppg": 9.3,
+    "espn_team_name": "Wichita St"
+  },
+  {
+    "name": "Cameron Stewart",
+    "position": "C",
+    "avg_ppg": 2.4,
+    "espn_team_name": "Wichita St"
+  },
+  {
+    "name": "Garrett Taylor",
+    "position": "G",
+    "avg_ppg": 15.7,
+    "espn_team_name": "Morehead St"
+  },
+  {
+    "name": "Patrick Ross",
+    "position": "G",
+    "avg_ppg": 13.1,
+    "espn_team_name": "Morehead St"
+  },
+  {
+    "name": "Victor Long",
+    "position": "F",
+    "avg_ppg": 11.8,
+    "espn_team_name": "Morehead St"
+  },
+  {
+    "name": "Victor Baker",
+    "position": "F",
+    "avg_ppg": 6.4,
+    "espn_team_name": "Morehead St"
+  },
+  {
+    "name": "Davis Campbell",
+    "position": "C",
+    "avg_ppg": 6.8,
+    "espn_team_name": "Morehead St"
+  },
+  {
+    "name": "Samuel Cooper",
+    "position": "G",
+    "avg_ppg": 13.9,
+    "espn_team_name": "Buffalo"
+  },
+  {
+    "name": "Brandon Mitchell",
+    "position": "G",
+    "avg_ppg": 11.4,
+    "espn_team_name": "Buffalo"
+  },
+  {
+    "name": "Cole Robinson",
+    "position": "F",
+    "avg_ppg": 9.7,
+    "espn_team_name": "Buffalo"
+  },
+  {
+    "name": "Andre Anderson",
+    "position": "F",
+    "avg_ppg": 6.0,
+    "espn_team_name": "Buffalo"
+  },
+  {
+    "name": "Davis Evans",
+    "position": "C",
+    "avg_ppg": 6.0,
+    "espn_team_name": "Buffalo"
+  },
+  {
+    "name": "Khalil Smith",
+    "position": "G",
+    "avg_ppg": 14.9,
+    "espn_team_name": "VMI"
+  },
+  {
+    "name": "Ethan Howard",
+    "position": "G",
+    "avg_ppg": 12.5,
+    "espn_team_name": "VMI"
+  },
+  {
+    "name": "Ethan Foster",
+    "position": "F",
+    "avg_ppg": 9.4,
+    "espn_team_name": "VMI"
+  },
+  {
+    "name": "Owen Campbell",
+    "position": "F",
+    "avg_ppg": 5.6,
+    "espn_team_name": "VMI"
+  },
+  {
+    "name": "Grant Carter",
+    "position": "C",
+    "avg_ppg": 2.9,
+    "espn_team_name": "VMI"
+  },
+  {
+    "name": "Garrett Evans",
+    "position": "G",
+    "avg_ppg": 14.2,
+    "espn_team_name": "VCU"
+  },
+  {
+    "name": "Ethan Davis",
+    "position": "G",
+    "avg_ppg": 9.4,
+    "espn_team_name": "VCU"
+  },
+  {
+    "name": "Zachary Jordan",
+    "position": "F",
+    "avg_ppg": 9.7,
+    "espn_team_name": "VCU"
+  },
+  {
+    "name": "Spencer Davis",
+    "position": "F",
+    "avg_ppg": 6.9,
+    "espn_team_name": "VCU"
+  },
+  {
+    "name": "Wesley Foster",
+    "position": "C",
+    "avg_ppg": 4.7,
+    "espn_team_name": "VCU"
+  },
+  {
+    "name": "Cameron Martinez",
+    "position": "G",
+    "avg_ppg": 12.9,
+    "espn_team_name": "Southern Utah"
+  },
+  {
+    "name": "Blake Thompson",
+    "position": "G",
+    "avg_ppg": 11.2,
+    "espn_team_name": "Southern Utah"
+  },
+  {
+    "name": "Xavier Robinson",
+    "position": "F",
+    "avg_ppg": 9.0,
+    "espn_team_name": "Southern Utah"
+  },
+  {
+    "name": "Cameron Gray",
+    "position": "F",
+    "avg_ppg": 7.2,
+    "espn_team_name": "Southern Utah"
+  },
+  {
+    "name": "Wesley Simmons",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Southern Utah"
+  },
+  {
+    "name": "Garrett Mitchell",
+    "position": "G",
+    "avg_ppg": 12.5,
+    "espn_team_name": "Eastern Wash"
+  },
+  {
+    "name": "Blake Jenkins",
+    "position": "G",
+    "avg_ppg": 9.7,
+    "espn_team_name": "Eastern Wash"
+  },
+  {
+    "name": "Andre Brown",
+    "position": "F",
+    "avg_ppg": 7.6,
+    "espn_team_name": "Eastern Wash"
+  },
+  {
+    "name": "Elijah Jordan",
+    "position": "F",
+    "avg_ppg": 4.3,
+    "espn_team_name": "Eastern Wash"
+  },
+  {
+    "name": "Samuel Garcia",
+    "position": "C",
+    "avg_ppg": 4.3,
+    "espn_team_name": "Eastern Wash"
+  },
+  {
+    "name": "Devin White",
+    "position": "G",
+    "avg_ppg": 11.9,
+    "espn_team_name": "Robert Morris"
+  },
+  {
+    "name": "Reggie Garcia",
+    "position": "G",
+    "avg_ppg": 10.5,
+    "espn_team_name": "Robert Morris"
+  },
+  {
+    "name": "Jordan Stewart",
+    "position": "F",
+    "avg_ppg": 5.5,
+    "espn_team_name": "Robert Morris"
+  },
+  {
+    "name": "Justin Howard",
+    "position": "F",
+    "avg_ppg": 4.2,
+    "espn_team_name": "Robert Morris"
+  },
+  {
+    "name": "Brandon Rogers",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Robert Morris"
+  },
+  {
+    "name": "Samuel Hayes",
+    "position": "G",
+    "avg_ppg": 12.0,
+    "espn_team_name": "Savannah St"
+  },
+  {
+    "name": "Elijah Brown",
+    "position": "G",
+    "avg_ppg": 7.7,
+    "espn_team_name": "Savannah St"
+  },
+  {
+    "name": "Jaylen Richardson",
+    "position": "F",
+    "avg_ppg": 4.9,
+    "espn_team_name": "Savannah St"
+  },
+  {
+    "name": "Caleb Brown",
+    "position": "F",
+    "avg_ppg": 3.2,
+    "espn_team_name": "Savannah St"
+  },
+  {
+    "name": "Reggie Fisher",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Savannah St"
+  },
+  {
+    "name": "Victor Powell",
+    "position": "G",
+    "avg_ppg": 19.2,
+    "espn_team_name": "UCLA"
+  },
+  {
+    "name": "Justin Miller",
+    "position": "G",
+    "avg_ppg": 17.0,
+    "espn_team_name": "UCLA"
+  },
+  {
+    "name": "Tyler White",
+    "position": "F",
+    "avg_ppg": 14.8,
+    "espn_team_name": "UCLA"
+  },
+  {
+    "name": "Andre Mitchell",
+    "position": "F",
+    "avg_ppg": 9.4,
+    "espn_team_name": "UCLA"
+  },
+  {
+    "name": "Ethan Morris",
+    "position": "C",
+    "avg_ppg": 11.4,
+    "espn_team_name": "UCLA"
+  },
+  {
+    "name": "Brandon Taylor",
+    "position": "G",
+    "avg_ppg": 4.8,
+    "espn_team_name": "UCLA"
+  },
+  {
+    "name": "Garrett Powell",
+    "position": "G",
+    "avg_ppg": 17.8,
+    "espn_team_name": "TCU"
+  },
+  {
+    "name": "Tyler Cooper",
+    "position": "G",
+    "avg_ppg": 17.8,
+    "espn_team_name": "TCU"
+  },
+  {
+    "name": "Elijah Parker",
+    "position": "F",
+    "avg_ppg": 14.6,
+    "espn_team_name": "TCU"
+  },
+  {
+    "name": "Lucas Wilson",
+    "position": "F",
+    "avg_ppg": 10.6,
+    "espn_team_name": "TCU"
+  },
+  {
+    "name": "Jordan Adams",
+    "position": "C",
+    "avg_ppg": 9.4,
+    "espn_team_name": "TCU"
+  },
+  {
+    "name": "Malik Simmons",
+    "position": "G",
+    "avg_ppg": 3.1,
+    "espn_team_name": "TCU"
+  },
+  {
+    "name": "Malik Stewart",
+    "position": "G",
+    "avg_ppg": 17.9,
+    "espn_team_name": "Arizona"
+  },
+  {
+    "name": "Owen Murphy",
+    "position": "G",
+    "avg_ppg": 15.6,
+    "espn_team_name": "Arizona"
+  },
+  {
+    "name": "Wesley Thompson",
+    "position": "F",
+    "avg_ppg": 12.4,
+    "espn_team_name": "Arizona"
+  },
+  {
+    "name": "Trevor Nelson",
+    "position": "F",
+    "avg_ppg": 10.5,
+    "espn_team_name": "Arizona"
+  },
+  {
+    "name": "Ethan Wilson",
+    "position": "C",
+    "avg_ppg": 6.6,
+    "espn_team_name": "Arizona"
+  },
+  {
+    "name": "Patrick Reed",
+    "position": "G",
+    "avg_ppg": 6.1,
+    "espn_team_name": "Arizona"
+  },
+  {
+    "name": "Jeremiah Powell",
+    "position": "G",
+    "avg_ppg": 17.1,
+    "espn_team_name": "Texas Tech"
+  },
+  {
+    "name": "Elijah Rogers",
+    "position": "G",
+    "avg_ppg": 14.8,
+    "espn_team_name": "Texas Tech"
+  },
+  {
+    "name": "Malik Kelly",
+    "position": "F",
+    "avg_ppg": 14.1,
+    "espn_team_name": "Texas Tech"
+  },
+  {
+    "name": "Chase Murphy",
+    "position": "F",
+    "avg_ppg": 10.7,
+    "espn_team_name": "Texas Tech"
+  },
+  {
+    "name": "DeShawn Richardson",
+    "position": "C",
+    "avg_ppg": 5.4,
+    "espn_team_name": "Texas Tech"
+  },
+  {
+    "name": "Blake Murphy",
+    "position": "G",
+    "avg_ppg": 4.2,
+    "espn_team_name": "Texas Tech"
+  },
+  {
+    "name": "Logan Henderson",
+    "position": "G",
+    "avg_ppg": 16.2,
+    "espn_team_name": "Arkansas"
+  },
+  {
+    "name": "Jaylen Nelson",
+    "position": "G",
+    "avg_ppg": 14.4,
+    "espn_team_name": "Arkansas"
+  },
+  {
+    "name": "Jalen Henderson",
+    "position": "F",
+    "avg_ppg": 11.2,
+    "espn_team_name": "Arkansas"
+  },
+  {
+    "name": "Miles Henderson",
+    "position": "F",
+    "avg_ppg": 10.7,
+    "espn_team_name": "Arkansas"
+  },
+  {
+    "name": "Elijah Howard",
+    "position": "C",
+    "avg_ppg": 8.8,
+    "espn_team_name": "Arkansas"
+  },
+  {
+    "name": "DeShawn Adams",
+    "position": "G",
+    "avg_ppg": 16.6,
+    "espn_team_name": "Colorado"
+  },
+  {
+    "name": "Victor Jordan",
+    "position": "G",
+    "avg_ppg": 15.0,
+    "espn_team_name": "Colorado"
+  },
+  {
+    "name": "Chase Smith",
+    "position": "F",
+    "avg_ppg": 11.0,
+    "espn_team_name": "Colorado"
+  },
+  {
+    "name": "Cole Murphy",
+    "position": "F",
+    "avg_ppg": 9.7,
+    "espn_team_name": "Colorado"
+  },
+  {
+    "name": "Ethan Coleman",
+    "position": "C",
+    "avg_ppg": 8.1,
+    "espn_team_name": "Colorado"
+  },
+  {
+    "name": "Jalen Brown",
+    "position": "G",
+    "avg_ppg": 15.9,
+    "espn_team_name": "New Mexico"
+  },
+  {
+    "name": "Trevor Taylor",
+    "position": "G",
+    "avg_ppg": 12.1,
+    "espn_team_name": "New Mexico"
+  },
+  {
+    "name": "Garrett Parker",
+    "position": "F",
+    "avg_ppg": 10.7,
+    "espn_team_name": "New Mexico"
+  },
+  {
+    "name": "Frank Johnson",
+    "position": "F",
+    "avg_ppg": 9.2,
+    "espn_team_name": "New Mexico"
+  },
+  {
+    "name": "Patrick Richardson",
+    "position": "C",
+    "avg_ppg": 6.7,
+    "espn_team_name": "New Mexico"
+  },
+  {
+    "name": "Owen Reed",
+    "position": "G",
+    "avg_ppg": 16.0,
+    "espn_team_name": "Illinois"
+  },
+  {
+    "name": "Jeremiah Hayes",
+    "position": "G",
+    "avg_ppg": 14.3,
+    "espn_team_name": "Illinois"
+  },
+  {
+    "name": "Nathan Green",
+    "position": "F",
+    "avg_ppg": 10.1,
+    "espn_team_name": "Illinois"
+  },
+  {
+    "name": "Owen Jordan",
+    "position": "F",
+    "avg_ppg": 8.7,
+    "espn_team_name": "Illinois"
+  },
+  {
+    "name": "Kevin Brown",
+    "position": "C",
+    "avg_ppg": 3.6,
+    "espn_team_name": "Illinois"
+  },
+  {
+    "name": "Jordan Cooper",
+    "position": "G",
+    "avg_ppg": 15.0,
+    "espn_team_name": "Brigham Young"
+  },
+  {
+    "name": "Caleb Stewart",
+    "position": "G",
+    "avg_ppg": 12.4,
+    "espn_team_name": "Brigham Young"
+  },
+  {
+    "name": "Samuel Coleman",
+    "position": "F",
+    "avg_ppg": 9.8,
+    "espn_team_name": "Brigham Young"
+  },
+  {
+    "name": "Jalen Howard",
+    "position": "F",
+    "avg_ppg": 6.2,
+    "espn_team_name": "Brigham Young"
+  },
+  {
+    "name": "Ethan Johnson",
+    "position": "C",
+    "avg_ppg": 5.0,
+    "espn_team_name": "Brigham Young"
+  },
+  {
+    "name": "Frank Fisher",
+    "position": "G",
+    "avg_ppg": 14.8,
+    "espn_team_name": "South Dakota St"
+  },
+  {
+    "name": "Owen Rogers",
+    "position": "G",
+    "avg_ppg": 11.5,
+    "espn_team_name": "South Dakota St"
+  },
+  {
+    "name": "Jordan Campbell",
+    "position": "F",
+    "avg_ppg": 11.0,
+    "espn_team_name": "South Dakota St"
+  },
+  {
+    "name": "Miles Fisher",
+    "position": "F",
+    "avg_ppg": 4.4,
+    "espn_team_name": "South Dakota St"
+  },
+  {
+    "name": "Khalil Powell",
+    "position": "C",
+    "avg_ppg": 5.9,
+    "espn_team_name": "South Dakota St"
+  },
+  {
+    "name": "Garrett Miller",
+    "position": "G",
+    "avg_ppg": 14.8,
+    "espn_team_name": "Appalachian St"
+  },
+  {
+    "name": "Jeremiah Murphy",
+    "position": "G",
+    "avg_ppg": 10.8,
+    "espn_team_name": "Appalachian St"
+  },
+  {
+    "name": "Jaylen Stewart",
+    "position": "F",
+    "avg_ppg": 9.3,
+    "espn_team_name": "Appalachian St"
+  },
+  {
+    "name": "Zachary Simmons",
+    "position": "F",
+    "avg_ppg": 4.4,
+    "espn_team_name": "Appalachian St"
+  },
+  {
+    "name": "Lucas Morris",
+    "position": "C",
+    "avg_ppg": 2.4,
+    "espn_team_name": "Appalachian St"
+  },
+  {
+    "name": "Logan Morris",
+    "position": "G",
+    "avg_ppg": 14.5,
+    "espn_team_name": "Kent St"
+  },
+  {
+    "name": "Noah Taylor",
+    "position": "G",
+    "avg_ppg": 10.6,
+    "espn_team_name": "Kent St"
+  },
+  {
+    "name": "DeShawn Murphy",
+    "position": "F",
+    "avg_ppg": 7.6,
+    "espn_team_name": "Kent St"
+  },
+  {
+    "name": "Owen Hall",
+    "position": "F",
+    "avg_ppg": 5.5,
+    "espn_team_name": "Kent St"
+  },
+  {
+    "name": "Tre Cooper",
+    "position": "C",
+    "avg_ppg": 2.5,
+    "espn_team_name": "Kent St"
+  },
+  {
+    "name": "Caleb Johnson",
+    "position": "G",
+    "avg_ppg": 13.1,
+    "espn_team_name": "Cal Baptist"
+  },
+  {
+    "name": "Caleb Fisher",
+    "position": "G",
+    "avg_ppg": 9.7,
+    "espn_team_name": "Cal Baptist"
+  },
+  {
+    "name": "Jaylen Foster",
+    "position": "F",
+    "avg_ppg": 5.8,
+    "espn_team_name": "Cal Baptist"
+  },
+  {
+    "name": "Zachary Thompson",
+    "position": "F",
+    "avg_ppg": 5.6,
+    "espn_team_name": "Cal Baptist"
+  },
+  {
+    "name": "Blake Taylor",
+    "position": "C",
+    "avg_ppg": 2.4,
+    "espn_team_name": "Cal Baptist"
+  },
+  {
+    "name": "Elijah Powell",
+    "position": "G",
+    "avg_ppg": 12.2,
+    "espn_team_name": "UNC Asheville"
+  },
+  {
+    "name": "William Johnson",
+    "position": "G",
+    "avg_ppg": 10.3,
+    "espn_team_name": "UNC Asheville"
+  },
+  {
+    "name": "Isaac Miller",
+    "position": "F",
+    "avg_ppg": 6.8,
+    "espn_team_name": "UNC Asheville"
+  },
+  {
+    "name": "Miles Jenkins",
+    "position": "F",
+    "avg_ppg": 5.9,
+    "espn_team_name": "UNC Asheville"
+  },
+  {
+    "name": "Noah Murphy",
+    "position": "C",
+    "avg_ppg": 2.6,
+    "espn_team_name": "UNC Asheville"
+  },
+  {
+    "name": "Lucas Rogers",
+    "position": "G",
+    "avg_ppg": 10.9,
+    "espn_team_name": "Texas Southern"
+  },
+  {
+    "name": "Jordan Mitchell",
+    "position": "G",
+    "avg_ppg": 9.6,
+    "espn_team_name": "Texas Southern"
+  },
+  {
+    "name": "Cameron Anderson",
+    "position": "F",
+    "avg_ppg": 6.2,
+    "espn_team_name": "Texas Southern"
+  },
+  {
+    "name": "Ryan Campbell",
+    "position": "F",
+    "avg_ppg": 5.0,
+    "espn_team_name": "Texas Southern"
+  },
+  {
+    "name": "Malik Martinez",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Texas Southern"
+  },
+  {
+    "name": "Alex Evans",
+    "position": "G",
+    "avg_ppg": 11.0,
+    "espn_team_name": "Stetson"
+  },
+  {
+    "name": "Blake Lee",
+    "position": "G",
+    "avg_ppg": 9.6,
+    "espn_team_name": "Stetson"
+  },
+  {
+    "name": "Noah Parker",
+    "position": "F",
+    "avg_ppg": 6.3,
+    "espn_team_name": "Stetson"
+  },
+  {
+    "name": "Owen Anderson",
+    "position": "F",
+    "avg_ppg": 3.5,
+    "espn_team_name": "Stetson"
+  },
+  {
+    "name": "Chase Foster",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Stetson"
+  },
+  {
+    "name": "Tyler Wilson",
+    "position": "G",
+    "avg_ppg": 10.4,
+    "espn_team_name": "Le Moyne"
+  },
+  {
+    "name": "Mason Baker",
+    "position": "G",
+    "avg_ppg": 8.7,
+    "espn_team_name": "Le Moyne"
+  },
+  {
+    "name": "Nathan Evans",
+    "position": "F",
+    "avg_ppg": 5.8,
+    "espn_team_name": "Le Moyne"
+  },
+  {
+    "name": "William Brown",
+    "position": "F",
+    "avg_ppg": 2.5,
+    "espn_team_name": "Le Moyne"
+  },
+  {
+    "name": "Jalen Lee",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Le Moyne"
+  },
+  {
+    "name": "Ethan Harris",
+    "position": "G",
+    "avg_ppg": 13.9,
+    "espn_team_name": "Wagner"
+  },
+  {
+    "name": "Lucas Adams",
+    "position": "G",
+    "avg_ppg": 11.2,
+    "espn_team_name": "Wagner"
+  },
+  {
+    "name": "Grant Miller",
+    "position": "F",
+    "avg_ppg": 9.7,
+    "espn_team_name": "Wagner"
+  },
+  {
+    "name": "Noah Morris",
+    "position": "F",
+    "avg_ppg": 4.6,
+    "espn_team_name": "Wagner"
+  },
+  {
+    "name": "Jalen Carter",
+    "position": "C",
+    "avg_ppg": 6.5,
+    "espn_team_name": "Wagner"
+  },
+  {
+    "name": "Isaac Simmons",
+    "position": "G",
+    "avg_ppg": 10.9,
+    "espn_team_name": "Texas A&M-CC"
+  },
+  {
+    "name": "Cameron Powell",
+    "position": "G",
+    "avg_ppg": 9.2,
+    "espn_team_name": "Texas A&M-CC"
+  },
+  {
+    "name": "Zachary Wilson",
+    "position": "F",
+    "avg_ppg": 6.8,
+    "espn_team_name": "Texas A&M-CC"
+  },
+  {
+    "name": "Jordan Gray",
+    "position": "F",
+    "avg_ppg": 3.6,
+    "espn_team_name": "Texas A&M-CC"
+  },
+  {
+    "name": "Wesley Carter",
+    "position": "C",
+    "avg_ppg": 2.0,
+    "espn_team_name": "Texas A&M-CC"
+  },
+  {
+    "name": "DeShawn Brown",
+    "position": "G",
+    "avg_ppg": 13.5,
+    "espn_team_name": "Montana St"
+  },
+  {
+    "name": "Jalen Johnson",
+    "position": "G",
+    "avg_ppg": 11.3,
+    "espn_team_name": "Montana St"
+  },
+  {
+    "name": "Tyler Parker",
+    "position": "F",
+    "avg_ppg": 9.5,
+    "espn_team_name": "Montana St"
+  },
+  {
+    "name": "Cole Howard",
+    "position": "F",
+    "avg_ppg": 4.0,
+    "espn_team_name": "Montana St"
+  },
+  {
+    "name": "Jalen Stewart",
+    "position": "C",
+    "avg_ppg": 2.4,
+    "espn_team_name": "Montana St"
+  }
+]
