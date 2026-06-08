@@ -49,10 +49,10 @@ export function PlayerPositionOverride({
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/players/${selectedId}`, {
+      const res = await fetch('/api/commissioner/player/position', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ league_id: leagueId, position, note: note.trim() }),
+        body: JSON.stringify({ player_id: selectedId, league_id: leagueId, position, override_note: note.trim() }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

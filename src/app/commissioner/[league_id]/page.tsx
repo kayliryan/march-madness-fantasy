@@ -16,6 +16,17 @@ import type {
   Player,
 } from '@/lib/types';
 
+const ROUND_STAGES = ['play_in', 'r64', 'r32', 's16', 'e8', 'f4', 'championship'] as const;
+const ROUND_STAGE_LABELS: Record<string, string> = {
+  play_in: 'Play-In',
+  r64: 'Round of 64',
+  r32: 'Round of 32',
+  s16: 'Sweet 16',
+  e8: 'Elite 8',
+  f4: 'Final Four',
+  championship: 'Championship',
+};
+
 export default function CommissionerPage() {
   const params = useParams<{ league_id: string }>();
   const leagueId = params.league_id;
@@ -31,6 +42,17 @@ export default function CommissionerPage() {
   const [forbidden, setForbidden] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
+
+  // Manual score entry state
+  const [scorePlayerId, setScorePlayerId] = useState('');
+  const [scorePlayerSearch, setScorePlayerSearch] = useState('');
+  const [scoreRoundStage, setScoreRoundStage] = useState<typeof ROUND_STAGES[number]>('r64');
+  const [scoreRoundNumber, setScoreRoundNumber] = useState(1);
+  const [scoreGameDate, setScoreGameDate] = useState('');
+  const [scorePoints, setScorePoints] = useState('');
+  const [scoreError, setScoreError] = useState<string | null>(null);
+  const [scoreSuccess, setScoreSuccess] = useState(false);
+  const [savingScore, setSavingScore] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -98,15 +120,15 @@ export default function CommissionerPage() {
     if (!league) return;
     setSavingOrder(true);
     try {
-      await fetch('/api/draft/session', {
+      const res = await fetch('/api/commissioner/draft/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          league_id: leagueId,
-          season: league.season,
-          snake_order: orderedUserIds,
-        }),
+        body: JSON.stringify({ league_id: leagueId, order: orderedUserIds }),
       });
+      if (res.ok) {
+        const data = await res.json();
+        setDraftSession(data.draft_session as DraftSession);
+      }
     } finally {
       setSavingOrder(false);
     }
@@ -127,6 +149,41 @@ export default function CommissionerPage() {
       }
     } finally {
       setSavingSchedule(false);
+    }
+  }
+
+  async function handleManualScore(e: React.FormEvent) {
+    e.preventDefault();
+    if (!scorePlayerId) { setScoreError('Select a player.'); return; }
+    const pts = parseInt(scorePoints, 10);
+    if (isNaN(pts) || pts < 0) { setScoreError('Points must be a non-negative number.'); return; }
+    setScoreError(null);
+    setScoreSuccess(false);
+    setSavingScore(true);
+    try {
+      const res = await fetch(`/api/league/${leagueId}/scores/manual`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_id: scorePlayerId,
+          round_stage: scoreRoundStage,
+          round_number: scoreRoundNumber,
+          game_date: scoreGameDate,
+          points: pts,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setScoreError(err.error ?? 'Failed to save score');
+      } else {
+        setScoreSuccess(true);
+        setScorePlayerId('');
+        setScorePlayerSearch('');
+        setScorePoints('');
+        setScoreGameDate('');
+      }
+    } finally {
+      setSavingScore(false);
     }
   }
 
@@ -202,6 +259,120 @@ export default function CommissionerPage() {
             memberLabels={memberLabels}
             loadBench={loadBench}
           />
+
+          {/* Manual Score Entry */}
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-800">Enter Score Manually</h2>
+            <form onSubmit={handleManualScore} className="flex flex-col gap-3">
+              {/* Player search */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Player</label>
+                <input
+                  type="text"
+                  placeholder="Search by name…"
+                  value={scorePlayerSearch}
+                  onChange={(e) => {
+                    setScorePlayerSearch(e.target.value);
+                    setScorePlayerId('');
+                    setScoreSuccess(false);
+                  }}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                {scorePlayerSearch.trim().length >= 2 && !scorePlayerId && (
+                  <ul className="mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm">
+                    {players
+                      .filter((p) =>
+                        p.name.toLowerCase().includes(scorePlayerSearch.toLowerCase())
+                      )
+                      .slice(0, 8)
+                      .map((p) => (
+                        <li
+                          key={p.id}
+                          className="cursor-pointer px-3 py-2 text-sm hover:bg-indigo-50"
+                          onClick={() => {
+                            setScorePlayerId(p.id);
+                            setScorePlayerSearch(p.name);
+                          }}
+                        >
+                          {p.name} <span className="text-gray-400">({p.position})</span>
+                        </li>
+                      ))}
+                    {players.filter((p) => p.name.toLowerCase().includes(scorePlayerSearch.toLowerCase())).length === 0 && (
+                      <li className="px-3 py-2 text-sm text-gray-400">No players found</li>
+                    )}
+                  </ul>
+                )}
+                {scorePlayerId && (
+                  <p className="mt-1 text-xs text-green-600">Selected: {scorePlayerSearch}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Round</label>
+                  <select
+                    value={scoreRoundStage}
+                    onChange={(e) => setScoreRoundStage(e.target.value as typeof ROUND_STAGES[number])}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {ROUND_STAGES.map((s) => (
+                      <option key={s} value={s}>{ROUND_STAGE_LABELS[s]}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Round #</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={scoreRoundNumber}
+                    onChange={(e) => setScoreRoundNumber(parseInt(e.target.value, 10) || 1)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Game Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={scoreGameDate}
+                    onChange={(e) => setScoreGameDate(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Points</label>
+                  <input
+                    type="number"
+                    min={0}
+                    required
+                    placeholder="0"
+                    value={scorePoints}
+                    onChange={(e) => setScorePoints(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {scoreError && <p className="text-sm text-red-600">{scoreError}</p>}
+              {scoreSuccess && (
+                <p className="text-sm text-green-600">Score saved and leaderboard is updating.</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={savingScore || !scorePlayerId}
+                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {savingScore ? 'Saving…' : 'Save Score'}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

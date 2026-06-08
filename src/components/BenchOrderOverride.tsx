@@ -58,10 +58,11 @@ export function BenchOrderOverride({
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/league/${leagueId}/bench-order`, {
-        method: 'PUT',
+      const res = await fetch('/api/commissioner/bench-order', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          league_id: leagueId,
           user_id: selectedUserId,
           ordered_player_ids: bench.map((p) => p.id),
         }),

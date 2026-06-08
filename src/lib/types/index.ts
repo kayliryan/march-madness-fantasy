@@ -184,6 +184,49 @@ export interface RosterSlot {
   updated_at: string;
 }
 
+// ===== SCORING =====
+export interface GameScore {
+  id: string;
+  player_id: string;
+  season: number;
+  round_stage: string;
+  round_number: number;
+  game_date: string;
+  game_status: 'scheduled' | 'in_progress' | 'final';
+  points: number;
+  source: 'manual' | 'espn_api' | 'sportsradar_api';
+  synced_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScoringEvent {
+  id: string;
+  league_id: string;
+  user_id: string;
+  player_id: string;
+  game_score_id: string;
+  round_stage: string;
+  points_credited: number;
+  roster_slot_id?: string;
+  is_stale: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LeaderboardSnapshot {
+  id: string;
+  league_id: string;
+  user_id: string;
+  total_points: number;
+  active_player_count: number;
+  highest_single_game_points: number;
+  last_computed_at: string;
+  round_stage: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // ===== API REQUEST/RESPONSE TYPES =====
 
 export interface CreateLeagueRequest {
