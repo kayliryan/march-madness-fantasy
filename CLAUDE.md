@@ -17,6 +17,8 @@ It is the source of truth for **what is actually built**. The design intent live
 | UI primitives | Base UI (`@base-ui/react`) + shadcn pattern, `lucide-react` icons |
 | Types/validation | Manual validation in API routes (Zod installed but not yet used) |
 | Node compat | Node 20 — polyfill `globalThis.WebSocket` with `ws` before `createClient` in scripts |
+| AI | `@anthropic-ai/sdk` — draft advisor (Sonnet 4.6), standings narrator (Haiku 4.5) |
+| Email | `resend` — invite emails; falls back to console.log when `RESEND_API_KEY` absent |
 
 ---
 
@@ -28,8 +30,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY       used by supabaseAdmin and seed script
 MOCK_ESPN=true                  ESPNStatsProvider returns fixture data instead of hitting ESPN
 ANTHROPIC_API_KEY               set in ~/.zshrc, bills API credits (not Pro plan)
-RESEND_API_KEY                  present but not yet wired — email invites log to console
-CRON_SECRET                     used by /api/cron/* routes (not yet built)
+RESEND_API_KEY                  wired in POST /api/league/invite; stubs to console.log if absent
+CRON_SECRET                     Authorization: Bearer {CRON_SECRET} on GET /api/cron/sync-scores
+NEXT_PUBLIC_APP_URL             used by Resend email link generation (defaults to localhost:3000)
 DEMO_LEAGUE_ID
 ```
 
@@ -64,7 +67,7 @@ npx eslint src/
 
 ## Database
 
-11 migrations in `supabase/migrations/`, applied in order:
+12 migrations in `supabase/migrations/`, applied in order:
 
 | Migration | What it creates |
 |---|---|
@@ -79,6 +82,7 @@ npx eslint src/
 | 000008 | Auth triggers (create `users` row on signup) |
 | 000009 | Missing RLS policy additions |
 | 000010 | Unique constraints on `espn_team_id` and `espn_player_id` (required for seed upsert) |
+| 000011 | `acquire_cron_lock(job_name, instance_id)` Postgres function — atomic cron lock (Section 3.18 SQL) |
 
 Key RLS rules to know:
 - `players` — publicly readable; writes are service-role only (use `supabaseAdmin`)
@@ -123,7 +127,7 @@ All routes live under `src/app/api/`.
 | POST | `/api/league` | auth | Create league. Returns `{ league, league_member }`. Commissioner row created automatically. |
 | GET | `/api/leagues` | auth | User's leagues (via `league_members`). |
 | GET | `/api/league/[league_id]` | member | League + members + current_member. |
-| POST | `/api/league/invite` | commissioner | Creates invite, stubs email to console. 7-day expiry. |
+| POST | `/api/league/invite` | commissioner | Creates invite, sends Resend email (stubs to console if no API key). 7-day expiry. |
 | GET | `/api/league/invite?token=` | — | Public (uses `supabaseAdmin`). Returns invite + league info. |
 | POST | `/api/league/invite/[token]/accept` | auth | Validates expiry/status, creates `league_members` row, marks invite accepted. |
 | GET | `/api/league/[league_id]/roster/[user_id]` | member | Roster split into active_starters/active_bench/released_starters/released_bench. Each slot includes player details + per_round points. |
@@ -143,6 +147,10 @@ All routes live under `src/app/api/`.
 | PATCH | `/api/commissioner/player/position` | commissioner | Body: `{player_id, league_id, position, override_note}`. |
 | POST | `/api/commissioner/draft/order` | commissioner | Body: `{league_id, order?}`. Omit order for random shuffle. |
 | PATCH | `/api/commissioner/pick/void` | commissioner | Void + replace pick. `replacement_player_id` required (no void-without-replacement in v1). |
+| GET | `/api/cron/sync-scores` | `CRON_SECRET` header | Score sync + bench lock + end_of_round activation. Returns `{ in_progress }` for adaptive polling. |
+| POST | `/api/ai/draft-advisor` | member | Body: `{draft_session_id, question?}`. Returns `{advice}`. Sonnet 4.6, position-aware context. |
+| POST | `/api/ai/standings-narrator` | member | Body: `{league_id}`. Returns `{narrative}`. Haiku 4.5. |
+| POST | `/api/commissioner/injury-sub` | commissioner | Body: `{league_id, injured_player_id, sub_player_id?}`. Requires `injury_sub_enabled=true`. Auto-resolves sub via BenchOrderService if omitted. |
 
 ---
 
@@ -156,8 +164,8 @@ All routes live under `src/app/api/`.
 | `/league/create` | `src/app/league/create/page.tsx` | Commissioner creates league → invite modal |
 | `/league/[league_id]/roster/[user_id]` | `src/app/league/[league_id]/roster/[user_id]/page.tsx` | Roster: active starters/bench, released players, per-round points. |
 | `/league/[league_id]/leaderboard` | `src/app/league/[league_id]/leaderboard/page.tsx` | Standings table with rank, per-round breakdown, links to roster pages. "Scores updating…" banner. |
-| `/commissioner/[league_id]` | `src/app/commissioner/[league_id]/page.tsx` | Draft order, scheduler, position override, bench order override, **manual score entry** |
-| `/draft/[session_id]` | `src/app/draft/[session_id]/page.tsx` | Live draft room: snake order strip, cosmetic countdown, 4s server polling, Realtime subscription, JWT heartbeat. |
+| `/commissioner/[league_id]` | `src/app/commissioner/[league_id]/page.tsx` | Draft order, scheduler, position override, bench order override, injury sub form (when `injury_sub_enabled=true`), manual score entry |
+| `/draft/[session_id]` | `src/app/draft/[session_id]/page.tsx` | Live draft room: snake order strip, cosmetic countdown, 4s server polling, Realtime subscription, JWT heartbeat, AI advisor panel. |
 | `/auth/login` | stub | UI scaffolded, auth not yet wired |
 | `/auth/signup` | stub | UI scaffolded, auth not yet wired |
 
@@ -172,7 +180,7 @@ Middleware (`src/middleware.ts`) redirects unauthenticated users to `/` for `/da
 | `DraftEngine.ts` | `submitPick`, `autoPickForUser`, `validatePositionEnforcement`, `broadcastPickMade` |
 | `ScoreAccumulator.ts` | `runForGames` (incremental, no round_stage advance), `runForLeague` (full recompute, advances round_stage), `runForPlayer` |
 | `BenchOrderService.ts` | `resolveNext(league_id, user_id, open_slot_position, sub_eligibility_matrix)` — Section 5.4 algorithm |
-| `RosterActivationService.ts` | `activateImmediate(league_id, eliminated_team_id)`, `activateBatch(league_ids)` — 3-retry exponential backoff |
+| `RosterActivationService.ts` | `activateImmediate(league_id, eliminated_team_id)`, `activateBatch(league_ids, next_round_stage)` — 3-retry exponential backoff |
 
 **ScoreAccumulator important invariants:**
 - All round comparisons use `ROUND_STAGE_ORDER.indexOf()` — never string comparison
@@ -230,11 +238,9 @@ All DB-mapped types live here: `User`, `Team`, `Player`, `League`, `LeagueSettin
 
 ---
 
-## What's Not Built Yet (Phase 4+)
+## What's Not Built Yet (Phase 5+)
 
-- **Vercel Cron job** — `GET /api/cron/sync-scores` (protected by `CRON_SECRET`): polls ESPNStatsProvider, upserts `game_scores`, calls `ScoreAccumulator.runForGames`. This is what drives live score updates during the tournament.
-- **RosterActivationService wiring** — `activateImmediate` and `activateBatch` are implemented but have no callers yet; need to be triggered by the elimination sync job.
-- **Auth flows** — login/signup pages are UI stubs only
-- **Email** — `RESEND_API_KEY` is in env but invite emails only log to console
+- **Auth flows** — login/signup pages are UI stubs only; `src/app/auth/login` and `src/app/auth/signup` need real Supabase Auth wiring
 - **Demo league** — `DEMO_LEAGUE_ID` in env, but `/demo/*` routes not built
 - **Leagues list page** — `/leagues` route linked from dashboard but not created
+- **Vercel cron schedule** — `GET /api/cron/sync-scores` is built but not yet registered in `vercel.json`; adaptive 30s polling when games are `in_progress` requires a second cron entry or external scheduler
