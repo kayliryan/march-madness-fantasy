@@ -33,7 +33,8 @@ ANTHROPIC_API_KEY               set in ~/.zshrc, bills API credits (not Pro plan
 RESEND_API_KEY                  wired in POST /api/league/invite; stubs to console.log if absent
 CRON_SECRET                     Authorization: Bearer {CRON_SECRET} on GET /api/cron/sync-scores
 NEXT_PUBLIC_APP_URL             used by Resend email link generation (defaults to localhost:3000)
-DEMO_LEAGUE_ID
+DEMO_LEAGUE_ID                  used by seed script; same UUID as NEXT_PUBLIC_DEMO_LEAGUE_ID
+NEXT_PUBLIC_DEMO_LEAGUE_ID      exposed to client — used by /demo/league page
 ```
 
 ---
@@ -52,6 +53,9 @@ npx supabase migration up
 
 # Seed players/teams (safe to re-run — idempotent upsert)
 npx tsx --env-file=.env.local scripts/seed-players-2026.ts
+
+# Seed demo league (run after seed-players; idempotent)
+npx tsx --env-file=.env.local scripts/seed-demo-league.ts
 
 # Dev server
 npm run dev        # http://localhost:3000
@@ -150,7 +154,9 @@ All routes live under `src/app/api/`.
 | GET | `/api/cron/sync-scores` | `CRON_SECRET` header | Score sync + bench lock + end_of_round activation. Returns `{ in_progress }` for adaptive polling. |
 | POST | `/api/ai/draft-advisor` | member | Body: `{draft_session_id, question?}`. Returns `{advice}`. Sonnet 4.6, position-aware context. |
 | POST | `/api/ai/standings-narrator` | member | Body: `{league_id}`. Returns `{narrative}`. Haiku 4.5. |
+| POST | `/api/ai/mock-draft-advisor` | anon auth | Body: `{available_players, my_roster, pick_number, total_teams, unfilled_starters, unfilled_bench, question?}`. Stateless — no draft_session_id. Sonnet 4.6. |
 | POST | `/api/commissioner/injury-sub` | commissioner | Body: `{league_id, injured_player_id, sub_player_id?}`. Requires `injury_sub_enabled=true`. Auto-resolves sub via BenchOrderService if omitted. |
+| POST | `/api/demo/session` | — | Body: `{user_id}`. Verifies user is anonymous, calls set-demo-claim Edge Function, falls back to direct admin update. Sets `app_metadata.role = demo_viewer`. |
 
 ---
 
@@ -166,8 +172,12 @@ All routes live under `src/app/api/`.
 | `/league/[league_id]/leaderboard` | `src/app/league/[league_id]/leaderboard/page.tsx` | Standings table with rank, per-round breakdown, links to roster pages. "Scores updating…" banner. |
 | `/commissioner/[league_id]` | `src/app/commissioner/[league_id]/page.tsx` | Draft order, scheduler, position override, bench order override, injury sub form (when `injury_sub_enabled=true`), manual score entry |
 | `/draft/[session_id]` | `src/app/draft/[session_id]/page.tsx` | Live draft room: snake order strip, cosmetic countdown, 4s server polling, Realtime subscription, JWT heartbeat, AI advisor panel. |
-| `/auth/login` | stub | UI scaffolded, auth not yet wired |
-| `/auth/signup` | stub | UI scaffolded, auth not yet wired |
+| `/auth/login` | `src/app/auth/login/page.tsx` | Email+password + Google OAuth. Calls `supabase.auth.signInWithPassword` / `signInWithOAuth`. |
+| `/auth/signup` | `src/app/auth/signup/page.tsx` | Display name + email + password. Shows `checkEmail` screen after signup. Google OAuth. |
+| `/auth/callback` | `src/app/auth/callback/route.ts` | GET route — exchanges OAuth/email-confirm code for session via `exchangeCodeForSession`. |
+| `/leagues` | `src/app/leagues/page.tsx` | Lists user's leagues. Redirects to login on 401. |
+| `/demo/league` | `src/app/demo/league/page.tsx` | Read-only standings + roster view for DEMO_LEAGUE_ID. Signs in anonymously if needed. No auth required to view (is_demo RLS). |
+| `/demo/draft` | `src/app/demo/draft/page.tsx` | Mock draft simulator: 5 teams (user + 4 AI), client-side only, zero DB writes. AI advisor via `/api/ai/mock-draft-advisor`. |
 
 Middleware (`src/middleware.ts`) redirects unauthenticated users to `/` for `/dashboard`, `/league/*`, `/draft/*`, `/commissioner/*`.
 
@@ -216,6 +226,18 @@ Middleware (`src/middleware.ts`) redirects unauthenticated users to `/` for `/da
 
 ---
 
+## Supabase Edge Functions (`supabase/functions/`)
+
+Edge Functions run on Deno — excluded from the main tsconfig (they have their own Deno types). Deploy with `npx supabase functions deploy <name>`.
+
+| Function | Purpose |
+|---|---|
+| `set-demo-claim` | Sets `app_metadata.role = demo_viewer` for an anonymous user. Called by `POST /api/demo/session` with the service role key. Accepts service-role Bearer token (no user check) or user Bearer token (validates token matches user_id). |
+
+**demo_viewer JWT claim:** Supabase promotes `app_metadata` into the JWT root, so `auth.jwt() ->> 'role'` reads from `app_metadata.role`. RLS policies on draft_picks, roster_slots, draft_queues, bench_orders all include `AND NOT (auth.jwt() ->> 'role' = 'demo_viewer')` to block mutations from demo users.
+
+---
+
 ## Data & Fixtures
 
 - `src/mocks/fixtures/espn/teams-2026.json` — 68 NCAA teams (4 regions × 16 seeds + 4 First Four play-ins)
@@ -238,9 +260,9 @@ All DB-mapped types live here: `User`, `Team`, `Player`, `League`, `LeagueSettin
 
 ---
 
-## What's Not Built Yet (Phase 5+)
+## What's Not Built Yet (Phase 6+)
 
-- **Auth flows** — login/signup pages are UI stubs only; `src/app/auth/login` and `src/app/auth/signup` need real Supabase Auth wiring
-- **Demo league** — `DEMO_LEAGUE_ID` in env, but `/demo/*` routes not built
-- **Leagues list page** — `/leagues` route linked from dashboard but not created
-- **Vercel cron schedule** — `GET /api/cron/sync-scores` is built but not yet registered in `vercel.json`; adaptive 30s polling when games are `in_progress` requires a second cron entry or external scheduler
+- **Demo Edge Function deploy** — `supabase/functions/set-demo-claim` must be deployed to Supabase (`npx supabase functions deploy set-demo-claim`); in local dev the API route falls back to direct `supabaseAdmin.auth.admin.updateUserById()` when the Edge Function isn't running
+- **Adaptive cron polling** — `vercel.json` runs `/api/cron/sync-scores` every 5 minutes; 30s polling during live games requires an external scheduler or second cron entry (design doc Section 4.7)
+- **Landing page** — `/` is a placeholder; needs tournament info, demo CTA, feature highlights
+- **README / deploy docs** — setup instructions for Vercel + Supabase production deploy
