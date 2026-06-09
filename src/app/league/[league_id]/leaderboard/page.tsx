@@ -52,6 +52,8 @@ export default function LeaderboardPage() {
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [narrative, setNarrative] = useState<string | null>(null);
+  const [narrativeLoading, setNarrativeLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -96,7 +98,38 @@ export default function LeaderboardPage() {
       )}
 
       <div className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">Leaderboard</h1>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <h1 className="text-2xl font-bold text-gray-900">Leaderboard</h1>
+          <button
+            onClick={async () => {
+              setNarrativeLoading(true);
+              setNarrative(null);
+              try {
+                const res = await fetch('/api/ai/standings-narrator', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ league_id }),
+                });
+                if (res.ok) {
+                  const json = await res.json();
+                  setNarrative(json.narrative);
+                }
+              } finally {
+                setNarrativeLoading(false);
+              }
+            }}
+            disabled={narrativeLoading}
+            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 shrink-0"
+          >
+            {narrativeLoading ? 'Generating…' : 'AI Recap'}
+          </button>
+        </div>
+
+        {narrative && (
+          <div className="mb-6 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 leading-relaxed">
+            {narrative}
+          </div>
+        )}
 
         {data.standings.length === 0 ? (
           <p className="text-center text-gray-400 mt-12">No scores yet — check back after the tournament starts.</p>

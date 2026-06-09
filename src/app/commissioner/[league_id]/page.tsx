@@ -54,6 +54,15 @@ export default function CommissionerPage() {
   const [scoreSuccess, setScoreSuccess] = useState(false);
   const [savingScore, setSavingScore] = useState(false);
 
+  // Injury sub state
+  const [injuredPlayerId, setInjuredPlayerId] = useState('');
+  const [injuredPlayerSearch, setInjuredPlayerSearch] = useState('');
+  const [subPlayerId, setSubPlayerId] = useState('');
+  const [subPlayerSearch, setSubPlayerSearch] = useState('');
+  const [injuryError, setInjuryError] = useState<string | null>(null);
+  const [injurySuccess, setInjurySuccess] = useState<string | null>(null);
+  const [savingInjurySub, setSavingInjurySub] = useState(false);
+
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -187,6 +196,37 @@ export default function CommissionerPage() {
     }
   }
 
+  async function handleInjurySub(e: React.FormEvent) {
+    e.preventDefault();
+    if (!injuredPlayerId) { setInjuryError('Select the injured player.'); return; }
+    setInjuryError(null);
+    setInjurySuccess(null);
+    setSavingInjurySub(true);
+    try {
+      const body: Record<string, string> = { league_id: leagueId, injured_player_id: injuredPlayerId };
+      if (subPlayerId) body.sub_player_id = subPlayerId;
+      const res = await fetch('/api/commissioner/injury-sub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setInjuryError(err.error ?? 'Failed to process injury sub');
+      } else {
+        const data = await res.json();
+        const subName = players.find((p) => p.id === data.sub_player_id)?.name ?? data.sub_player_id;
+        setInjurySuccess(`Substitution complete. ${subName} is now in the lineup.`);
+        setInjuredPlayerId('');
+        setInjuredPlayerSearch('');
+        setSubPlayerId('');
+        setSubPlayerSearch('');
+      }
+    } finally {
+      setSavingInjurySub(false);
+    }
+  }
+
   // Resolve a participant's bench (pre-draft this is usually empty)
   const loadBench = useCallback(
     async (userId: string): Promise<Player[]> => {
@@ -259,6 +299,71 @@ export default function CommissionerPage() {
             memberLabels={memberLabels}
             loadBench={loadBench}
           />
+
+          {/* Injury Substitution */}
+          {league?.settings.injury_sub_enabled && (
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-lg font-semibold text-gray-800">Injury Substitution</h2>
+              <form onSubmit={handleInjurySub} className="flex flex-col gap-3">
+                {/* Injured player */}
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Injured Player</label>
+                  <input
+                    type="text"
+                    placeholder="Search by name…"
+                    value={injuredPlayerSearch}
+                    onChange={(e) => { setInjuredPlayerSearch(e.target.value); setInjuredPlayerId(''); setInjurySuccess(null); }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {injuredPlayerSearch.trim().length >= 2 && !injuredPlayerId && (
+                    <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm">
+                      {players.filter((p) => p.name.toLowerCase().includes(injuredPlayerSearch.toLowerCase())).slice(0, 6).map((p) => (
+                        <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-indigo-50"
+                          onClick={() => { setInjuredPlayerId(p.id); setInjuredPlayerSearch(p.name); }}>
+                          {p.name} <span className="text-gray-400">({p.position})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {injuredPlayerId && <p className="mt-1 text-xs text-green-600">Selected: {injuredPlayerSearch}</p>}
+                </div>
+
+                {/* Optional explicit sub */}
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Sub Player <span className="font-normal text-gray-400">(leave blank to auto-select from bench)</span></label>
+                  <input
+                    type="text"
+                    placeholder="Search by name…"
+                    value={subPlayerSearch}
+                    onChange={(e) => { setSubPlayerSearch(e.target.value); setSubPlayerId(''); }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {subPlayerSearch.trim().length >= 2 && !subPlayerId && (
+                    <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm">
+                      {players.filter((p) => p.name.toLowerCase().includes(subPlayerSearch.toLowerCase())).slice(0, 6).map((p) => (
+                        <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-indigo-50"
+                          onClick={() => { setSubPlayerId(p.id); setSubPlayerSearch(p.name); }}>
+                          {p.name} <span className="text-gray-400">({p.position})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {subPlayerId && <p className="mt-1 text-xs text-green-600">Selected: {subPlayerSearch}</p>}
+                </div>
+
+                {injuryError && <p className="text-sm text-red-600">{injuryError}</p>}
+                {injurySuccess && <p className="text-sm text-green-600">{injurySuccess}</p>}
+
+                <button
+                  type="submit"
+                  disabled={savingInjurySub || !injuredPlayerId}
+                  className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                >
+                  {savingInjurySub ? 'Processing…' : 'Apply Injury Sub'}
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* Manual Score Entry */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">

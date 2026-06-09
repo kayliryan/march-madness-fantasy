@@ -1,15 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/client';
+import { Resend } from 'resend';
 import type { LeagueInvite, SendInviteRequest, SendInviteResponse } from '@/lib/types';
 
 const INVITE_EXPIRY_DAYS = 7;
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-// Stub email sender — logs to console for now (real Resend integration deferred to a later phase)
-function sendInviteEmail(email: string, league_name: string, token: string) {
-  console.log(
-    `[stub email] Invite sent to ${email} for league "${league_name}" — accept at /league/invite/${token}`
-  );
+async function sendInviteEmail(email: string, league_name: string, token: string): Promise<void> {
+  const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/league/invite/${token}`;
+
+  if (!resend) {
+    console.log(`[email stub] Invite to ${email} for "${league_name}" — ${acceptUrl}`);
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: 'March Madness Fantasy <noreply@marchfantasy.app>',
+    to: email,
+    subject: `You're invited to join ${league_name} on March Madness Fantasy`,
+    html: `
+      <p>You've been invited to join <strong>${league_name}</strong> on March Madness Fantasy.</p>
+      <p><a href="${acceptUrl}" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">Accept Invitation</a></p>
+      <p style="color:#6b7280;font-size:12px;">This invite expires in ${INVITE_EXPIRY_DAYS} days. If you didn't expect this, you can ignore it.</p>
+    `,
+  });
+
+  if (error) {
+    console.error('[resend] Failed to send invite email:', error);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -84,7 +103,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
     }
 
-    sendInviteEmail(body.email, league.name, token);
+    await sendInviteEmail(body.email, league.name, token);
 
     const response: SendInviteResponse = { invite: invite as LeagueInvite };
     return NextResponse.json(response, { status: 201 });

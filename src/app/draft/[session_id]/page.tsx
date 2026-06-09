@@ -39,6 +39,11 @@ export default function DraftRoomPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // AI advisor state
+  const [advisorQuestion, setAdvisorQuestion] = useState('');
+  const [advisorAdvice, setAdvisorAdvice] = useState<string | null>(null);
+  const [advisorLoading, setAdvisorLoading] = useState(false);
+
   // ── Fetch/refresh state from server ────────────────────────────────────────
   const fetchState = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -130,6 +135,33 @@ export default function DraftRoomPage() {
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [fetchState]);
+
+  // ── AI advisor ─────────────────────────────────────────────────────────────
+  async function handleAdvisorAsk() {
+    if (advisorLoading) return;
+    setAdvisorLoading(true);
+    setAdvisorAdvice(null);
+    try {
+      const res = await fetch('/api/ai/draft-advisor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          draft_session_id: session_id,
+          question: advisorQuestion.trim() || undefined,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAdvisorAdvice(data.advice);
+      } else {
+        setAdvisorAdvice('Could not get advice right now. Try again.');
+      }
+    } catch {
+      setAdvisorAdvice('Could not get advice right now. Try again.');
+    } finally {
+      setAdvisorLoading(false);
+    }
+  }
 
   // ── Submit a manual pick ────────────────────────────────────────────────────
   async function handlePick(player_id: string) {
@@ -305,6 +337,27 @@ export default function DraftRoomPage() {
           {/* Right column: queue + picks log */}
           <div className="flex flex-col gap-4">
             <DraftQueue sessionId={session_id} />
+
+            {/* AI Draft Advisor */}
+            <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-4 shadow-sm">
+              <h2 className="mb-2 text-base font-semibold text-indigo-900">AI Draft Advisor</h2>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ask anything… (optional)"
+                  value={advisorQuestion}
+                  onChange={(e) => setAdvisorQuestion(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdvisorAsk()}
+                  className="flex-1 rounded-md border border-indigo-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+                <Button size="sm" onClick={handleAdvisorAsk} disabled={advisorLoading}>
+                  {advisorLoading ? '…' : 'Ask'}
+                </Button>
+              </div>
+              {advisorAdvice && (
+                <p className="mt-2 text-sm text-indigo-800 leading-relaxed">{advisorAdvice}</p>
+              )}
+            </div>
 
             {/* Picks log */}
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">

@@ -154,8 +154,10 @@ export const RosterActivationService = {
 
   /**
    * Batch activation at round end — used when activation_timing === 'end_of_round'.
+   * next_round_stage: the round that just started (e.g. 'r32' when r64 completed). Incoming
+   * bench players are acquired at this stage so they score from the new round onwards.
    */
-  async activateBatch(league_ids: string[]): Promise<void> {
+  async activateBatch(league_ids: string[], next_round_stage: string): Promise<void> {
     for (const league_id of league_ids) {
       const { data: leagueRow } = await supabaseAdmin
         .from('leagues')
@@ -190,8 +192,6 @@ export const RosterActivationService = {
 
         if (existingActive) continue; // Already replaced
 
-        const current_round_stage = slot.released_at_round_stage!;
-
         const activated_player_id = await withRetry(
           () =>
             activateSlot(
@@ -200,7 +200,7 @@ export const RosterActivationService = {
               slot.id,
               slot.slot_position as 'G' | 'F' | 'C',
               slot.slot_key,
-              current_round_stage,
+              next_round_stage,
               settings
             ),
           `activateBatch league=${league_id} user=${slot.user_id} slot=${slot.slot_key}`
