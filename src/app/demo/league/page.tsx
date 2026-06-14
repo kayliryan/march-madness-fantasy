@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
+import { useDemoSession } from '@/lib/context/DemoSessionContext';
 
-const DEMO_LEAGUE_ID = process.env.NEXT_PUBLIC_DEMO_LEAGUE_ID ?? '00000000-demo-0000-0000-000000000001';
+const DEMO_LEAGUE_ID = process.env.NEXT_PUBLIC_DEMO_LEAGUE_ID ?? '00000000-0000-0000-0000-000000000001';
 const ROUND_LABELS: Record<string, string> = {
   play_in: 'Play-In', r64: 'R64', r32: 'R32', s16: 'S16', e8: 'E8', f4: 'F4', championship: 'Champ',
 };
@@ -36,6 +37,7 @@ export default function DemoLeaguePage() {
   const [roster, setRoster] = useState<RosterSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [rosterLoading, setRosterLoading] = useState(false);
+  const { setDemoSession } = useDemoSession();
 
   useEffect(() => {
     async function load() {
@@ -43,13 +45,20 @@ export default function DemoLeaguePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         const { data: anonData } = await supabase.auth.signInAnonymously();
-        if (anonData.user) {
+        if (anonData.user && anonData.session) {
           // Fire-and-forget: attach demo_viewer claim so write RLS blocks mutations
           fetch('/api/demo/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id: anonData.user.id }),
           }).catch(() => {});
+
+          // Both demo flows write to this same shared slot — most recent token always overwrites
+          const { session } = anonData;
+          const expires_at = session.expires_at
+            ? new Date(session.expires_at * 1000).toISOString()
+            : new Date(Date.now() + session.expires_in * 1000).toISOString();
+          setDemoSession({ access_token: session.access_token, expires_at });
         }
       }
 

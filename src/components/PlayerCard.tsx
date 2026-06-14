@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { InjuryBadge } from '@/components/InjuryBadge';
+import { TeamBadge } from '@/components/TeamBadge';
 import type { Player } from '@/lib/types';
 
 interface PlayerCardProps {
@@ -31,28 +32,18 @@ export function PlayerCard({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-opacity',
+        'flex flex-col gap-3 rounded-lg border border-neutral-800 bg-neutral-900 p-4 shadow-sm transition-opacity',
         isDrafted && 'opacity-50'
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-semibold text-gray-900">{player.name}</p>
-          <p className="text-sm text-gray-500">
-            {POSITION_LABELS[player.position] ?? player.position}
-            {team && (
-              <>
-                {' · '}
-                {team.name}
-                {typeof team.seed === 'number' && (
-                  <span className="text-gray-400"> (#{team.seed} {team.region})</span>
-                )}
-              </>
-            )}
-          </p>
+          <p className="font-semibold text-white">{player.name}</p>
+          <p className="text-sm text-neutral-500">{POSITION_LABELS[player.position] ?? player.position}</p>
+          {team && <div className="mt-1.5"><TeamBadge team={team} /></div>}
         </div>
         {isDrafted && (
-          <span className="shrink-0 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-600">
+          <span className="shrink-0 rounded-full bg-neutral-800 px-2 py-0.5 text-xs font-semibold text-neutral-400">
             Taken
           </span>
         )}
@@ -60,8 +51,8 @@ export function PlayerCard({
 
       <div className="flex items-center justify-between gap-2">
         <div>
-          <p className="text-2xl font-bold text-gray-900">{player.avg_ppg.toFixed(1)}</p>
-          <p className="text-xs text-gray-500">avg PPG</p>
+          <p className="text-2xl font-bold text-white">{player.avg_ppg.toFixed(1)}</p>
+          <p className="text-xs text-neutral-500">avg PPG</p>
         </div>
         <InjuryBadge
           status={player.injury_status}

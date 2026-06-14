@@ -17,6 +17,19 @@ export const ROUND_STAGE_ORDER = [
 export type RoundStage = (typeof ROUND_STAGE_ORDER)[number];
 
 /**
+ * Display labels for round stages (excludes 'draft')
+ */
+export const ROUND_LABELS: Record<string, string> = {
+  play_in: 'Play-In',
+  r64: 'R64',
+  r32: 'R32',
+  s16: 'S16',
+  e8: 'E8',
+  f4: 'F4',
+  championship: 'Champ',
+};
+
+/**
  * Get the index of a round stage for comparison
  */
 export function getRoundStageIndex(stage: RoundStage): number {

@@ -76,18 +76,18 @@ export function BenchOrderOverride({
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-3 text-lg font-semibold text-gray-900">Override Bench Order</h3>
+    <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-5 shadow-sm">
+      <h3 className="mb-3 text-lg font-semibold text-white">Override Bench Order</h3>
 
       <div className="mb-4 flex flex-col gap-1.5">
-        <label htmlFor="bench-participant" className="text-sm font-medium text-gray-700">
+        <label htmlFor="bench-participant" className="text-sm font-medium text-neutral-300">
           Participant
         </label>
         <select
           id="bench-participant"
           value={selectedUserId}
           onChange={(e) => setSelectedUserId(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+          className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
         >
           <option value="">Select a participant…</option>
           {members.map((m) => (
@@ -99,23 +99,23 @@ export function BenchOrderOverride({
       </div>
 
       {loading ? (
-        <p className="py-4 text-sm text-gray-500">Loading bench…</p>
+        <p className="py-4 text-sm text-neutral-500">Loading bench…</p>
       ) : selectedUserId && bench.length === 0 ? (
-        <p className="py-4 text-sm text-gray-500">This participant has no bench players yet.</p>
+        <p className="py-4 text-sm text-neutral-500">This participant has no bench players yet.</p>
       ) : (
         bench.length > 0 && (
           <ol className="mb-4 flex flex-col gap-2">
             {bench.map((player, index) => (
               <li
                 key={player.id}
-                className="flex items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
+                className="flex items-center gap-3 rounded-md border border-neutral-800 bg-black px-3 py-2"
               >
-                <span className="flex size-6 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-600">
+                <span className="flex size-6 items-center justify-center rounded-full bg-neutral-700 text-xs font-bold text-neutral-300">
                   {index + 1}
                 </span>
-                <span className="flex-1 text-sm text-gray-800">
+                <span className="flex-1 text-sm text-neutral-200">
                   {player.name}
-                  <span className="text-gray-400"> · {player.position}</span>
+                  <span className="text-neutral-500"> · {player.position}</span>
                 </span>
                 <span className="flex gap-1">
                   <button
@@ -123,7 +123,7 @@ export function BenchOrderOverride({
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
                     aria-label="Move up"
-                    className="rounded p-1 text-gray-400 hover:bg-gray-200 disabled:opacity-30"
+                    className="rounded p-1 text-neutral-500 hover:bg-neutral-700 disabled:opacity-30"
                   >
                     <ArrowUp className="size-4" />
                   </button>
@@ -132,7 +132,7 @@ export function BenchOrderOverride({
                     onClick={() => move(index, 1)}
                     disabled={index === bench.length - 1}
                     aria-label="Move down"
-                    className="rounded p-1 text-gray-400 hover:bg-gray-200 disabled:opacity-30"
+                    className="rounded p-1 text-neutral-500 hover:bg-neutral-700 disabled:opacity-30"
                   >
                     <ArrowDown className="size-4" />
                   </button>
@@ -143,7 +143,7 @@ export function BenchOrderOverride({
         )
       )}
 
-      {message && <p className="mb-3 text-sm text-gray-600">{message}</p>}
+      {message && <p className="mb-3 text-sm text-neutral-300">{message}</p>}
 
       {bench.length > 0 && (
         <Button onClick={handleSave} disabled={saving}>

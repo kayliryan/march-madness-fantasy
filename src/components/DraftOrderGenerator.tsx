@@ -51,8 +51,8 @@ export function DraftOrderGenerator({
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-3 text-lg font-semibold text-gray-900">Draft Order</h3>
+    <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-5 shadow-sm">
+      <h3 className="mb-3 text-lg font-semibold text-white">Draft Order</h3>
 
       <div className="mb-4 flex gap-2">
         {(['random', 'manual'] as const).map((m) => (
@@ -63,8 +63,8 @@ export function DraftOrderGenerator({
             className={cn(
               'rounded-full border px-3 py-1 text-sm font-medium capitalize transition-colors',
               mode === m
-                ? 'border-indigo-600 bg-indigo-600 text-white'
-                : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                ? 'border-yellow-400 bg-yellow-400 text-black'
+                : 'border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800'
             )}
           >
             {m}
@@ -81,12 +81,12 @@ export function DraftOrderGenerator({
         {order.map((userId, index) => (
           <li
             key={userId}
-            className="flex items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
+            className="flex items-center gap-3 rounded-md border border-neutral-800 bg-black px-3 py-2"
           >
-            <span className="flex size-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+            <span className="flex size-6 items-center justify-center rounded-full bg-yellow-400/20 text-xs font-bold text-yellow-400">
               {index + 1}
             </span>
-            <span className="flex-1 text-sm text-gray-800">{label(userId)}</span>
+            <span className="flex-1 text-sm text-neutral-200">{label(userId)}</span>
             {mode === 'manual' && (
               <span className="flex gap-1">
                 <button
@@ -94,7 +94,7 @@ export function DraftOrderGenerator({
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
                   aria-label="Move up"
-                  className="rounded p-1 text-gray-400 hover:bg-gray-200 disabled:opacity-30"
+                  className="rounded p-1 text-neutral-500 hover:bg-neutral-700 disabled:opacity-30"
                 >
                   <ArrowUp className="size-4" />
                 </button>
@@ -103,7 +103,7 @@ export function DraftOrderGenerator({
                   onClick={() => move(index, 1)}
                   disabled={index === order.length - 1}
                   aria-label="Move down"
-                  className="rounded p-1 text-gray-400 hover:bg-gray-200 disabled:opacity-30"
+                  className="rounded p-1 text-neutral-500 hover:bg-neutral-700 disabled:opacity-30"
                 >
                   <ArrowDown className="size-4" />
                 </button>

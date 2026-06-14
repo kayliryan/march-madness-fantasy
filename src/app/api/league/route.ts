@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS: LeagueSettings = {
   bench_lock_mode: 'before_first_game',
   activation_timing: 'immediate',
   injury_sub_enabled: false,
+  // injury_sub_reversible is deferred — has no effect in current implementation.
   injury_sub_reversible: false,
   tiebreaker_strategies: ['highest_single_active_game'],
   scoring_includes_play_in: true,

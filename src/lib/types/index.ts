@@ -62,6 +62,9 @@ export interface LeagueSettings {
   bench_lock_mode: 'before_first_game' | 'always_editable';
   activation_timing: 'immediate' | 'end_of_round';
   injury_sub_enabled: boolean;
+  // DEFAULT false. Not yet implemented — no re-activation endpoint reads this
+  // setting. When implemented, a re-activation endpoint should check this
+  // before allowing an injured player to return to their roster slot.
   injury_sub_reversible: boolean;
   tiebreaker_strategies: string[];
   scoring_includes_play_in: boolean;
@@ -280,6 +283,10 @@ export interface GetPlayersResponse {
   total: number;
 }
 
+export interface GetTeamsResponse {
+  teams: Pick<Team, 'id' | 'name' | 'seed' | 'region'>[];
+}
+
 export interface GetLeaguesResponse {
   leagues: League[];
 }
@@ -288,4 +295,9 @@ export interface GetLeagueResponse {
   league: League;
   members: LeagueMember[];
   current_member: LeagueMember;
+  draft_session_id: string | null;
+  bench_lock_deadline: string | null;
+  draft_status: 'scheduled' | 'live' | 'complete' | 'cancelled' | null;
+  scheduled_start: string | null;
+  season_in_progress: boolean;
 }

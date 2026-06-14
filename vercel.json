@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/sync-scores",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/demo-cleanup",
+      "schedule": "0 3 * * *"
     }
   ]
 }

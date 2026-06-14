@@ -1,7 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase/client';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
-import type { LeagueSettings } from '@/lib/types';
+import type { GameScore, LeagueSettings } from '@/lib/types';
+
+// PostgREST/Kong enforce a request-line length limit, so .in() filters with large
+// ID arrays (e.g. a full-season game_scores lookup) must be chunked.
+const IN_FILTER_CHUNK_SIZE = 100;
 
 export const ScoreAccumulator = {
   /**
@@ -16,12 +20,16 @@ export const ScoreAccumulator = {
   async _runForGamesInternal(game_score_ids: string[], updateRoundStage: boolean): Promise<void> {
     if (game_score_ids.length === 0) return;
 
-    const { data: gameScores } = await supabaseAdmin
-      .from('game_scores')
-      .select('*')
-      .in('id', game_score_ids);
+    const gameScores: GameScore[] = [];
+    for (let i = 0; i < game_score_ids.length; i += IN_FILTER_CHUNK_SIZE) {
+      const { data } = await supabaseAdmin
+        .from('game_scores')
+        .select('*')
+        .in('id', game_score_ids.slice(i, i + IN_FILTER_CHUNK_SIZE));
+      if (data) gameScores.push(...data);
+    }
 
-    if (!gameScores?.length) return;
+    if (!gameScores.length) return;
 
     // Track which (league_id, user_id) pairs need snapshot updates
     const affectedPairs = new Set<string>();
@@ -99,6 +107,7 @@ export const ScoreAccumulator = {
   /**
    * Full recompute for a league — used when scoring-affecting settings change.
    * Clears existing scoring_events and rebuilds from game_scores.
+   * runForLeague() always performs a full recompute regardless of is_stale.
    */
   async runForLeague(league_id: string): Promise<void> {
     // Mark all existing events stale so "updating" banner shows immediately

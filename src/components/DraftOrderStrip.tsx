@@ -57,10 +57,10 @@ export function DraftOrderStrip({
     : null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-800 bg-neutral-900 shadow-[0_-2px_8px_rgba(0,0,0,0.4)]">
       <div className="mx-auto flex max-w-7xl items-center gap-0 overflow-x-auto px-4 py-2">
         {/* Order label */}
-        <span className="mr-3 shrink-0 text-xs font-medium text-gray-400 uppercase tracking-wide">
+        <span className="mr-3 shrink-0 text-xs font-medium text-neutral-500 uppercase tracking-wide">
           Pick order
         </span>
 
@@ -75,18 +75,18 @@ export function DraftOrderStrip({
               className={cn(
                 'mx-0.5 flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-sm transition-colors',
                 isActive
-                  ? 'bg-indigo-600 font-semibold text-white ring-2 ring-indigo-300'
+                  ? 'bg-yellow-400 font-semibold text-black ring-2 ring-yellow-300'
                   : isMe
-                    ? 'bg-indigo-50 font-medium text-indigo-700 ring-1 ring-indigo-200'
-                    : 'bg-gray-100 text-gray-600'
+                    ? 'bg-yellow-400/10 font-medium text-yellow-400 ring-1 ring-yellow-400/30'
+                    : 'bg-neutral-800 text-neutral-300'
               )}
             >
               {isActive && (
-                <span className="inline-block size-2 animate-pulse rounded-full bg-white opacity-80" />
+                <span className="inline-block size-2 animate-pulse rounded-full bg-black opacity-80" />
               )}
               <span>{label(user_id, display_names)}</span>
               {isMe && !isActive && (
-                <span className="text-xs text-indigo-400">you</span>
+                <span className="text-xs text-yellow-200">you</span>
               )}
             </div>
           );
@@ -94,7 +94,7 @@ export function DraftOrderStrip({
 
         {/* "X picks until your turn" counter */}
         {until !== null && (
-          <span className="ml-4 shrink-0 text-sm text-gray-500">
+          <span className="ml-4 shrink-0 text-sm text-neutral-500">
             {until === 0
               ? 'Your pick'
               : `${until} pick${until === 1 ? '' : 's'} until your turn`}
@@ -102,7 +102,7 @@ export function DraftOrderStrip({
         )}
 
         {is_complete && (
-          <span className="ml-4 shrink-0 text-sm font-medium text-green-600">Draft complete</span>
+          <span className="ml-4 shrink-0 text-sm font-medium text-green-400">Draft complete</span>
         )}
       </div>
     </div>

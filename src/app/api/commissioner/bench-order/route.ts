@@ -34,12 +34,40 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: membership } = await supabase
+      .from('league_members')
+      .select('role')
+      .eq('league_id', body.league_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const isCommissioner = membership?.role === 'commissioner' || membership?.role === 'co_commissioner';
+
     const { data: existing } = await supabase
       .from('bench_orders')
       .select('id')
       .eq('league_id', body.league_id)
       .eq('user_id', body.user_id)
       .maybeSingle();
+
+    // Check the lock deadline directly (rather than bench_orders.locked_at) so the lock
+    // applies even to a user's first-ever submission, when no bench_orders row exists yet.
+    const { data: draftSession } = await supabase
+      .from('draft_sessions')
+      .select('bench_lock_deadline')
+      .eq('league_id', body.league_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const isLocked = !!draftSession?.bench_lock_deadline && new Date(draftSession.bench_lock_deadline) < new Date();
+
+    if (isLocked && !isCommissioner) {
+      return NextResponse.json(
+        { error: 'BENCH_ORDER_LOCKED', message: 'Bench order is locked for this league.' },
+        { status: 422 }
+      );
+    }
 
     const now = new Date().toISOString();
     let benchOrder;
@@ -49,6 +77,7 @@ export async function PATCH(request: NextRequest) {
         .from('bench_orders')
         .update({
           ordered_player_ids: body.ordered_player_ids,
+          submitted_at: now,
           last_edited_by: user.id,
           last_edited_at: now,
         })
@@ -68,6 +97,7 @@ export async function PATCH(request: NextRequest) {
           league_id: body.league_id,
           user_id: body.user_id,
           ordered_player_ids: body.ordered_player_ids,
+          submitted_at: now,
           last_edited_by: user.id,
           last_edited_at: now,
         })

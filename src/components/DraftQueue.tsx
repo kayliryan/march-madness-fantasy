@@ -6,9 +6,14 @@ import type { AddToQueueResponse, DraftQueue as DraftQueueEntry } from '@/lib/ty
 
 interface DraftQueueProps {
   sessionId: string;
+  refreshTrigger?: number; // increment to force a re-fetch
+  canDraft?: boolean; // true when it's the user's turn and a pick can be submitted
+  availablePlayerIds?: Set<string>; // players not yet drafted
+  isPicking?: boolean;
+  onDraft?: (playerId: string) => void;
 }
 
-export function DraftQueue({ sessionId }: DraftQueueProps) {
+export function DraftQueue({ sessionId, refreshTrigger, canDraft, availablePlayerIds, isPicking, onDraft }: DraftQueueProps) {
   const [queue, setQueue] = useState<DraftQueueEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,9 +36,11 @@ export function DraftQueue({ sessionId }: DraftQueueProps) {
     }
   }, [sessionId]);
 
+  useEffect(() => { loadQueue(); }, [loadQueue]);
+
   useEffect(() => {
-    loadQueue();
-  }, [loadQueue]);
+    if (refreshTrigger !== undefined && refreshTrigger > 0) loadQueue();
+  }, [refreshTrigger, loadQueue]);
 
   async function handleRemove(playerId: string) {
     // Optimistic removal
@@ -98,36 +105,43 @@ export function DraftQueue({ sessionId }: DraftQueueProps) {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <h2 className="mb-1 text-lg font-bold text-gray-900">Your Draft Queue</h2>
-      <p className="mb-4 text-sm text-gray-500">
+    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+      <h2 className="mb-1 text-lg font-bold text-white">Your Draft Queue</h2>
+      <p className="mb-4 text-sm text-neutral-500">
         Drag to reorder. Players auto-pick from the top of this list if your timer runs out.
       </p>
 
       {loading ? (
-        <p className="py-6 text-center text-sm text-gray-500">Loading…</p>
+        <p className="py-6 text-center text-sm text-neutral-500">Loading…</p>
       ) : error ? (
-        <p className="py-6 text-center text-sm text-red-600">{error}</p>
+        <p className="py-6 text-center text-sm text-red-400">{error}</p>
       ) : queue.length === 0 ? (
-        <p className="rounded-md border border-dashed border-gray-300 bg-white p-4 text-center text-sm text-gray-500">
+        <p className="rounded-md border border-dashed border-neutral-700 bg-black p-4 text-center text-sm text-neutral-500">
           Your queue is empty. If you don&apos;t set one, auto-picks will fall back to the
           best available player by average PPG.
         </p>
       ) : (
         <ol className="flex flex-col gap-2">
-          {queue.map((entry, index) => (
-            <QueueItem
-              key={entry.player_id}
-              entry={entry}
-              rank={index + 1}
-              isDragging={draggingId === entry.player_id}
-              onRemove={handleRemove}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onDragEnd={handleDragEnd}
-            />
-          ))}
+          {queue.map((entry, index) => {
+            const isDrafted = availablePlayerIds !== undefined && !availablePlayerIds.has(entry.player_id);
+            return (
+              <QueueItem
+                key={entry.player_id}
+                entry={entry}
+                rank={index + 1}
+                isDragging={draggingId === entry.player_id}
+                onRemove={handleRemove}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onDragEnd={handleDragEnd}
+                canDraft={canDraft && !isDrafted}
+                isDrafted={isDrafted}
+                isPicking={isPicking}
+                onDraft={onDraft}
+              />
+            );
+          })}
         </ol>
       )}
     </div>

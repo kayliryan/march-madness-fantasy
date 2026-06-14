@@ -10,9 +10,9 @@ interface InjuryBadgeProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-green-100 text-green-700',
-  day_to_day: 'bg-yellow-100 text-yellow-800',
-  out: 'bg-red-100 text-red-700',
+  active: 'bg-green-400/20 text-green-400',
+  day_to_day: 'bg-yellow-400/20 text-yellow-300',
+  out: 'bg-red-400/20 text-red-400',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -45,14 +45,14 @@ export function InjuryBadge({ status, note, updatedAt }: InjuryBadgeProps) {
       </span>
 
       {open && (note || updatedAt) && (
-        <span className="absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-xs text-white shadow-lg">
+        <span className="absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded-md bg-neutral-800 px-3 py-2 text-xs text-white shadow-lg">
           {note && <span className="block font-medium">{note}</span>}
           {updatedAt && (
-            <span className="mt-1 block text-gray-300">
+            <span className="mt-1 block text-neutral-400">
               Updated {new Date(updatedAt).toLocaleDateString()}
             </span>
           )}
-          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-800" />
         </span>
       )}
     </span>

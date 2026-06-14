@@ -70,12 +70,12 @@ export function PlayerPositionOverride({
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-3 text-lg font-semibold text-gray-900">Override Player Position</h3>
+    <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-5 shadow-sm">
+      <h3 className="mb-3 text-lg font-semibold text-white">Override Player Position</h3>
 
       <div className="flex flex-col gap-4">
         <div className="relative flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Player</label>
+          <label className="text-sm font-medium text-neutral-300">Player</label>
           <input
             type="text"
             value={selected ? selected.name : search}
@@ -84,10 +84,10 @@ export function PlayerPositionOverride({
               setSearch(e.target.value);
             }}
             placeholder="Search by name…"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+            className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
           />
           {!selected && matches.length > 0 && (
-            <ul className="absolute top-full z-10 mt-1 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
+            <ul className="absolute top-full z-10 mt-1 w-full overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 shadow-lg">
               {matches.map((p) => (
                 <li key={p.id}>
                   <button
@@ -97,10 +97,10 @@ export function PlayerPositionOverride({
                       setPosition(p.position);
                       setSearch('');
                     }}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-gray-50"
+                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-800"
                   >
-                    <span className="text-gray-900">{p.name}</span>
-                    <span className="text-gray-400">
+                    <span className="text-white">{p.name}</span>
+                    <span className="text-neutral-500">
                       {p.position}
                       {p.teams ? ` · ${p.teams.name}` : ''}
                     </span>
@@ -112,7 +112,7 @@ export function PlayerPositionOverride({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">New position</label>
+          <label className="text-sm font-medium text-neutral-300">New position</label>
           <div className="flex gap-2">
             {POSITIONS.map((pos) => (
               <button
@@ -121,8 +121,8 @@ export function PlayerPositionOverride({
                 onClick={() => setPosition(pos)}
                 className={`rounded-md border px-4 py-2 text-sm font-medium ${
                   position === pos
-                    ? 'border-indigo-600 bg-indigo-600 text-white'
-                    : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                    ? 'border-yellow-400 bg-yellow-400 text-black'
+                    : 'border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800'
                 }`}
               >
                 {pos}
@@ -132,7 +132,7 @@ export function PlayerPositionOverride({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="override-note" className="text-sm font-medium text-gray-700">
+          <label htmlFor="override-note" className="text-sm font-medium text-neutral-300">
             Note (required)
           </label>
           <textarea
@@ -141,12 +141,12 @@ export function PlayerPositionOverride({
             onChange={(e) => setNote(e.target.value)}
             rows={2}
             placeholder="Why is this position being changed?"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+            className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
           />
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {success && <p className="text-sm text-green-600">{success}</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
+        {success && <p className="text-sm text-green-400">{success}</p>}
 
         <Button onClick={handleSave} disabled={saving}>
           {saving ? 'Saving…' : 'Override Position'}

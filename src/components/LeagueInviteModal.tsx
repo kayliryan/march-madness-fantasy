@@ -45,18 +45,18 @@ export function LeagueInviteModal({ leagueId, leagueName, onClose }: LeagueInvit
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Invite friends</h2>
-            <p className="text-sm text-gray-500">{leagueName}</p>
+            <h2 className="text-xl font-bold text-white">Invite friends</h2>
+            <p className="text-sm text-neutral-500">{leagueName}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-md p-1 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300"
           >
             <X className="size-5" />
           </button>
@@ -68,7 +68,7 @@ export function LeagueInviteModal({ leagueId, leagueName, onClose }: LeagueInvit
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="friend@example.com"
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+            className="flex-1 rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
           />
           <Button type="submit">Send</Button>
         </form>
@@ -78,17 +78,17 @@ export function LeagueInviteModal({ leagueId, leagueName, onClose }: LeagueInvit
             {invites.map((inv, i) => (
               <li
                 key={`${inv.email}-${i}`}
-                className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded-md bg-neutral-800 px-3 py-2 text-sm"
               >
-                <span className="truncate text-gray-700">{inv.email}</span>
+                <span className="truncate text-neutral-300">{inv.email}</span>
                 {inv.status === 'sent' ? (
-                  <span className="flex items-center gap-1 text-green-600">
+                  <span className="flex items-center gap-1 text-green-400">
                     <Check className="size-4" /> Sent
                   </span>
                 ) : inv.status === 'error' ? (
-                  <span className="text-red-600">Failed</span>
+                  <span className="text-red-400">Failed</span>
                 ) : (
-                  <span className="text-gray-400">Sending…</span>
+                  <span className="text-neutral-500">Sending…</span>
                 )}
               </li>
             ))}

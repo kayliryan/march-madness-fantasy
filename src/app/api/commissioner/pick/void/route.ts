@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/client';
+import { ScoreAccumulator } from '@/lib/services/ScoreAccumulator';
 import type { DraftPick } from '@/lib/types';
 
 interface VoidPickRequest {
@@ -159,6 +160,13 @@ export async function PATCH(request: NextRequest) {
         acquired_at_round_stage: 'draft',
       });
     }
+
+    // Full recompute: a runForGames-only re-run would leave orphaned scoring_events
+    // for the voided player's slot, since it never qualifies for the active-window
+    // check again. Only runForLeague's delete+rebuild removes those rows.
+    ScoreAccumulator.runForLeague(pick.league_id).catch((err) =>
+      console.error('[pick/void] ScoreAccumulator.runForLeague failed:', err)
+    );
 
     return NextResponse.json({
       voided_pick: voidedPick as DraftPick,

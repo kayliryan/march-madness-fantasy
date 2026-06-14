@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import AppHeader from '@/components/AppHeader';
 import { DraftOrderGenerator } from '@/components/DraftOrderGenerator';
 import { DraftScheduler } from '@/components/DraftScheduler';
 import { PlayerPositionOverride } from '@/components/PlayerPositionOverride';
@@ -40,8 +41,25 @@ export default function CommissionerPage() {
 
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
+  const [demoBannerDismissed, setDemoBannerDismissed] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
+  const [startingDraft, setStartingDraft] = useState(false);
+  const [startDraftError, setStartDraftError] = useState<string | null>(null);
+
+  // League settings state
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSuccess, setSettingsSuccess] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  // Pick void state
+  const [voidPickNumber, setVoidPickNumber] = useState('');
+  const [voidReason, setVoidReason] = useState('');
+  const [replacementSearch, setReplacementSearch] = useState('');
+  const [replacementId, setReplacementId] = useState('');
+  const [voidError, setVoidError] = useState<string | null>(null);
+  const [voidSuccess, setVoidSuccess] = useState<string | null>(null);
+  const [voidingPick, setVoidingPick] = useState(false);
 
   // Manual score entry state
   const [scorePlayerId, setScorePlayerId] = useState('');
@@ -227,6 +245,92 @@ export default function CommissionerPage() {
     }
   }
 
+  async function handleStartDraft() {
+    if (!draftSession) return;
+    setStartingDraft(true);
+    setStartDraftError(null);
+    try {
+      const res = await fetch('/api/draft/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft_session_id: draftSession.id }),
+      });
+      if (res.ok) {
+        router.push(`/draft/${draftSession.id}`);
+      } else {
+        const err = await res.json();
+        setStartDraftError(err.message ?? err.error ?? 'Could not start draft. Make sure the scheduled time has passed.');
+      }
+    } finally { setStartingDraft(false); }
+  }
+
+  async function handleSaveSettings(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!league) return;
+    setSavingSettings(true);
+    setSettingsError(null);
+    setSettingsSuccess(false);
+    const form = new FormData(e.currentTarget);
+    const patch = {
+      injury_sub_enabled: form.get('injury_sub_enabled') === 'true',
+      activation_timing: form.get('activation_timing') as string,
+      scoring_includes_play_in: form.get('scoring_includes_play_in') === 'true',
+      bench_lock_mode: form.get('bench_lock_mode') as string,
+    };
+    try {
+      const res = await fetch('/api/commissioner/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ league_id: leagueId, settings: patch }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setSettingsError(err.error ?? 'Failed to save settings.');
+      } else {
+        const data = await res.json();
+        setLeague(data.league as League);
+        setSettingsSuccess(true);
+        setTimeout(() => setSettingsSuccess(false), 3000);
+      }
+    } finally { setSavingSettings(false); }
+  }
+
+  async function handleVoidPick(e: React.FormEvent) {
+    e.preventDefault();
+    if (!replacementId || !voidReason.trim() || !voidPickNumber) { setVoidError('Fill in all fields.'); return; }
+    const pickNum = parseInt(voidPickNumber, 10);
+    if (isNaN(pickNum) || pickNum < 1) { setVoidError('Enter a valid pick number.'); return; }
+    setVoidingPick(true);
+    setVoidError(null);
+    setVoidSuccess(null);
+    try {
+      // Fetch picks to find the pick_id from the pick number
+      const { data: picks } = await supabase.from('draft_picks')
+        .select('id, player_id')
+        .eq('draft_session_id', draftSession!.id)
+        .eq('pick_number', pickNum)
+        .is('voided_at', null)
+        .maybeSingle();
+      if (!picks) { setVoidError(`Pick #${pickNum} not found or already voided.`); setVoidingPick(false); return; }
+      const res = await fetch('/api/commissioner/pick/void', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pick_id: picks.id, void_reason: voidReason, replacement_player_id: replacementId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setVoidError(err.error ?? 'Failed to void pick.');
+      } else {
+        const repName = players.find((p) => p.id === replacementId)?.name ?? replacementId;
+        setVoidSuccess(`Pick #${pickNum} voided. ${repName} inserted as replacement.`);
+        setVoidPickNumber('');
+        setVoidReason('');
+        setReplacementId('');
+        setReplacementSearch('');
+      }
+    } finally { setVoidingPick(false); }
+  }
+
   // Resolve a participant's bench (pre-draft this is usually empty)
   const loadBench = useCallback(
     async (userId: string): Promise<Player[]> => {
@@ -247,27 +351,95 @@ export default function CommissionerPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Loading commissioner tools…</p>
+      <div className="min-h-screen bg-black">
+        <AppHeader leagueId={leagueId} />
+        <div className="flex items-center justify-center py-24">
+          <p className="text-neutral-500">Loading commissioner tools…</p>
+        </div>
       </div>
     );
   }
 
   if (forbidden) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <p className="text-center text-gray-600">
-          You don&apos;t have commissioner access to this league.
-        </p>
+      <div className="min-h-screen bg-black">
+        <AppHeader leagueId={leagueId} />
+        <div className="flex items-center justify-center px-4 py-24">
+          <p className="text-center text-neutral-300">
+            You don&apos;t have commissioner access to this league.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
+    <div className="min-h-screen bg-black">
+      <AppHeader leagueId={leagueId} />
+      <div className="px-4 py-8">
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-1 text-3xl font-bold text-gray-900">Commissioner Tools</h1>
-        <p className="mb-8 text-gray-600">{league?.name}</p>
+        <h1 className="mb-1 text-2xl font-bold text-white sm:text-3xl">Commissioner Tools</h1>
+        <p className="mb-6 text-neutral-500">{league?.name} · Season {league?.season}</p>
+
+        {/* Demo league banner */}
+        {league?.is_demo && !demoBannerDismissed && (
+          <div className="mb-6 flex items-start justify-between gap-3 rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-4">
+            <p className="text-sm text-yellow-300">
+              This is a demo league. You have full commissioner access. Your progress is saved for 24 hours.
+            </p>
+            <button
+              onClick={() => setDemoBannerDismissed(true)}
+              className="shrink-0 text-xs font-medium text-yellow-400 hover:text-yellow-200"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Setup guide for brand-new leagues */}
+        {!draftSession && (
+          <div className="mb-6 rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-4">
+            <p className="text-sm font-semibold text-yellow-300">Getting started</p>
+            <ol className="mt-2 space-y-1 text-sm text-yellow-100 list-decimal list-inside">
+              <li>Set the draft order below (random shuffle or manual).</li>
+              <li>Schedule a date and pick timer using the Draft Scheduler.</li>
+              <li>Share the draft room link with your participants.</li>
+            </ol>
+          </div>
+        )}
+
+        {draftSession && (
+          <div className="mb-6 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-neutral-500">Draft status</p>
+                <p className="font-semibold text-white capitalize">{draftSession.status}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {draftSession.status === 'scheduled' && (
+                  <button
+                    onClick={handleStartDraft}
+                    disabled={startingDraft}
+                    className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {startingDraft ? 'Starting…' : 'Start Draft'}
+                  </button>
+                )}
+                {(draftSession.status === 'scheduled' || draftSession.status === 'live') && (
+                  <a href={`/draft/${draftSession.id}`} className="rounded-md bg-yellow-400 px-3 py-1.5 text-xs font-semibold text-black hover:bg-yellow-300">
+                    Open Room →
+                  </a>
+                )}
+                {draftSession.status === 'complete' && (
+                  <a href={`/league/${leagueId}/leaderboard`} className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700">
+                    View Standings →
+                  </a>
+                )}
+              </div>
+            </div>
+            {startDraftError && <p className="mt-2 text-sm text-red-400">{startDraftError}</p>}
+          </div>
+        )}
 
         <div className="flex flex-col gap-6">
           <DraftOrderGenerator
@@ -283,6 +455,7 @@ export default function CommissionerPage() {
             initialPickTimerSeconds={draftSession?.pick_timer_seconds}
             onSave={handleSaveSchedule}
             saving={savingSchedule}
+            showScheduledStart={!league?.is_demo}
           />
 
           <PlayerPositionOverride
@@ -302,57 +475,57 @@ export default function CommissionerPage() {
 
           {/* Injury Substitution */}
           {league?.settings.injury_sub_enabled && (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-gray-800">Injury Substitution</h2>
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
+              <h2 className="mb-4 text-lg font-semibold text-neutral-200">Injury Substitution</h2>
               <form onSubmit={handleInjurySub} className="flex flex-col gap-3">
                 {/* Injured player */}
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Injured Player</label>
+                  <label className="mb-1 block text-sm font-medium text-neutral-300">Injured Player</label>
                   <input
                     type="text"
                     placeholder="Search by name…"
                     value={injuredPlayerSearch}
                     onChange={(e) => { setInjuredPlayerSearch(e.target.value); setInjuredPlayerId(''); setInjurySuccess(null); }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   />
                   {injuredPlayerSearch.trim().length >= 2 && !injuredPlayerId && (
-                    <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm">
+                    <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-neutral-800 bg-neutral-900 shadow-sm">
                       {players.filter((p) => p.name.toLowerCase().includes(injuredPlayerSearch.toLowerCase())).slice(0, 6).map((p) => (
-                        <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-indigo-50"
+                        <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
                           onClick={() => { setInjuredPlayerId(p.id); setInjuredPlayerSearch(p.name); }}>
-                          {p.name} <span className="text-gray-400">({p.position})</span>
+                          {p.name} <span className="text-neutral-500">({p.position})</span>
                         </li>
                       ))}
                     </ul>
                   )}
-                  {injuredPlayerId && <p className="mt-1 text-xs text-green-600">Selected: {injuredPlayerSearch}</p>}
+                  {injuredPlayerId && <p className="mt-1 text-xs text-green-400">Selected: {injuredPlayerSearch}</p>}
                 </div>
 
                 {/* Optional explicit sub */}
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Sub Player <span className="font-normal text-gray-400">(leave blank to auto-select from bench)</span></label>
+                  <label className="mb-1 block text-sm font-medium text-neutral-300">Sub Player <span className="font-normal text-neutral-500">(leave blank to auto-select from bench)</span></label>
                   <input
                     type="text"
                     placeholder="Search by name…"
                     value={subPlayerSearch}
                     onChange={(e) => { setSubPlayerSearch(e.target.value); setSubPlayerId(''); }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   />
                   {subPlayerSearch.trim().length >= 2 && !subPlayerId && (
-                    <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm">
+                    <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-neutral-800 bg-neutral-900 shadow-sm">
                       {players.filter((p) => p.name.toLowerCase().includes(subPlayerSearch.toLowerCase())).slice(0, 6).map((p) => (
-                        <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-indigo-50"
+                        <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
                           onClick={() => { setSubPlayerId(p.id); setSubPlayerSearch(p.name); }}>
-                          {p.name} <span className="text-gray-400">({p.position})</span>
+                          {p.name} <span className="text-neutral-500">({p.position})</span>
                         </li>
                       ))}
                     </ul>
                   )}
-                  {subPlayerId && <p className="mt-1 text-xs text-green-600">Selected: {subPlayerSearch}</p>}
+                  {subPlayerId && <p className="mt-1 text-xs text-green-400">Selected: {subPlayerSearch}</p>}
                 </div>
 
-                {injuryError && <p className="text-sm text-red-600">{injuryError}</p>}
-                {injurySuccess && <p className="text-sm text-green-600">{injurySuccess}</p>}
+                {injuryError && <p className="text-sm text-red-400">{injuryError}</p>}
+                {injurySuccess && <p className="text-sm text-green-400">{injurySuccess}</p>}
 
                 <button
                   type="submit"
@@ -366,12 +539,12 @@ export default function CommissionerPage() {
           )}
 
           {/* Manual Score Entry */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-800">Enter Score Manually</h2>
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-neutral-200">Enter Score Manually</h2>
             <form onSubmit={handleManualScore} className="flex flex-col gap-3">
               {/* Player search */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Player</label>
+                <label className="mb-1 block text-sm font-medium text-neutral-300">Player</label>
                 <input
                   type="text"
                   placeholder="Search by name…"
@@ -381,10 +554,10 @@ export default function CommissionerPage() {
                     setScorePlayerId('');
                     setScoreSuccess(false);
                   }}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 />
                 {scorePlayerSearch.trim().length >= 2 && !scorePlayerId && (
-                  <ul className="mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm">
+                  <ul className="mt-1 max-h-48 overflow-y-auto rounded-md border border-neutral-800 bg-neutral-900 shadow-sm">
                     {players
                       .filter((p) =>
                         p.name.toLowerCase().includes(scorePlayerSearch.toLowerCase())
@@ -393,32 +566,32 @@ export default function CommissionerPage() {
                       .map((p) => (
                         <li
                           key={p.id}
-                          className="cursor-pointer px-3 py-2 text-sm hover:bg-indigo-50"
+                          className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
                           onClick={() => {
                             setScorePlayerId(p.id);
                             setScorePlayerSearch(p.name);
                           }}
                         >
-                          {p.name} <span className="text-gray-400">({p.position})</span>
+                          {p.name} <span className="text-neutral-500">({p.position})</span>
                         </li>
                       ))}
                     {players.filter((p) => p.name.toLowerCase().includes(scorePlayerSearch.toLowerCase())).length === 0 && (
-                      <li className="px-3 py-2 text-sm text-gray-400">No players found</li>
+                      <li className="px-3 py-2 text-sm text-neutral-500">No players found</li>
                     )}
                   </ul>
                 )}
                 {scorePlayerId && (
-                  <p className="mt-1 text-xs text-green-600">Selected: {scorePlayerSearch}</p>
+                  <p className="mt-1 text-xs text-green-400">Selected: {scorePlayerSearch}</p>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Round</label>
+                  <label className="mb-1 block text-sm font-medium text-neutral-300">Round</label>
                   <select
                     value={scoreRoundStage}
                     onChange={(e) => setScoreRoundStage(e.target.value as typeof ROUND_STAGES[number])}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   >
                     {ROUND_STAGES.map((s) => (
                       <option key={s} value={s}>{ROUND_STAGE_LABELS[s]}</option>
@@ -427,31 +600,31 @@ export default function CommissionerPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Round #</label>
+                  <label className="mb-1 block text-sm font-medium text-neutral-300">Round #</label>
                   <input
                     type="number"
                     min={1}
                     value={scoreRoundNumber}
                     onChange={(e) => setScoreRoundNumber(parseInt(e.target.value, 10) || 1)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Game Date</label>
+                  <label className="mb-1 block text-sm font-medium text-neutral-300">Game Date</label>
                   <input
                     type="date"
                     required
                     value={scoreGameDate}
                     onChange={(e) => setScoreGameDate(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Points</label>
+                  <label className="mb-1 block text-sm font-medium text-neutral-300">Points</label>
                   <input
                     type="number"
                     min={0}
@@ -459,26 +632,123 @@ export default function CommissionerPage() {
                     placeholder="0"
                     value={scorePoints}
                     onChange={(e) => setScorePoints(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   />
                 </div>
               </div>
 
-              {scoreError && <p className="text-sm text-red-600">{scoreError}</p>}
+              {scoreError && <p className="text-sm text-red-400">{scoreError}</p>}
               {scoreSuccess && (
-                <p className="text-sm text-green-600">Score saved and leaderboard is updating.</p>
+                <p className="text-sm text-green-400">Score saved and leaderboard is updating.</p>
               )}
 
               <button
                 type="submit"
                 disabled={savingScore || !scorePlayerId}
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-md bg-yellow-400 px-4 py-2 text-sm font-medium text-black hover:bg-yellow-300 disabled:opacity-50"
               >
                 {savingScore ? 'Saving…' : 'Save Score'}
               </button>
             </form>
           </div>
+
+          {/* League Settings */}
+          {league && (
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
+              <h2 className="mb-4 text-lg font-semibold text-neutral-200">League Settings</h2>
+              <form onSubmit={handleSaveSettings} className="flex flex-col gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-300">Injury Subs</label>
+                    <select name="injury_sub_enabled" defaultValue={String(league.settings.injury_sub_enabled ?? false)}
+                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                      <option value="false">Disabled</option>
+                      <option value="true">Enabled</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-300">Activation Timing</label>
+                    <select name="activation_timing" defaultValue={league.settings.activation_timing ?? 'immediate'}
+                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                      <option value="immediate">Immediate (bench activates same day)</option>
+                      <option value="end_of_round">End of Round</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-300">Play-In Scoring</label>
+                    <select name="scoring_includes_play_in" defaultValue={String(league.settings.scoring_includes_play_in ?? true)}
+                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                      <option value="true">Include Play-In games</option>
+                      <option value="false">Exclude Play-In games</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-300">Bench Lock Mode</label>
+                    <select name="bench_lock_mode" defaultValue={league.settings.bench_lock_mode ?? 'before_first_game'}
+                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                      <option value="before_first_game">Lock before first game</option>
+                      <option value="always_editable">Always editable</option>
+                    </select>
+                  </div>
+                </div>
+                {settingsError && <p className="text-sm text-red-400">{settingsError}</p>}
+                {settingsSuccess && <p className="text-sm text-green-400">Settings saved.</p>}
+                <button type="submit" disabled={savingSettings}
+                  className="self-start rounded-md bg-yellow-400 px-4 py-2 text-sm font-medium text-black hover:bg-yellow-300 disabled:opacity-50">
+                  {savingSettings ? 'Saving…' : 'Save Settings'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Void & Replace Pick */}
+          {draftSession && (draftSession.status === 'live' || draftSession.status === 'complete') && (
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
+              <h2 className="mb-1 text-lg font-semibold text-neutral-200">Void & Replace Pick</h2>
+              <p className="mb-4 text-xs text-neutral-500">A replacement player is required — void without replacement is not supported.</p>
+              <form onSubmit={handleVoidPick} className="flex flex-col gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-300">Pick #</label>
+                    <input type="number" min={1} placeholder="e.g. 5" value={voidPickNumber}
+                      onChange={(e) => setVoidPickNumber(e.target.value)}
+                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-300">Void Reason</label>
+                    <input type="text" placeholder="Wrong pick, admin error…" value={voidReason}
+                      onChange={(e) => setVoidReason(e.target.value)}
+                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-neutral-300">Replacement Player</label>
+                  <input type="text" placeholder="Search by name…" value={replacementSearch}
+                    onChange={(e) => { setReplacementSearch(e.target.value); setReplacementId(''); setVoidSuccess(null); }}
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                  {replacementSearch.trim().length >= 2 && !replacementId && (
+                    <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-neutral-800 bg-neutral-900 shadow-sm">
+                      {players.filter((p) => p.name.toLowerCase().includes(replacementSearch.toLowerCase())).slice(0, 6).map((p) => (
+                        <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
+                          onClick={() => { setReplacementId(p.id); setReplacementSearch(p.name); }}>
+                          {p.name} <span className="text-neutral-500">({p.position})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {replacementId && <p className="mt-1 text-xs text-green-400">Selected: {replacementSearch}</p>}
+                </div>
+                {voidError && <p className="text-sm text-red-400">{voidError}</p>}
+                {voidSuccess && <p className="text-sm text-green-400">{voidSuccess}</p>}
+                <button type="submit" disabled={voidingPick || !replacementId || !voidReason.trim() || !voidPickNumber}
+                  className="self-start rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
+                  {voidingPick ? 'Voiding…' : 'Void & Replace'}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
+      </div>
       </div>
     </div>
   );

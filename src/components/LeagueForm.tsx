@@ -44,7 +44,7 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="league-name" className="text-sm font-medium text-gray-700">
+        <label htmlFor="league-name" className="text-sm font-medium text-neutral-300">
           League name
         </label>
         <input
@@ -53,13 +53,13 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="The Office Bracket Brawl"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+          className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="season" className="text-sm font-medium text-gray-700">
+          <label htmlFor="season" className="text-sm font-medium text-neutral-300">
             Season
           </label>
           <input
@@ -67,19 +67,19 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
             type="number"
             value={season}
             onChange={(e) => setSeason(Number(e.target.value))}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+            className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="draft-type" className="text-sm font-medium text-gray-700">
+          <label htmlFor="draft-type" className="text-sm font-medium text-neutral-300">
             Draft type
           </label>
           <select
             id="draft-type"
             value={draftType}
             onChange={(e) => setDraftType(e.target.value as LeagueSettings['draft_type'])}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+            className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
           >
             <option value="snake">Snake</option>
             <option value="linear">Linear</option>
@@ -89,7 +89,7 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="pick-timer" className="text-sm font-medium text-gray-700">
+        <label htmlFor="pick-timer" className="text-sm font-medium text-neutral-300">
           Pick timer (seconds)
         </label>
         <input
@@ -98,12 +98,12 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
           min={15}
           value={pickTimer}
           onChange={(e) => setPickTimer(Number(e.target.value))}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+          className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
         />
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium text-gray-700">Starter slots</legend>
+        <legend className="text-sm font-medium text-neutral-300">Starter slots</legend>
         <div className="grid grid-cols-3 gap-4">
           {(
             [
@@ -113,13 +113,13 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
             ] as const
           ).map(([label, value, setter]) => (
             <div key={label} className="flex flex-col gap-1.5">
-              <label className="text-xs text-gray-500">{label}</label>
+              <label className="text-xs text-neutral-500">{label}</label>
               <input
                 type="number"
                 min={0}
                 value={value}
                 onChange={(e) => setter(Number(e.target.value))}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+                className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
               />
             </div>
           ))}
@@ -127,7 +127,7 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
       </fieldset>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="bench-slots" className="text-sm font-medium text-gray-700">
+        <label htmlFor="bench-slots" className="text-sm font-medium text-neutral-300">
           Bench slots
         </label>
         <input
@@ -136,11 +136,11 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
           min={0}
           value={benchSlots}
           onChange={(e) => setBenchSlots(Number(e.target.value))}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+          className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
         />
       </div>
 
-      {formError && <p className="text-sm text-red-600">{formError}</p>}
+      {formError && <p className="text-sm text-red-400">{formError}</p>}
 
       <Button type="submit" size="lg" disabled={submitting}>
         {submitting ? 'Creating…' : 'Create League'}

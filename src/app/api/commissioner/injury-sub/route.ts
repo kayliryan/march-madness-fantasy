@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     // Fetch league settings (check injury_sub_enabled)
     const { data: leagueRow } = await supabaseAdmin
       .from('leagues')
-      .select('settings')
+      .select('settings, season')
       .eq('id', league_id)
       .single();
 
@@ -86,13 +86,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine the current round stage (from latest game_scores or fallback to 'r64')
-    const { data: latestGame } = await supabaseAdmin
-      .from('game_scores')
-      .select('round_stage')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Determine the current round stage from this league's own active roster -
+    // a global, unscoped query would pick up the most recently-synced game from
+    // any league/season, which is wrong in a multi-league environment.
+    const { data: activeSlots } = await supabaseAdmin
+      .from('roster_slots')
+      .select('player_id')
+      .eq('league_id', league_id)
+      .eq('is_active', true);
+
+    const activePlayerIds = [...new Set((activeSlots ?? []).map((s: { player_id: string }) => s.player_id))];
+
+    const { data: latestGame } = activePlayerIds.length > 0
+      ? await supabaseAdmin
+          .from('game_scores')
+          .select('round_stage')
+          .eq('season', leagueRow.season)
+          .in('player_id', activePlayerIds)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
 
     const current_round_stage: string = latestGame?.round_stage ?? 'r64';
 
