@@ -5,6 +5,7 @@ import { ScoreAccumulator } from '@/lib/services/ScoreAccumulator';
 import { RosterActivationService } from '@/lib/services/RosterActivationService';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
+import { CURRENT_TOURNAMENT_SEASON } from '@/lib/constants/season';
 
 const JOB_NAME = 'sync-scores';
 const PLAYABLE_STAGES = ROUND_STAGE_ORDER.filter((s) => s !== 'draft') as RoundStage[];
@@ -13,7 +14,6 @@ const PLAYABLE_STAGES = ROUND_STAGE_ORDER.filter((s) => s !== 'draft') as RoundS
 // leagues (season < CURRENT_TOURNAMENT_SEASON) share players by espn_player_id
 // with the current roster, so without this filter the sync would overwrite
 // their completed game_scores with current-season data.
-const CURRENT_TOURNAMENT_SEASON = 2026;
 
 export async function GET(request: NextRequest) {
   // Auth: Vercel calls with Authorization: Bearer {CRON_SECRET}

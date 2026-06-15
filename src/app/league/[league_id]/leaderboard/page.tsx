@@ -21,12 +21,12 @@ interface LeaderboardResponse {
   scores_updating: boolean;
 }
 
-function sortedRounds(per_round: { round_stage: string; points: number }[]) {
-  return [...per_round].sort(
-    (a, b) =>
-      ROUND_STAGE_ORDER.indexOf(a.round_stage as RoundStage) -
-      ROUND_STAGE_ORDER.indexOf(b.round_stage as RoundStage)
-  );
+const ROUND_COLUMNS = ROUND_STAGE_ORDER.filter((s) => s !== 'draft') as RoundStage[];
+
+function roundPointsMap(per_round: { round_stage: string; points: number }[]) {
+  const map = new Map<string, number>();
+  for (const r of per_round) map.set(r.round_stage, r.points);
+  return map;
 }
 
 function getRankLabel(rank: number): string {
@@ -45,6 +45,7 @@ export default function LeaderboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [narrative, setNarrative] = useState<string | null>(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
+  const [view, setView] = useState<'standings' | 'rounds'>('standings');
 
   useEffect(() => {
     setLoading(true);
@@ -144,62 +145,119 @@ export default function LeaderboardPage() {
             </a>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
-            <table className="w-full text-sm">
-              <thead className="border-b border-neutral-800 bg-black">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-neutral-300">Rank</th>
-                  <th className="px-4 py-3 text-left font-medium text-neutral-300">Team</th>
-                  <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
-                  <th className="px-4 py-3 text-right font-medium text-neutral-300 hidden sm:table-cell">Active</th>
-                  <th className="px-4 py-3 text-right font-medium text-neutral-300 hidden md:table-cell">Best Game</th>
-                  <th className="px-4 py-3 text-left font-medium text-neutral-300 hidden lg:table-cell">Per Round</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-800">
-                {data.standings.map((entry, i) => {
-                  const rank = i + 1;
-                  const rounds = sortedRounds(entry.per_round);
-                  return (
-                    <tr key={entry.user_id} className={rank === 1 ? 'bg-yellow-400/10' : ''}>
-                      <td className="px-4 py-3 font-medium text-neutral-300">
-                        {getRankLabel(rank)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/league/${league_id}/roster/${entry.user_id}`}
-                          className="font-medium text-yellow-400 hover:underline"
-                        >
-                          {entry.display_name}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
-                        {entry.total_points}
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-300 tabular-nums hidden sm:table-cell">
-                        {entry.active_player_count}
-                      </td>
-                      <td className="px-4 py-3 text-right text-neutral-300 tabular-nums hidden md:table-cell">
-                        {entry.highest_single_game_points}
-                      </td>
-                      <td className="px-4 py-3 hidden lg:table-cell">
-                        <div className="flex flex-wrap gap-2">
-                          {rounds.map((r) => (
-                            <span key={r.round_stage} className="text-xs text-neutral-500">
-                              {ROUND_LABELS[r.round_stage] ?? r.round_stage}: {r.points}
-                            </span>
-                          ))}
-                          {rounds.length === 0 && (
-                            <span className="text-xs text-neutral-500">—</span>
-                          )}
-                        </div>
-                      </td>
+          <>
+            <div className="mb-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setView('standings')}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                  view === 'standings'
+                    ? 'bg-yellow-400 text-black'
+                    : 'border border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400'
+                }`}
+              >
+                Standings
+              </button>
+              <button
+                type="button"
+                onClick={() => setView('rounds')}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                  view === 'rounds'
+                    ? 'bg-yellow-400 text-black'
+                    : 'border border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400'
+                }`}
+              >
+                Round by Round
+              </button>
+            </div>
+
+            {view === 'standings' ? (
+              <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-neutral-800 bg-black">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Rank</th>
+                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Team</th>
+                      <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
+                      <th className="px-4 py-3 text-right font-medium text-neutral-300 hidden sm:table-cell">Active</th>
+                      <th className="px-4 py-3 text-right font-medium text-neutral-300 hidden md:table-cell">Best Game</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-800">
+                    {data.standings.map((entry, i) => {
+                      const rank = i + 1;
+                      return (
+                        <tr key={entry.user_id} className={rank === 1 ? 'bg-yellow-400/10' : ''}>
+                          <td className="px-4 py-3 font-medium text-neutral-300">
+                            {getRankLabel(rank)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Link
+                              href={`/league/${league_id}/roster/${entry.user_id}`}
+                              className="font-medium text-yellow-400 hover:underline"
+                            >
+                              {entry.display_name}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
+                            {entry.total_points}
+                          </td>
+                          <td className="px-4 py-3 text-right text-neutral-300 tabular-nums hidden sm:table-cell">
+                            {entry.active_player_count}
+                          </td>
+                          <td className="px-4 py-3 text-right text-neutral-300 tabular-nums hidden md:table-cell">
+                            {entry.highest_single_game_points}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-neutral-800 bg-black">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Team</th>
+                      {ROUND_COLUMNS.map((stage) => (
+                        <th key={stage} className="px-3 py-3 text-right font-medium text-neutral-300 whitespace-nowrap">
+                          {ROUND_LABELS[stage] ?? stage}
+                        </th>
+                      ))}
+                      <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-800">
+                    {data.standings.map((entry, i) => {
+                      const rank = i + 1;
+                      const points = roundPointsMap(entry.per_round);
+                      return (
+                        <tr key={entry.user_id} className={rank === 1 ? 'bg-yellow-400/10' : ''}>
+                          <td className="px-4 py-3">
+                            <Link
+                              href={`/league/${league_id}/roster/${entry.user_id}`}
+                              className="font-medium text-yellow-400 hover:underline"
+                            >
+                              {entry.display_name}
+                            </Link>
+                          </td>
+                          {ROUND_COLUMNS.map((stage) => (
+                            <td key={stage} className="px-3 py-3 text-right text-neutral-300 tabular-nums">
+                              {points.has(stage) ? points.get(stage) : '—'}
+                            </td>
+                          ))}
+                          <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
+                            {entry.total_points}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

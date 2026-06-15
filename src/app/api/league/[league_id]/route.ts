@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import type { GetLeagueResponse, League, LeagueMember } from '@/lib/types';
+import { CURRENT_TOURNAMENT_SEASON } from '@/lib/constants/season';
 
 export async function GET(
   request: NextRequest,
@@ -84,6 +85,7 @@ export async function GET(
       draft_status: session?.status ?? null,
       scheduled_start: session?.scheduled_start ?? null,
       season_in_progress: (count ?? 0) > 0,
+      is_historical: (league as League).season < CURRENT_TOURNAMENT_SEASON,
     };
 
     return NextResponse.json(response);

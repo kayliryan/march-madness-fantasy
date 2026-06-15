@@ -173,7 +173,11 @@ export default function BenchOrderPage() {
           When an active slot opens up, your bench players are activated in this order.
         </p>
 
-        {league.draft_status !== 'complete' ? (
+        {league.is_historical ? (
+          <p className="rounded-md border border-dashed border-neutral-700 bg-neutral-900 p-4 text-center text-sm text-neutral-500">
+            This is a historical season. Bench orders are view-only.
+          </p>
+        ) : league.draft_status !== 'complete' ? (
           <p className="rounded-md border border-dashed border-neutral-700 bg-neutral-900 p-4 text-center text-sm text-neutral-500">
             Your bench order will be available after the draft completes.
           </p>

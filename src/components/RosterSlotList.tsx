@@ -18,14 +18,14 @@ function sortRounds(per_round: { round_stage: string; points: number }[]) {
   );
 }
 
-export function SlotRow({ slot }: { slot: RosterSlotEnriched }) {
+export function SlotRow({ slot, historical }: { slot: RosterSlotEnriched; historical?: boolean }) {
   const rounds = sortRounds(slot.per_round);
   const uncountedRounds = sortRounds(slot.uncounted_round);
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5 px-1">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-neutral-500 w-8">{slot.slot_key}</span>
+          {!historical && <span className="text-xs font-mono text-neutral-500 w-8">{slot.slot_key}</span>}
           <span className="font-medium text-white">
             {slot.player?.name ?? slot.player_id.slice(0, 8)}
           </span>
@@ -35,12 +35,12 @@ export function SlotRow({ slot }: { slot: RosterSlotEnriched }) {
               {slot.player.teams.name} ({slot.player.teams.seed})
             </span>
           )}
-          {!slot.is_active && (
+          {!historical && !slot.is_active && (
             <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-400">
               {slot.release_reason ?? 'released'}
             </span>
           )}
-          {slot.is_active && (
+          {!historical && slot.is_active && (
             <InjuryBadge
               status={slot.player?.injury_status}
               note={slot.player?.injury_note}
@@ -80,10 +80,12 @@ export function Section({
   title,
   slots,
   muted,
+  historical,
 }: {
   title: string;
   slots: RosterSlotEnriched[];
   muted?: boolean;
+  historical?: boolean;
 }) {
   if (slots.length === 0) return null;
   return (
@@ -93,7 +95,7 @@ export function Section({
       </div>
       <ul className="divide-y divide-neutral-800 px-4">
         {slots.map((s) => (
-          <SlotRow key={s.id} slot={s} />
+          <SlotRow key={s.id} slot={s} historical={historical} />
         ))}
       </ul>
     </div>

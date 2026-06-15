@@ -320,6 +320,7 @@ export interface GetLeagueResponse {
   draft_status: 'scheduled' | 'live' | 'complete' | 'cancelled' | null;
   scheduled_start: string | null;
   season_in_progress: boolean;
+  is_historical: boolean;
 }
 
 export interface InviteListItem {

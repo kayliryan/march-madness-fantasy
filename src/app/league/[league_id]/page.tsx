@@ -126,11 +126,34 @@ export default function LeagueHomePage() {
           <p className="mt-1 text-sm text-neutral-500">
             Season {league.league.season} · {league.members.length} member{league.members.length === 1 ? '' : 's'}
           </p>
-          {benchLockInfo && (
+          {!league.is_historical && benchLockInfo && (
             <p className="mt-1 text-xs text-neutral-500">{benchLockInfo}</p>
+          )}
+          {league.is_historical && (
+            <div className="mt-3 rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-400">
+              This is a past season — view only.
+            </div>
           )}
         </div>
 
+        {!league.is_historical && league.draft_status === null ? (
+          <div className="mb-6 rounded-lg border border-dashed border-neutral-700 bg-neutral-900 p-6 text-center">
+            <p className="font-semibold text-white">No draft yet</p>
+            <p className="mt-1 text-sm text-neutral-500">
+              {isCommissioner
+                ? 'Invite members and schedule your draft to get started.'
+                : "The commissioner hasn't scheduled a draft yet."}
+            </p>
+            {isCommissioner && (
+              <Link
+                href={`/commissioner/${league_id}`}
+                className="mt-4 inline-block rounded-md bg-yellow-400 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-300"
+              >
+                Go to Commissioner Tools
+              </Link>
+            )}
+          </div>
+        ) : (
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* My Team card */}
           <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-5 shadow-sm">
@@ -182,6 +205,7 @@ export default function LeagueHomePage() {
             </Link>
           </div>
         </div>
+        )}
 
         {/* AI Recap */}
         <div className="mb-6">

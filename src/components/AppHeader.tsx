@@ -60,7 +60,7 @@ export default function AppHeader({ leagueId }: AppHeaderProps) {
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
-                href={link.href}
+                href={link.href === '/players' && leagueId ? `/players?league_id=${leagueId}` : link.href}
                 className="text-sm text-neutral-300 hover:text-yellow-400"
               >
                 {link.label}

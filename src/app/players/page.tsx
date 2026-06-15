@@ -8,7 +8,13 @@ import { PlayerCard } from '@/components/PlayerCard';
 import { PlayerFilters } from '@/components/PlayerFilters';
 import { PlayerSearch } from '@/components/PlayerSearch';
 import { DraftQueue } from '@/components/DraftQueue';
-import type { GetLeagueResponse, GetPlayersQuery, GetPlayersResponse, Player } from '@/lib/types';
+import type { GetLeagueResponse, GetLeaguesResponse, GetPlayersQuery, GetPlayersResponse, Player } from '@/lib/types';
+
+interface QueueableLeague {
+  league_id: string;
+  name: string;
+  draft_session_id: string;
+}
 
 function PlayersExplorer() {
   const searchParams = useSearchParams();
@@ -25,11 +31,15 @@ function PlayersExplorer() {
 
   const [draftSessionId, setDraftSessionId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<GetLeagueResponse['draft_status']>(null);
+  const [isHistorical, setIsHistorical] = useState(false);
   const [draftedPlayerIds, setDraftedPlayerIds] = useState<Set<string>>(new Set());
   const [queuedPlayerIds, setQueuedPlayerIds] = useState<Set<string>>(new Set());
   const [addingPlayerId, setAddingPlayerId] = useState<string | null>(null);
   const [queueOpen, setQueueOpen] = useState(false);
   const [draftCompleteMessage, setDraftCompleteMessage] = useState<string | null>(null);
+  const [queueableLeagues, setQueueableLeagues] = useState<QueueableLeague[]>([]);
+  const [leaguePickerPlayer, setLeaguePickerPlayer] = useState<Player | null>(null);
+  const [addedPlayerIds, setAddedPlayerIds] = useState<Set<string>>(new Set());
 
   // Fetch players whenever filters change
   useEffect(() => {
@@ -78,8 +88,9 @@ function PlayersExplorer() {
 
       setDraftStatus(league.draft_status);
       setDraftSessionId(league.draft_session_id);
+      setIsHistorical(league.is_historical);
 
-      if (!league.draft_session_id || league.draft_status === 'complete') {
+      if (!league.draft_session_id || league.draft_status === 'complete' || league.is_historical) {
         return;
       }
 
@@ -115,6 +126,43 @@ function PlayersExplorer() {
     return () => { active = false; };
   }, [leagueId, searchParams]);
 
+  // No league context from the URL — discover which (if any) of the user's
+  // leagues currently have an active draft, so "Add to Queue" can offer a
+  // league picker when there's more than one.
+  useEffect(() => {
+    if (leagueId) return;
+    let active = true;
+
+    async function loadQueueableLeagues() {
+      const res = await fetch('/api/leagues');
+      if (!res.ok) return;
+      const { leagues }: GetLeaguesResponse = await res.json();
+      if (!active || leagues.length === 0) return;
+
+      const details = await Promise.all(
+        leagues.map((l) => fetch(`/api/league/${l.id}`).then((r) => (r.ok ? r.json() : null)))
+      );
+      if (!active) return;
+
+      const queueable: QueueableLeague[] = [];
+      leagues.forEach((l, i) => {
+        const detail = details[i] as GetLeagueResponse | null;
+        if (
+          detail &&
+          !detail.is_historical &&
+          detail.draft_session_id &&
+          (detail.draft_status === 'scheduled' || detail.draft_status === 'live')
+        ) {
+          queueable.push({ league_id: l.id, name: l.name, draft_session_id: detail.draft_session_id });
+        }
+      });
+      setQueueableLeagues(queueable);
+    }
+
+    loadQueueableLeagues();
+    return () => { active = false; };
+  }, [leagueId]);
+
   // While the draft is live, watch for DRAFT_COMPLETE so the queue drawer
   // and "Add to Queue" controls disappear without a page refresh.
   useEffect(() => {
@@ -134,21 +182,37 @@ function PlayersExplorer() {
     };
   }, [draftStatus, draftSessionId]);
 
-  async function handleAddToQueue(player: Player) {
-    if (!draftSessionId) return;
-
+  async function addToQueueForSession(player: Player, sessionId: string) {
     setAddingPlayerId(player.id);
     try {
       const res = await fetch('/api/draft/queue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ draft_session_id: draftSessionId, player_id: player.id }),
+        body: JSON.stringify({ draft_session_id: sessionId, player_id: player.id }),
       });
       if (res.ok) {
-        setQueuedPlayerIds((prev) => new Set(prev).add(player.id));
+        if (leagueId) {
+          setQueuedPlayerIds((prev) => new Set(prev).add(player.id));
+        } else {
+          setAddedPlayerIds((prev) => new Set(prev).add(player.id));
+        }
       }
     } finally {
       setAddingPlayerId(null);
+    }
+  }
+
+  function handleAddToQueue(player: Player) {
+    if (leagueId) {
+      if (!draftSessionId) return;
+      addToQueueForSession(player, draftSessionId);
+      return;
+    }
+
+    if (queueableLeagues.length === 1) {
+      addToQueueForSession(player, queueableLeagues[0].draft_session_id);
+    } else if (queueableLeagues.length > 1) {
+      setLeaguePickerPlayer(player);
     }
   }
 
@@ -159,8 +223,9 @@ function PlayersExplorer() {
     return null;
   }, [loading, error, players.length]);
 
-  const queueFeatureActive =
-    !!leagueId && !!draftSessionId && (draftStatus === 'scheduled' || draftStatus === 'live');
+  const queueFeatureActive = leagueId
+    ? !!draftSessionId && !isHistorical && (draftStatus === 'scheduled' || draftStatus === 'live')
+    : queueableLeagues.length > 0;
 
   return (
     <div className="min-h-screen bg-black">
@@ -175,7 +240,7 @@ function PlayersExplorer() {
             </div>
           )}
 
-          {queueFeatureActive && (
+          {queueFeatureActive && leagueId && draftSessionId && (
             <div className="mb-6">
               <button
                 type="button"
@@ -186,7 +251,7 @@ function PlayersExplorer() {
               </button>
               {queueOpen && (
                 <div className="mt-3">
-                  <DraftQueue sessionId={draftSessionId!} />
+                  <DraftQueue sessionId={draftSessionId} />
                 </div>
               )}
             </div>
@@ -213,7 +278,7 @@ function PlayersExplorer() {
                   key={player.id}
                   player={player}
                   isDrafted={draftedPlayerIds.has(player.id)}
-                  isQueued={queuedPlayerIds.has(player.id)}
+                  isQueued={leagueId ? queuedPlayerIds.has(player.id) : addedPlayerIds.has(player.id)}
                   addingToQueue={addingPlayerId === player.id}
                   onAddToQueue={queueFeatureActive ? handleAddToQueue : undefined}
                 />
@@ -222,6 +287,47 @@ function PlayersExplorer() {
           )}
         </div>
       </div>
+
+      {leaguePickerPlayer && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+          onClick={() => setLeaguePickerPlayer(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-lg border border-neutral-800 bg-neutral-900 p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-1 text-base font-semibold text-white">
+              Add {leaguePickerPlayer.name} to queue
+            </h2>
+            <p className="mb-4 text-sm text-neutral-500">
+              You&apos;re drafting in multiple leagues. Which one should this go to?
+            </p>
+            <div className="flex flex-col gap-2">
+              {queueableLeagues.map((l) => (
+                <button
+                  key={l.league_id}
+                  type="button"
+                  onClick={() => {
+                    addToQueueForSession(leaguePickerPlayer, l.draft_session_id);
+                    setLeaguePickerPlayer(null);
+                  }}
+                  className="rounded-md border border-neutral-800 bg-black px-3 py-2 text-left text-sm text-white hover:border-yellow-400/40 hover:text-yellow-400"
+                >
+                  {l.name}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setLeaguePickerPlayer(null)}
+              className="mt-4 text-sm text-neutral-500 hover:text-neutral-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

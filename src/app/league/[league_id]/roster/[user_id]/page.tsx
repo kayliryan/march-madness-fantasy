@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { Section, type RosterSlotEnriched } from '@/components/RosterSlotList';
 import { supabase } from '@/lib/supabase/client';
+import type { GetLeagueResponse } from '@/lib/types';
 
 interface RosterResponse {
   active_starters: RosterSlotEnriched[];
@@ -18,6 +19,7 @@ export default function RosterPage() {
   const { league_id, user_id } = params;
 
   const [data, setData] = useState<RosterResponse | null>(null);
+  const [league, setLeague] = useState<GetLeagueResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOwnRoster, setIsOwnRoster] = useState(false);
@@ -34,17 +36,26 @@ export default function RosterPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/league/${league_id}/roster/${user_id}`)
-      .then((res) => {
-        if (res.status === 401) {
+    Promise.all([
+      fetch(`/api/league/${league_id}/roster/${user_id}`),
+      fetch(`/api/league/${league_id}`),
+    ])
+      .then(([rosterRes, leagueRes]) => {
+        if (rosterRes.status === 401) {
           window.location.href = '/auth/login';
           return null;
         }
-        if (!res.ok) throw new Error('Failed to load roster');
-        return res.json();
+        if (!rosterRes.ok) throw new Error('Failed to load roster');
+        return Promise.all([
+          rosterRes.json(),
+          leagueRes.ok ? leagueRes.json() : null,
+        ]);
       })
-      .then((json) => {
-        if (json) setData(json as RosterResponse);
+      .then((result) => {
+        if (!result) return;
+        const [rosterJson, leagueJson] = result;
+        setData(rosterJson as RosterResponse);
+        if (leagueJson) setLeague(leagueJson as GetLeagueResponse);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -72,9 +83,10 @@ export default function RosterPage() {
     );
   }
 
-  const totalPoints =
-    [...data.active_starters, ...data.active_bench, ...data.released_starters, ...data.released_bench]
-      .reduce((sum, s) => sum + s.total_points, 0);
+  const allSlots = [...data.active_starters, ...data.active_bench, ...data.released_starters, ...data.released_bench];
+  const totalPoints = allSlots.reduce((sum, s) => sum + s.total_points, 0);
+  const isHistorical = league?.is_historical ?? false;
+  const historicalSlots = [...allSlots].sort((a, b) => b.total_points - a.total_points);
 
   return (
     <div className="min-h-screen bg-black">
@@ -88,7 +100,13 @@ export default function RosterPage() {
           <span className="text-lg font-semibold text-yellow-400">{totalPoints} pts total</span>
         </div>
 
-        {isOwnRoster && (
+        {isHistorical && (
+          <p className="mb-6 rounded-md border border-dashed border-neutral-700 bg-neutral-900 p-3 text-center text-sm text-neutral-500">
+            This is a historical season. Showing what was drafted and scored.
+          </p>
+        )}
+
+        {isOwnRoster && !isHistorical && (
           <div className="mb-6">
             <a href={`/league/${league_id}/bench-order`} className="text-sm text-yellow-400 hover:underline">
               Manage Bench Order →
@@ -97,18 +115,21 @@ export default function RosterPage() {
         )}
 
         <div className="flex flex-col gap-5">
-          <Section title="Active Starters" slots={data.active_starters} />
-          <Section title="Active Bench" slots={data.active_bench} />
-          <Section title="Released Starters" slots={data.released_starters} muted />
-          <Section title="Released Bench" slots={data.released_bench} muted />
+          {isHistorical ? (
+            <Section title="Roster" slots={historicalSlots} historical />
+          ) : (
+            <>
+              <Section title="Active Starters" slots={data.active_starters} />
+              <Section title="Active Bench" slots={data.active_bench} />
+              <Section title="Released Starters" slots={data.released_starters} muted />
+              <Section title="Released Bench" slots={data.released_bench} muted />
+            </>
+          )}
         </div>
 
-        {data.active_starters.length === 0 &&
-          data.active_bench.length === 0 &&
-          data.released_starters.length === 0 &&
-          data.released_bench.length === 0 && (
-            <p className="mt-12 text-center text-neutral-500">No roster yet — draft hasn&apos;t started.</p>
-          )}
+        {allSlots.length === 0 && (
+          <p className="mt-12 text-center text-neutral-500">No roster yet — draft hasn&apos;t started.</p>
+        )}
       </div>
     </div>
   );

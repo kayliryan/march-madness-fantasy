@@ -8,8 +8,11 @@ import { formatCountdown } from '@/lib/utils/formatCountdown';
 import type { GetLeagueResponse, League } from '@/lib/types';
 
 function getStatusLine(detail: GetLeagueResponse): { text: string; href?: string } | null {
-  const { draft_status, scheduled_start, season_in_progress, draft_session_id } = detail;
+  const { draft_status, scheduled_start, season_in_progress, draft_session_id, is_historical } = detail;
 
+  if (is_historical) {
+    return { text: 'Season complete' };
+  }
   if (draft_status === 'live') {
     return { text: 'Draft in progress →', href: draft_session_id ? `/draft/${draft_session_id}` : undefined };
   }
@@ -22,10 +25,19 @@ function getStatusLine(detail: GetLeagueResponse): { text: string; href?: string
   if (draft_status === 'complete' && !season_in_progress) {
     return { text: 'Season complete' };
   }
+  if (draft_status === null) {
+    const isCommissioner =
+      detail.current_member.role === 'commissioner' || detail.current_member.role === 'co_commissioner';
+    return {
+      text: 'No draft yet — invite members and schedule your draft',
+      href: isCommissioner ? `/commissioner/${detail.league.id}` : undefined,
+    };
+  }
   return null;
 }
 
 function getBenchLockLine(detail: GetLeagueResponse): string | null {
+  if (detail.is_historical) return null;
   if (detail.bench_lock_deadline == null) return null;
   const deadline = new Date(detail.bench_lock_deadline);
   return deadline > new Date() ? `Bench order locks ${formatCountdown(deadline)}` : 'Bench order locked';
