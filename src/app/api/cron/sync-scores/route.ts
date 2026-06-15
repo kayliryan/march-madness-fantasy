@@ -9,6 +9,12 @@ import type { RoundStage } from '@/lib/constants/rounds';
 const JOB_NAME = 'sync-scores';
 const PLAYABLE_STAGES = ROUND_STAGE_ORDER.filter((s) => s !== 'draft') as RoundStage[];
 
+// The live ESPN feed only ever reflects the current tournament. Historical
+// leagues (season < CURRENT_TOURNAMENT_SEASON) share players by espn_player_id
+// with the current roster, so without this filter the sync would overwrite
+// their completed game_scores with current-season data.
+const CURRENT_TOURNAMENT_SEASON = 2026;
+
 export async function GET(request: NextRequest) {
   // Auth: Vercel calls with Authorization: Bearer {CRON_SECRET}
   const authHeader = request.headers.get('authorization');
@@ -55,9 +61,26 @@ export async function GET(request: NextRequest) {
 
     anyInProgress = allGameStatuses.some((g) => g.game_status === 'in_progress');
 
+    // Resolve which of these players belong to the current tournament season —
+    // historical players sharing an espn_player_id with a current player must
+    // not have their (already-final) game_scores overwritten.
+    const candidatePlayerIds = [...new Set(allGameStatuses.map((gs) => gs.player_id))];
+    const { data: candidatePlayers } = await supabaseAdmin
+      .from('players')
+      .select('id, season')
+      .in('id', candidatePlayerIds);
+
+    const currentSeasonPlayerIds = new Set(
+      (candidatePlayers ?? [])
+        .filter((p) => p.season === CURRENT_TOURNAMENT_SEASON)
+        .map((p) => p.id)
+    );
+
     // Upsert game_scores for all returned statuses
     const upsertedGameScoreIds: string[] = [];
     for (const gs of allGameStatuses) {
+      if (!currentSeasonPlayerIds.has(gs.player_id)) continue;
+
       const { data: upserted } = await supabaseAdmin
         .from('game_scores')
         .upsert(
