@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { Section, type RosterSlotEnriched } from '@/components/RosterSlotList';
+import { supabase } from '@/lib/supabase/client';
 
 interface RosterResponse {
   active_starters: RosterSlotEnriched[];
@@ -19,6 +20,17 @@ export default function RosterPage() {
   const [data, setData] = useState<RosterResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOwnRoster, setIsOwnRoster] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function checkOwnRoster() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (active && user) setIsOwnRoster(user.id === user_id);
+    }
+    checkOwnRoster();
+    return () => { active = false; };
+  }, [user_id]);
 
   useEffect(() => {
     setLoading(true);
@@ -75,6 +87,14 @@ export default function RosterPage() {
           <h1 className="text-2xl font-bold text-white">Roster</h1>
           <span className="text-lg font-semibold text-yellow-400">{totalPoints} pts total</span>
         </div>
+
+        {isOwnRoster && (
+          <div className="mb-6">
+            <a href={`/league/${league_id}/bench-order`} className="text-sm text-yellow-400 hover:underline">
+              Manage Bench Order →
+            </a>
+          </div>
+        )}
 
         <div className="flex flex-col gap-5">
           <Section title="Active Starters" slots={data.active_starters} />

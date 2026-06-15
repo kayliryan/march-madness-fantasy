@@ -29,7 +29,7 @@ export async function getEnrichedRoster(league_id: string, user_id: string): Pro
   const { data: players } = playerIds.length > 0
     ? await supabaseAdmin
         .from('players')
-        .select('*, teams(id, name, seed, region)')
+        .select('*, teams(id, name, seed, region, is_eliminated)')
         .in('id', playerIds)
     : { data: [] };
 

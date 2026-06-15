@@ -7,7 +7,8 @@ import AppHeader from '@/components/AppHeader';
 import { PlayerCard } from '@/components/PlayerCard';
 import { PlayerFilters } from '@/components/PlayerFilters';
 import { PlayerSearch } from '@/components/PlayerSearch';
-import type { GetPlayersQuery, GetPlayersResponse, Player } from '@/lib/types';
+import { DraftQueue } from '@/components/DraftQueue';
+import type { GetLeagueResponse, GetPlayersQuery, GetPlayersResponse, Player } from '@/lib/types';
 
 function PlayersExplorer() {
   const searchParams = useSearchParams();
@@ -23,9 +24,12 @@ function PlayersExplorer() {
   const [teamId, setTeamId] = useState<string | undefined>(undefined);
 
   const [draftSessionId, setDraftSessionId] = useState<string | null>(null);
+  const [draftStatus, setDraftStatus] = useState<GetLeagueResponse['draft_status']>(null);
   const [draftedPlayerIds, setDraftedPlayerIds] = useState<Set<string>>(new Set());
   const [queuedPlayerIds, setQueuedPlayerIds] = useState<Set<string>>(new Set());
   const [addingPlayerId, setAddingPlayerId] = useState<string | null>(null);
+  const [queueOpen, setQueueOpen] = useState(false);
+  const [draftCompleteMessage, setDraftCompleteMessage] = useState<string | null>(null);
 
   // Fetch players whenever filters change
   useEffect(() => {
@@ -64,18 +68,20 @@ function PlayersExplorer() {
   // League/draft context: lets us mark drafted players and wire "Add to Queue"
   useEffect(() => {
     if (!leagueId) return;
+    let active = true;
 
     async function loadLeagueContext() {
-      const { data: session } = await supabase
-        .from('draft_sessions')
-        .select('id')
-        .eq('league_id', leagueId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const res = await fetch(`/api/league/${leagueId}`);
+      if (!res.ok) return;
+      const league: GetLeagueResponse = await res.json();
+      if (!active) return;
 
-      if (!session) return;
-      setDraftSessionId(session.id);
+      setDraftStatus(league.draft_status);
+      setDraftSessionId(league.draft_session_id);
+
+      if (!league.draft_session_id || league.draft_status === 'complete') {
+        return;
+      }
 
       const [{ data: rosterSlots }, queueRes] = await Promise.all([
         supabase
@@ -83,8 +89,10 @@ function PlayersExplorer() {
           .select('player_id')
           .eq('league_id', leagueId)
           .is('released_at_round_stage', null),
-        fetch(`/api/draft/queue?session_id=${session.id}`),
+        fetch(`/api/draft/queue?session_id=${league.draft_session_id}`),
       ]);
+
+      if (!active) return;
 
       if (rosterSlots) {
         setDraftedPlayerIds(new Set(rosterSlots.map((r) => r.player_id)));
@@ -92,12 +100,39 @@ function PlayersExplorer() {
 
       if (queueRes.ok) {
         const queueData: { queue: { player_id: string }[] } = await queueRes.json();
-        setQueuedPlayerIds(new Set(queueData.queue.map((q) => q.player_id)));
+        if (active) setQueuedPlayerIds(new Set(queueData.queue.map((q) => q.player_id)));
+      }
+
+      if (
+        (league.draft_status === 'scheduled' || league.draft_status === 'live') &&
+        searchParams.get('queue') === 'open'
+      ) {
+        setQueueOpen(true);
       }
     }
 
     loadLeagueContext();
-  }, [leagueId]);
+    return () => { active = false; };
+  }, [leagueId, searchParams]);
+
+  // While the draft is live, watch for DRAFT_COMPLETE so the queue drawer
+  // and "Add to Queue" controls disappear without a page refresh.
+  useEffect(() => {
+    if (draftStatus !== 'live' || !draftSessionId) return;
+
+    const channel = supabase
+      .channel(`draft:${draftSessionId}`)
+      .on('broadcast', { event: 'DRAFT_COMPLETE' }, () => {
+        setDraftStatus('complete');
+        setQueueOpen(false);
+        setDraftCompleteMessage('Draft complete. Your queue has been cleared.');
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [draftStatus, draftSessionId]);
 
   async function handleAddToQueue(player: Player) {
     if (!draftSessionId) return;
@@ -124,12 +159,38 @@ function PlayersExplorer() {
     return null;
   }, [loading, error, players.length]);
 
+  const queueFeatureActive =
+    !!leagueId && !!draftSessionId && (draftStatus === 'scheduled' || draftStatus === 'live');
+
   return (
     <div className="min-h-screen bg-black">
       <AppHeader leagueId={leagueId ?? undefined} />
       <div className="px-4 py-8">
         <div className="mx-auto max-w-6xl">
           <h1 className="mb-6 text-3xl font-bold text-white">Player Explorer</h1>
+
+          {draftCompleteMessage && (
+            <div className="mb-6 rounded-md border border-yellow-400/30 bg-yellow-400/10 px-4 py-3 text-sm text-yellow-300">
+              {draftCompleteMessage}
+            </div>
+          )}
+
+          {queueFeatureActive && (
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => setQueueOpen((o) => !o)}
+                className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:border-yellow-400/40 hover:text-yellow-400"
+              >
+                My Queue {queueOpen ? '▲' : '▼'}
+              </button>
+              {queueOpen && (
+                <div className="mt-3">
+                  <DraftQueue sessionId={draftSessionId!} />
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="mb-6 flex flex-col gap-4">
             <PlayerSearch value={search} onChange={setSearch} />
@@ -154,7 +215,7 @@ function PlayersExplorer() {
                   isDrafted={draftedPlayerIds.has(player.id)}
                   isQueued={queuedPlayerIds.has(player.id)}
                   addingToQueue={addingPlayerId === player.id}
-                  onAddToQueue={leagueId && draftSessionId ? handleAddToQueue : undefined}
+                  onAddToQueue={queueFeatureActive ? handleAddToQueue : undefined}
                 />
               ))}
             </div>

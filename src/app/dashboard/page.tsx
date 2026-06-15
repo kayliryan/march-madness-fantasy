@@ -4,11 +4,37 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
-import type { League } from '@/lib/types';
+import { formatCountdown } from '@/lib/utils/formatCountdown';
+import type { GetLeagueResponse, League } from '@/lib/types';
+
+function getStatusLine(detail: GetLeagueResponse): { text: string; href?: string } | null {
+  const { draft_status, scheduled_start, season_in_progress, draft_session_id } = detail;
+
+  if (draft_status === 'live') {
+    return { text: 'Draft in progress →', href: draft_session_id ? `/draft/${draft_session_id}` : undefined };
+  }
+  if (draft_status === 'scheduled' && scheduled_start != null && new Date(scheduled_start) > new Date()) {
+    return { text: `Draft starts ${formatCountdown(new Date(scheduled_start))}` };
+  }
+  if (draft_status === 'complete' && season_in_progress) {
+    return { text: 'Season in progress' };
+  }
+  if (draft_status === 'complete' && !season_in_progress) {
+    return { text: 'Season complete' };
+  }
+  return null;
+}
+
+function getBenchLockLine(detail: GetLeagueResponse): string | null {
+  if (detail.bench_lock_deadline == null) return null;
+  const deadline = new Date(detail.bench_lock_deadline);
+  return deadline > new Date() ? `Bench order locks ${formatCountdown(deadline)}` : 'Bench order locked';
+}
 
 export default function Dashboard() {
   const router = useRouter();
   const [leagues, setLeagues] = useState<League[]>([]);
+  const [leagueDetails, setLeagueDetails] = useState<Record<string, GetLeagueResponse>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,6 +48,28 @@ export default function Dashboard() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [router]);
+
+  useEffect(() => {
+    if (leagues.length === 0) return;
+    let active = true;
+
+    async function loadDetails() {
+      const results = await Promise.all(
+        leagues.map((l) => fetch(`/api/league/${l.id}`).then((r) => (r.ok ? r.json() : null)))
+      );
+      if (!active) return;
+
+      const details: Record<string, GetLeagueResponse> = {};
+      leagues.forEach((l, i) => {
+        const detail = results[i] as GetLeagueResponse | null;
+        if (detail) details[l.id] = detail;
+      });
+      setLeagueDetails(details);
+    }
+
+    loadDetails();
+    return () => { active = false; };
+  }, [leagues]);
 
   return (
     <div className="min-h-screen bg-black">
@@ -56,12 +104,29 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {leagues.map((league) => (
+              {leagues.map((league) => {
+                const detail = leagueDetails[league.id];
+                const statusLine = detail ? getStatusLine(detail) : null;
+                const benchLockLine = detail ? getBenchLockLine(detail) : null;
+
+                return (
                 <div key={league.id} className="rounded-lg border border-neutral-800 bg-neutral-900 p-5 shadow-sm hover:border-yellow-400/30 transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-white">{league.name}</p>
                       <p className="text-sm text-neutral-500">Season {league.season}</p>
+                      {statusLine && (
+                        statusLine.href ? (
+                          <Link href={statusLine.href} className="mt-1 inline-block text-xs font-medium text-yellow-400 hover:underline">
+                            {statusLine.text}
+                          </Link>
+                        ) : (
+                          <p className="mt-1 text-xs text-neutral-400">{statusLine.text}</p>
+                        )
+                      )}
+                      {benchLockLine && (
+                        <p className="mt-0.5 text-xs text-neutral-500">{benchLockLine}</p>
+                      )}
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
@@ -85,7 +150,8 @@ export default function Dashboard() {
                     </Link>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
+import { formatCountdown } from '@/lib/utils/formatCountdown';
 import type { GetLeagueResponse } from '@/lib/types';
 
 interface StandingEntry {
@@ -107,6 +108,14 @@ export default function LeagueHomePage() {
     ? [...myRoster.active_starters, ...myRoster.active_bench].reduce((sum, s) => sum + s.total_points, 0)
     : null;
 
+  let benchLockInfo: string | null = null;
+  if (league.bench_lock_deadline != null) {
+    const deadline = new Date(league.bench_lock_deadline);
+    benchLockInfo = deadline > new Date()
+      ? `Bench order locks ${formatCountdown(deadline)}`
+      : 'Bench order locked';
+  }
+
   return (
     <div className="min-h-screen bg-black">
       <AppHeader leagueId={league_id} />
@@ -117,6 +126,9 @@ export default function LeagueHomePage() {
           <p className="mt-1 text-sm text-neutral-500">
             Season {league.league.season} · {league.members.length} member{league.members.length === 1 ? '' : 's'}
           </p>
+          {benchLockInfo && (
+            <p className="mt-1 text-xs text-neutral-500">{benchLockInfo}</p>
+          )}
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -216,6 +228,17 @@ export default function LeagueHomePage() {
           </Link>
           <Link href={`/players?league_id=${league_id}`} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center text-sm font-medium text-white shadow-sm hover:border-yellow-400/40 hover:text-yellow-400">
             Player Explorer
+          </Link>
+          {(league.draft_status === 'scheduled' || league.draft_status === 'live') && (
+            <Link href={`/players?league_id=${league_id}&queue=open`} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center text-sm font-medium text-white shadow-sm hover:border-yellow-400/40 hover:text-yellow-400">
+              My Queue
+            </Link>
+          )}
+          <Link href={`/league/${league_id}/rules`} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center text-sm font-medium text-white shadow-sm hover:border-yellow-400/40 hover:text-yellow-400">
+            League Rules
+          </Link>
+          <Link href={`/league/${league_id}/bench-order`} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center text-sm font-medium text-white shadow-sm hover:border-yellow-400/40 hover:text-yellow-400">
+            Bench Order
           </Link>
           {isCommissioner && (
             <Link href={`/commissioner/${league_id}`} className="rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-4 text-center text-sm font-medium text-yellow-300 shadow-sm hover:bg-yellow-400/20 sm:col-span-2 lg:col-span-4">

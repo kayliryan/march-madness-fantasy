@@ -1,9 +1,10 @@
 import { ROUND_STAGE_ORDER, ROUND_LABELS } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
 import type { Player, RosterSlot, Team } from '@/lib/types';
+import { InjuryBadge } from '@/components/InjuryBadge';
 
 export interface RosterSlotEnriched extends RosterSlot {
-  player: (Player & { teams?: Pick<Team, 'id' | 'name' | 'seed' | 'region'> | null }) | null;
+  player: (Player & { teams?: Pick<Team, 'id' | 'name' | 'seed' | 'region' | 'is_eliminated'> | null }) | null;
   per_round: { round_stage: string; points: number }[];
   uncounted_round: { round_stage: string; points: number }[];
   total_points: number;
@@ -38,6 +39,13 @@ export function SlotRow({ slot }: { slot: RosterSlotEnriched }) {
             <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-400">
               {slot.release_reason ?? 'released'}
             </span>
+          )}
+          {slot.is_active && (
+            <InjuryBadge
+              status={slot.player?.injury_status}
+              note={slot.player?.injury_note}
+              updatedAt={slot.player?.injury_updated_at}
+            />
           )}
         </div>
 

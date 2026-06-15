@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     // Look up the league_id for this draft session
     const { data: draftSession, error: sessionError } = await supabase
       .from('draft_sessions')
-      .select('league_id')
+      .select('league_id, status')
       .eq('id', body.draft_session_id)
       .single();
 
@@ -104,6 +104,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Draft session not found' },
         { status: 404 }
+      );
+    }
+
+    if (draftSession.status === 'complete') {
+      return NextResponse.json(
+        { error: 'DRAFT_COMPLETE', message: 'Cannot modify your queue after the draft has completed.' },
+        { status: 422 }
       );
     }
 

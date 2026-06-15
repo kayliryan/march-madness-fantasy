@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/client';
 import { Resend } from 'resend';
-import type { LeagueInvite, SendInviteRequest, SendInviteResponse } from '@/lib/types';
+import type { GetInviteByTokenResponse, LeagueInvite, SendInviteRequest, SendInviteResponse } from '@/lib/types';
 
 const INVITE_EXPIRY_DAYS = 7;
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
     // yet, so RLS would otherwise hide both the invite and the league it points to.
     const { data: invite, error: inviteError } = await supabaseAdmin
       .from('league_invites')
-      .select('*, leagues(id, name, season)')
+      .select('*, leagues(id, name, season), users!invited_by(display_name)')
       .eq('token', token)
       .single();
 
@@ -133,7 +133,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ invite });
+    const response: GetInviteByTokenResponse = {
+      invite: invite as GetInviteByTokenResponse['invite'],
+    };
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error in GET /api/league/invite:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

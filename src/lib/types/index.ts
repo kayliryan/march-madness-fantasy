@@ -187,6 +187,19 @@ export interface RosterSlot {
   updated_at: string;
 }
 
+export interface BenchOrder {
+  id: string;
+  league_id: string;
+  user_id: string;
+  ordered_player_ids: string[];
+  submitted_at?: string;
+  locked_at?: string;
+  last_edited_by?: string;
+  last_edited_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // ===== SCORING =====
 export interface GameScore {
   id: string;
@@ -252,6 +265,13 @@ export interface SendInviteResponse {
   invite: LeagueInvite;
 }
 
+export interface GetInviteByTokenResponse {
+  invite: LeagueInvite & {
+    leagues: Pick<League, 'id' | 'name' | 'season'> | null;
+    users: Pick<User, 'display_name'> | null;
+  };
+}
+
 export interface AcceptInviteRequest {
   display_name?: string;
 }
@@ -300,4 +320,34 @@ export interface GetLeagueResponse {
   draft_status: 'scheduled' | 'live' | 'complete' | 'cancelled' | null;
   scheduled_start: string | null;
   season_in_progress: boolean;
+}
+
+export interface InviteListItem {
+  id: string;
+  invited_email: string;
+  status: 'pending' | 'expired';
+  sent_at: string;
+  accepted_at: string | null;
+  token: string;
+  invite_url: string;
+}
+
+export interface GetInvitesResponse {
+  invites: InviteListItem[];
+}
+
+export interface UpdateInviteStatusRequest {
+  status: 'expired';
+}
+
+export interface UpdateInviteStatusResponse {
+  invite: LeagueInvite;
+}
+
+export interface UpdateMemberRoleRequest {
+  role: 'member' | 'co_commissioner';
+}
+
+export interface UpdateMemberRoleResponse {
+  member: LeagueMember;
 }

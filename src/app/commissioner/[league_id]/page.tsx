@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase/client';
 import AppHeader from '@/components/AppHeader';
 import { DraftOrderGenerator } from '@/components/DraftOrderGenerator';
@@ -9,12 +10,16 @@ import { DraftScheduler } from '@/components/DraftScheduler';
 import { PlayerPositionOverride } from '@/components/PlayerPositionOverride';
 import { BenchOrderOverride } from '@/components/BenchOrderOverride';
 import type {
+  DraftPick,
   DraftSession,
+  GetInvitesResponse,
   GetLeagueResponse,
   GetPlayersResponse,
+  InviteListItem,
   League,
   LeagueMember,
   Player,
+  UpdateMemberRoleResponse,
 } from '@/lib/types';
 
 const ROUND_STAGES = ['play_in', 'r64', 'r32', 's16', 'e8', 'f4', 'championship'] as const;
@@ -28,6 +33,12 @@ const ROUND_STAGE_LABELS: Record<string, string> = {
   championship: 'Championship',
 };
 
+const ROLE_LABELS: Record<LeagueMember['role'], string> = {
+  commissioner: 'Commissioner',
+  co_commissioner: 'Co-Commissioner',
+  member: 'Member',
+};
+
 export default function CommissionerPage() {
   const params = useParams<{ league_id: string }>();
   const leagueId = params.league_id;
@@ -36,6 +47,7 @@ export default function CommissionerPage() {
   const [league, setLeague] = useState<League | null>(null);
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [memberLabels, setMemberLabels] = useState<Record<string, string>>({});
+  const [currentMember, setCurrentMember] = useState<LeagueMember | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [draftSession, setDraftSession] = useState<DraftSession | null>(null);
 
@@ -61,6 +73,21 @@ export default function CommissionerPage() {
   const [voidSuccess, setVoidSuccess] = useState<string | null>(null);
   const [voidingPick, setVoidingPick] = useState(false);
 
+  // Correct a Pick (3-step) state
+  const [correctPicks, setCorrectPicks] = useState<DraftPick[]>([]);
+  const [correctDisplayNames, setCorrectDisplayNames] = useState<Record<string, string>>({});
+  const [correctPicksLoading, setCorrectPicksLoading] = useState(true);
+  const [correctStep, setCorrectStep] = useState<1 | 2 | 3>(1);
+  const [selectedPick, setSelectedPick] = useState<DraftPick | null>(null);
+  const [correctAvailable, setCorrectAvailable] = useState<Player[]>([]);
+  const [correctAvailableLoading, setCorrectAvailableLoading] = useState(false);
+  const [correctSearch, setCorrectSearch] = useState('');
+  const [correctReplacementId, setCorrectReplacementId] = useState('');
+  const [correctVoidReason, setCorrectVoidReason] = useState('');
+  const [correctError, setCorrectError] = useState<string | null>(null);
+  const [correctSuccess, setCorrectSuccess] = useState<string | null>(null);
+  const [correctSubmitting, setCorrectSubmitting] = useState(false);
+
   // Manual score entry state
   const [scorePlayerId, setScorePlayerId] = useState('');
   const [scorePlayerSearch, setScorePlayerSearch] = useState('');
@@ -80,6 +107,22 @@ export default function CommissionerPage() {
   const [injuryError, setInjuryError] = useState<string | null>(null);
   const [injurySuccess, setInjurySuccess] = useState<string | null>(null);
   const [savingInjurySub, setSavingInjurySub] = useState(false);
+
+  // League Members & Invites state
+  const [invites, setInvites] = useState<InviteListItem[]>([]);
+  const [showExpiredInvites, setShowExpiredInvites] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+  const [resendingToken, setResendingToken] = useState<string | null>(null);
+  const [cancelingToken, setCancelingToken] = useState<string | null>(null);
+
+  // Member role management state
+  const [roleChangingUserId, setRoleChangingUserId] = useState<string | null>(null);
+  const [memberActionError, setMemberActionError] = useState<string | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<LeagueMember | null>(null);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -107,6 +150,7 @@ export default function CommissionerPage() {
 
       setLeague(leagueData.league);
       setMembers(leagueData.members);
+      setCurrentMember(leagueData.current_member);
 
       // Member display names for labels (best-effort; falls back to id)
       const userIds = leagueData.members.map((m) => m.user_id);
@@ -331,6 +375,233 @@ export default function CommissionerPage() {
     } finally { setVoidingPick(false); }
   }
 
+  const playerMap = useMemo(() => new Map(players.map((p) => [p.id, p])), [players]);
+
+  const pendingInvites = useMemo(() => invites.filter((i) => i.status === 'pending'), [invites]);
+  const expiredInvites = useMemo(() => invites.filter((i) => i.status === 'expired'), [invites]);
+
+  const loadCorrectPicks = useCallback(async () => {
+    if (!draftSession) return;
+    try {
+      const res = await fetch(`/api/draft/state/${draftSession.id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const picks = (data.picks as DraftPick[])
+        .filter((p) => !p.voided_at)
+        .sort((a, b) => a.round_number - b.round_number || a.pick_number - b.pick_number);
+      setCorrectPicks(picks);
+      setCorrectDisplayNames(data.display_names ?? {});
+    } finally {
+      setCorrectPicksLoading(false);
+    }
+  }, [draftSession]);
+
+  useEffect(() => {
+    if (draftSession?.status === 'complete') {
+      loadCorrectPicks();
+    }
+  }, [draftSession?.status, loadCorrectPicks]);
+
+  function resetCorrectFlow() {
+    setCorrectStep(1);
+    setSelectedPick(null);
+    setCorrectAvailable([]);
+    setCorrectSearch('');
+    setCorrectReplacementId('');
+    setCorrectVoidReason('');
+    setCorrectError(null);
+  }
+
+  async function handleSelectPick(pick: DraftPick) {
+    setSelectedPick(pick);
+    setCorrectStep(2);
+    setCorrectError(null);
+    setCorrectReplacementId('');
+    setCorrectSearch('');
+
+    const position = playerMap.get(pick.player_id)?.position;
+    setCorrectAvailableLoading(true);
+    try {
+      const url = position
+        ? `/api/league/${leagueId}/available-players?position=${position}`
+        : `/api/league/${leagueId}/available-players`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data: GetPlayersResponse = await res.json();
+        setCorrectAvailable(data.players);
+      } else {
+        setCorrectAvailable([]);
+      }
+    } finally {
+      setCorrectAvailableLoading(false);
+    }
+  }
+
+  async function handleConfirmCorrection() {
+    if (!selectedPick || !correctReplacementId || !correctVoidReason.trim()) {
+      setCorrectError('A void reason is required.');
+      return;
+    }
+    setCorrectSubmitting(true);
+    setCorrectError(null);
+    try {
+      const res = await fetch('/api/commissioner/pick/void', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pick_id: selectedPick.id,
+          void_reason: correctVoidReason.trim(),
+          replacement_player_id: correctReplacementId,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setCorrectError(err.message ?? err.error ?? 'Failed to correct pick.');
+      } else {
+        setCorrectSuccess('Pick corrected.');
+        setTimeout(() => setCorrectSuccess(null), 4000);
+        resetCorrectFlow();
+        setCorrectPicksLoading(true);
+        await loadCorrectPicks();
+      }
+    } finally {
+      setCorrectSubmitting(false);
+    }
+  }
+
+  const loadInvites = useCallback(async () => {
+    if (!leagueId) return;
+    const res = await fetch(`/api/league/${leagueId}/invites`);
+    if (!res.ok) return;
+    const data: GetInvitesResponse = await res.json();
+    setInvites(data.invites);
+  }, [leagueId]);
+
+  useEffect(() => {
+    if (currentMember?.role !== 'commissioner') return;
+    (async () => {
+      await loadInvites();
+    })();
+  }, [currentMember, loadInvites]);
+
+  async function handleSendInvite(e: React.FormEvent) {
+    e.preventDefault();
+    const email = inviteEmail.trim();
+    if (!email) return;
+
+    setInviteSending(true);
+    setInviteError(null);
+    setInviteSuccess(null);
+    try {
+      const res = await fetch('/api/league/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ league_id: leagueId, email }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setInviteError(err.error ?? 'Failed to send invite.');
+      } else {
+        setInviteSuccess(`Invite sent to ${email}.`);
+        setInviteEmail('');
+        await loadInvites();
+      }
+    } catch {
+      setInviteError('Failed to send invite.');
+    } finally {
+      setInviteSending(false);
+    }
+  }
+
+  async function handleResendInvite(invite: InviteListItem) {
+    const oldToken = invite.token;
+    setResendingToken(oldToken);
+    setInviteError(null);
+    try {
+      const res = await fetch('/api/league/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ league_id: leagueId, email: invite.invited_email }),
+      });
+      if (!res.ok) {
+        setInviteError('Failed to resend invite.');
+        return;
+      }
+
+      const patchRes = await fetch(`/api/league/invite/${oldToken}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'expired' }),
+      });
+      if (!patchRes.ok) {
+        console.error('Failed to expire old invite token:', oldToken);
+      }
+
+      await loadInvites();
+    } finally {
+      setResendingToken(null);
+    }
+  }
+
+  async function handleCancelInvite(token: string) {
+    setCancelingToken(token);
+    try {
+      await fetch(`/api/league/invite/${token}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'expired' }),
+      });
+      await loadInvites();
+    } finally {
+      setCancelingToken(null);
+    }
+  }
+
+  async function handleChangeRole(member: LeagueMember, role: 'member' | 'co_commissioner') {
+    setRoleChangingUserId(member.user_id);
+    setMemberActionError(null);
+    try {
+      const res = await fetch(`/api/league/${leagueId}/members/${member.user_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setMemberActionError(err.message ?? err.error ?? 'Failed to update member role.');
+      } else {
+        const data: UpdateMemberRoleResponse = await res.json();
+        setMembers((prev) => prev.map((m) => (m.user_id === member.user_id ? data.member : m)));
+      }
+    } catch {
+      setMemberActionError('Failed to update member role.');
+    } finally {
+      setRoleChangingUserId(null);
+    }
+  }
+
+  async function handleConfirmRemove() {
+    if (!removeTarget) return;
+    setRemovingUserId(removeTarget.user_id);
+    setMemberActionError(null);
+    try {
+      const res = await fetch(`/api/league/${leagueId}/members/${removeTarget.user_id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setMemberActionError(err.message ?? err.error ?? 'Failed to remove member.');
+      } else {
+        setMembers((prev) => prev.filter((m) => m.user_id !== removeTarget.user_id));
+        setRemoveTarget(null);
+      }
+    } catch {
+      setMemberActionError('Failed to remove member.');
+    } finally {
+      setRemovingUserId(null);
+    }
+  }
+
   // Resolve a participant's bench (pre-draft this is usually empty)
   const loadBench = useCallback(
     async (userId: string): Promise<Player[]> => {
@@ -472,6 +743,157 @@ export default function CommissionerPage() {
             memberLabels={memberLabels}
             loadBench={loadBench}
           />
+
+          {/* League Members & Invites */}
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-neutral-200">League Members &amp; Invites</h2>
+
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Members</h3>
+            <ul className="mb-2 divide-y divide-neutral-800">
+              {members.map((m) => (
+                <li key={m.user_id} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">
+                      {memberLabels[m.user_id] ?? m.user_id}
+                    </p>
+                    <p className="text-xs text-neutral-500">
+                      Joined {format(new Date(m.joined_at), 'MMMM d, yyyy')}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="rounded bg-neutral-800 px-2 py-0.5 text-xs text-neutral-300">
+                      {ROLE_LABELS[m.role]}
+                    </span>
+                    {currentMember?.role === 'commissioner' && m.role !== 'commissioner' && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleChangeRole(m, m.role === 'co_commissioner' ? 'member' : 'co_commissioner')
+                          }
+                          disabled={roleChangingUserId === m.user_id}
+                          className="rounded-md border border-neutral-700 px-2 py-1 text-xs font-medium text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400 disabled:opacity-50"
+                        >
+                          {roleChangingUserId === m.user_id
+                            ? 'Saving…'
+                            : m.role === 'co_commissioner'
+                              ? 'Demote to member'
+                              : 'Promote to co-commissioner'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRemoveTarget(m)}
+                          className="rounded-md border border-neutral-700 px-2 py-1 text-xs font-medium text-neutral-300 hover:border-red-400/40 hover:text-red-400"
+                        >
+                          Remove
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {memberActionError && <p className="mb-4 text-sm text-red-400">{memberActionError}</p>}
+
+            {currentMember?.role === 'commissioner' && (
+              <>
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Pending Invites</h3>
+                {pendingInvites.length === 0 ? (
+                  <p className="mb-4 text-sm text-neutral-500">No pending invites.</p>
+                ) : (
+                  <ul className="mb-4 divide-y divide-neutral-800">
+                    {pendingInvites.map((invite) => (
+                      <li key={invite.id} className="flex items-center justify-between gap-3 py-2.5">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm text-white">{invite.invited_email}</p>
+                          <p className="text-xs text-neutral-500">
+                            Sent {format(new Date(invite.sent_at), 'MMMM d, yyyy')}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="rounded bg-yellow-400/10 px-2 py-0.5 text-xs text-yellow-400">Pending</span>
+                          <button
+                            type="button"
+                            onClick={() => handleResendInvite(invite)}
+                            disabled={resendingToken === invite.token}
+                            className="rounded-md border border-neutral-700 px-2 py-1 text-xs font-medium text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400 disabled:opacity-50"
+                          >
+                            {resendingToken === invite.token ? 'Resending…' : 'Resend'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCancelInvite(invite.token)}
+                            disabled={cancelingToken === invite.token}
+                            className="rounded-md border border-neutral-700 px-2 py-1 text-xs font-medium text-neutral-300 hover:border-red-400/40 hover:text-red-400 disabled:opacity-50"
+                          >
+                            {cancelingToken === invite.token ? 'Canceling…' : 'Cancel'}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {expiredInvites.length > 0 && (
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowExpiredInvites((v) => !v)}
+                      className="text-sm text-yellow-400 hover:underline"
+                    >
+                      {showExpiredInvites ? 'Hide' : 'Show'} expired ({expiredInvites.length})
+                    </button>
+                    {showExpiredInvites && (
+                      <ul className="mt-2 divide-y divide-neutral-800">
+                        {expiredInvites.map((invite) => (
+                          <li key={invite.id} className="flex items-center justify-between gap-3 py-2.5">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm text-neutral-400">{invite.invited_email}</p>
+                              <p className="text-xs text-neutral-500">
+                                Sent {format(new Date(invite.sent_at), 'MMMM d, yyyy')}
+                              </p>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                              <span className="rounded bg-neutral-800 px-2 py-0.5 text-xs text-neutral-400">Expired</span>
+                              <button
+                                type="button"
+                                onClick={() => handleResendInvite(invite)}
+                                disabled={resendingToken === invite.token}
+                                className="rounded-md border border-neutral-700 px-2 py-1 text-xs font-medium text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400 disabled:opacity-50"
+                              >
+                                {resendingToken === invite.token ? 'Resending…' : 'Resend'}
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Invite Member</h3>
+                <form onSubmit={handleSendInvite} className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="email@example.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={inviteSending}
+                    className="shrink-0 rounded-md bg-yellow-400 px-4 py-2 text-sm font-medium text-black hover:bg-yellow-300 disabled:opacity-50"
+                  >
+                    {inviteSending ? 'Sending…' : 'Send Invite'}
+                  </button>
+                </form>
+                {inviteSuccess && <p className="mt-2 text-sm text-green-400">{inviteSuccess}</p>}
+                {inviteError && <p className="mt-2 text-sm text-red-400">{inviteError}</p>}
+              </>
+            )}
+          </div>
 
           {/* Injury Substitution */}
           {league?.settings.injury_sub_enabled && (
@@ -747,9 +1169,163 @@ export default function CommissionerPage() {
               </form>
             </div>
           )}
+
+          {/* Correct a Pick (3-step) */}
+          {draftSession && draftSession.status === 'complete' && (
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
+              <h2 className="mb-1 text-lg font-semibold text-neutral-200">Correct a Pick</h2>
+              <p className="mb-4 text-xs text-neutral-500">Step {correctStep} of 3</p>
+
+              {correctSuccess && <p className="mb-3 text-sm text-green-400">{correctSuccess}</p>}
+
+              {correctStep === 1 && (
+                <div>
+                  {correctPicksLoading ? (
+                    <p className="text-sm text-neutral-500">Loading picks…</p>
+                  ) : correctPicks.length === 0 ? (
+                    <p className="text-sm text-neutral-500">No picks found.</p>
+                  ) : (
+                    <ul className="max-h-80 divide-y divide-neutral-800 overflow-y-auto rounded-md border border-neutral-800">
+                      {correctPicks.map((pick) => {
+                        const player = playerMap.get(pick.player_id);
+                        return (
+                          <li
+                            key={pick.id}
+                            onClick={() => handleSelectPick(pick)}
+                            className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-neutral-800"
+                          >
+                            <span className="w-10 shrink-0 text-neutral-400">#{pick.pick_number}</span>
+                            <span className="flex-1 text-white">{correctDisplayNames[pick.user_id] ?? pick.user_id}</span>
+                            <span className="flex-1 text-neutral-300">
+                              {player?.name ?? pick.player_id}
+                              {player && (
+                                <span className="text-neutral-500">
+                                  {' '}({player.position}{player.teams ? ` · ${player.teams.name}` : ''})
+                                </span>
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {correctStep === 2 && selectedPick && (
+                <div>
+                  <p className="mb-2 text-sm text-neutral-300">
+                    Selecting replacement for pick #{selectedPick.pick_number} —{' '}
+                    {playerMap.get(selectedPick.player_id)?.name ?? selectedPick.player_id}
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="Search by name…"
+                    value={correctSearch}
+                    onChange={(e) => setCorrectSearch(e.target.value)}
+                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  />
+                  {correctAvailableLoading ? (
+                    <p className="mt-2 text-sm text-neutral-500">Loading available players…</p>
+                  ) : (
+                    <ul className="mt-2 max-h-60 divide-y divide-neutral-800 overflow-y-auto rounded-md border border-neutral-800">
+                      {correctAvailable
+                        .filter((p) => p.name.toLowerCase().includes(correctSearch.toLowerCase()))
+                        .slice(0, 50)
+                        .map((p) => (
+                          <li
+                            key={p.id}
+                            onClick={() => { setCorrectReplacementId(p.id); setCorrectStep(3); }}
+                            className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
+                          >
+                            {p.name}{' '}
+                            <span className="text-neutral-500">
+                              ({p.position}{p.teams ? ` · ${p.teams.name}` : ''})
+                            </span>
+                          </li>
+                        ))}
+                      {correctAvailable.length === 0 && (
+                        <li className="px-3 py-2 text-sm text-neutral-500">No available players found.</li>
+                      )}
+                    </ul>
+                  )}
+                  <button onClick={resetCorrectFlow} className="mt-3 text-sm text-neutral-400 hover:text-yellow-400">
+                    ← Back to picks
+                  </button>
+                </div>
+              )}
+
+              {correctStep === 3 && selectedPick && (() => {
+                const oldPlayer = playerMap.get(selectedPick.player_id);
+                const newPlayer = correctAvailable.find((p) => p.id === correctReplacementId);
+                return (
+                  <div>
+                    <p className="mb-3 text-sm text-neutral-300">
+                      Replace{' '}
+                      <span className="font-semibold text-white">{oldPlayer?.name ?? selectedPick.player_id}</span>
+                      {oldPlayer?.teams ? ` (${oldPlayer.teams.name})` : ''} with{' '}
+                      <span className="font-semibold text-white">{newPlayer?.name ?? correctReplacementId}</span>
+                      {newPlayer?.teams ? ` (${newPlayer.teams.name})` : ''}?
+                    </p>
+                    <label className="mb-1 block text-sm font-medium text-neutral-300">Void Reason</label>
+                    <input
+                      type="text"
+                      placeholder="Wrong pick, admin error…"
+                      value={correctVoidReason}
+                      onChange={(e) => setCorrectVoidReason(e.target.value)}
+                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    />
+                    {correctError && <p className="mt-2 text-sm text-red-400">{correctError}</p>}
+                    <div className="mt-3 flex gap-3">
+                      <button onClick={() => setCorrectStep(2)} className="text-sm text-neutral-400 hover:text-yellow-400">
+                        ← Back
+                      </button>
+                      <button
+                        onClick={handleConfirmCorrection}
+                        disabled={correctSubmitting || !correctVoidReason.trim()}
+                        className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {correctSubmitting ? 'Saving…' : 'Confirm Correction'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
       </div>
       </div>
+
+      {removeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-sm rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-lg">
+            <p className="text-sm text-white">
+              Remove {memberLabels[removeTarget.user_id] ?? removeTarget.user_id} from the league?
+            </p>
+            <p className="mt-2 text-sm text-neutral-400">
+              They will lose access immediately. Their draft picks and scores will remain in the league history.
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setRemoveTarget(null)}
+                className="rounded-md border border-neutral-700 px-3 py-1.5 text-sm font-medium text-neutral-300 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRemove}
+                disabled={removingUserId === removeTarget.user_id}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {removingUserId === removeTarget.user_id ? 'Removing…' : 'Remove Member'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

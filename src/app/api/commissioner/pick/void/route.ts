@@ -42,13 +42,16 @@ export async function PATCH(request: NextRequest) {
       .from('draft_picks')
       .select('*')
       .eq('id', body.pick_id)
-      .single();
+      .maybeSingle();
 
     if (!pick) {
-      return NextResponse.json({ error: 'Pick not found' }, { status: 404 });
+      return NextResponse.json({ error: 'PICK_NOT_FOUND', message: 'Pick not found.' }, { status: 404 });
     }
     if (pick.voided_at) {
-      return NextResponse.json({ error: 'Pick is already voided' }, { status: 409 });
+      return NextResponse.json(
+        { error: 'PICK_ALREADY_VOIDED', message: 'This pick has already been voided.' },
+        { status: 422 }
+      );
     }
 
     // Commissioner only

@@ -60,10 +60,30 @@ export async function GET(
       return NextResponse.json({ error: 'Not a member of this league' }, { status: 403 });
     }
 
+    const [{ data: session }, { count }] = await Promise.all([
+      supabase
+        .from('draft_sessions')
+        .select('id, bench_lock_deadline, status, scheduled_start')
+        .eq('league_id', league_id)
+        .neq('status', 'cancelled')
+        .order('created_at', { ascending: false })
+        .maybeSingle(),
+      supabase
+        .from('game_scores')
+        .select('id', { count: 'exact', head: true })
+        .eq('season', (league as League).season)
+        .eq('game_status', 'in_progress'),
+    ]);
+
     const response: GetLeagueResponse = {
       league: league as League,
       members: (members || []) as LeagueMember[],
       current_member: currentMember as LeagueMember,
+      draft_session_id: session?.id ?? null,
+      bench_lock_deadline: session?.bench_lock_deadline ?? null,
+      draft_status: session?.status ?? null,
+      scheduled_start: session?.scheduled_start ?? null,
+      season_in_progress: (count ?? 0) > 0,
     };
 
     return NextResponse.json(response);
