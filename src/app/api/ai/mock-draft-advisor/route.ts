@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { checkAndIncrementDemoAiCap, DEMO_AI_CAP_MESSAGE } from '@/lib/utils/demoAiCap';
 
 const anthropic = new Anthropic();
 
@@ -49,8 +50,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // No auth required — this is a stateless endpoint that takes client-provided
-    // player data and calls Claude. No DB access. Rate-limiting via Vercel if needed.
+    // Layer 3 global daily cap applies to all demo AI routes (no league_id = Layer 1 skipped).
+    const capResult = await checkAndIncrementDemoAiCap(null);
+    if (!capResult.allowed) {
+      return NextResponse.json({ error: DEMO_AI_CAP_MESSAGE }, { status: 429 });
+    }
 
     const n = total_teams ?? 5;
     const roundNumber = Math.ceil(pick_number / n);
@@ -87,7 +91,7 @@ Give concise, specific draft advice (2–3 sentences). Consider position need, s
     const userPrompt = question?.trim() || 'Who should I pick right now and why?';
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       max_tokens: 300,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
