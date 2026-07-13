@@ -1,5 +1,21 @@
 import { supabaseAdmin } from '@/lib/supabase/client';
 
+// Lets a known tester's real IP bypass the per-caller (not the global/per-league)
+// caps below — set via DEMO_AI_CAP_BYPASS_IPS="1.2.3.4,5.6.7.8" in env vars, comma-
+// separated, no spaces needed. Useful for verifying the live production advisor
+// actually works end-to-end without burning down the same daily quota real visitors
+// share. Does NOT affect the global daily cap or per-league cap — those still apply
+// to everyone, since they're the actual cost backstop.
+const BYPASS_IPS = new Set(
+  (process.env.DEMO_AI_CAP_BYPASS_IPS ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+);
+
+function isTrustedTestIp(ip: string | null): boolean {
+  if (!ip || ip === 'unknown') return false;
+  if (ip === '::1' || ip === '127.0.0.1' || ip.startsWith('::ffff:127.')) return true;
+  return BYPASS_IPS.has(ip);
+}
+
 // Sonnet pricing: ~$3/M input tokens, ~$15/M output tokens.
 // Typical advisor call: ~3000 input + ~300 output tokens.
 //   = (3000 × $0.000003) + (300 × $0.000015) = $0.009 + $0.0045 ≈ $0.014
@@ -89,9 +105,9 @@ export async function checkAndIncrementDemoAiCap(
     }
   }
 
-  // Layer 4 check (per-IP advisor call rate). Localhost is always the developer.
-  const isLocalhost = ip !== null && (ip === '::1' || ip === '127.0.0.1' || ip.startsWith('::ffff:127.'));
-  if (ip !== null && ip !== 'unknown' && !isLocalhost) {
+  // Layer 4 check (per-IP advisor call rate). Localhost and allowlisted tester IPs skip this.
+  const isTrusted = isTrustedTestIp(ip);
+  if (ip !== null && ip !== 'unknown' && !isTrusted) {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { count: ipCallCount } = await supabaseAdmin
       .from('demo_ai_call_log')
@@ -125,7 +141,7 @@ export async function checkAndIncrementDemoAiCap(
       .eq('is_demo', true);
   }
 
-  if (ip !== null && ip !== 'unknown' && !isLocalhost) {
+  if (ip !== null && ip !== 'unknown' && !isTrusted) {
     await supabaseAdmin.from('demo_ai_call_log').insert({ ip });
   }
 
@@ -157,12 +173,9 @@ export async function checkDemoProvisionAllowed(
   }
 
   // Per-IP rate limit (secondary signal — see NOTE on limitations above).
-  // Localhost is always the developer; rate-limiting it defeats testing without
-  // providing any abuse protection (local requests can't come from external attackers).
-  const isLocalhost =
-    ip === '::1' || ip === '127.0.0.1' || ip.startsWith('::ffff:127.');
-
-  if (!isLocalhost) {
+  // Localhost and allowlisted tester IPs skip this; rate-limiting them defeats
+  // testing without providing any real abuse protection.
+  if (!isTrustedTestIp(ip)) {
     const { count: ipCount } = await supabaseAdmin
       .from('demo_provision_log')
       .select('id', { count: 'exact', head: true })
