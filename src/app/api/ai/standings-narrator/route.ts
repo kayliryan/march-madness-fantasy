@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/client';
 import Anthropic from '@anthropic-ai/sdk';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
+import { checkAndIncrementDemoAiCap, DEMO_AI_CAP_MESSAGE } from '@/lib/utils/demoAiCap';
 
 const anthropic = new Anthropic();
 
@@ -57,9 +58,17 @@ export async function POST(request: NextRequest) {
     // Fetch league info
     const { data: league } = await supabaseAdmin
       .from('leagues')
-      .select('name')
+      .select('name, is_demo')
       .eq('id', league_id)
       .single();
+
+    // Demo AI cap check (Layers 1 + 3). Real leagues are uncapped.
+    if (league?.is_demo) {
+      const capResult = await checkAndIncrementDemoAiCap(league_id);
+      if (!capResult.allowed) {
+        return NextResponse.json({ error: DEMO_AI_CAP_MESSAGE }, { status: 429 });
+      }
+    }
 
     // Fetch standings snapshots
     const { data: snapshots } = await supabaseAdmin

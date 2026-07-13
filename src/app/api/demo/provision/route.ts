@@ -1,11 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { DemoProvisioningService } from '@/lib/services/DemoProvisioningService';
+import { checkDemoProvisionAllowed, logDemoProvision } from '@/lib/utils/demoAiCap';
 
 // "Try as Commissioner" (Section 14.3). No auth required — provisions a fresh
 // anonymous session + personal demo league on every call (no idempotency check;
 // double-clicks create two sessions, cleaned up by /api/cron/demo-cleanup).
-export async function POST() {
+export async function POST(request: NextRequest) {
+  // Layer 2 checks: concurrent-league cap (primary backstop) + per-IP rate limit.
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? request.headers.get('x-real-ip')
+    ?? 'unknown';
+  const capCheck = await checkDemoProvisionAllowed(ip);
+  if (!capCheck.allowed) {
+    const errorCode = capCheck.reason === 'concurrent_cap' ? 'CONCURRENT_CAP_REACHED' : 'RATE_LIMIT_IP';
+    return NextResponse.json({ error: 'capacity', errorCode }, { status: 429 });
+  }
+
   const response = NextResponse.json({});
 
   const supabase = createServerClient(
@@ -32,6 +43,7 @@ export async function POST() {
 
   try {
     const { league_id, draft_session_id } = await DemoProvisioningService.provision(anonData.user.id);
+    await logDemoProvision(ip);
 
     const { session } = anonData;
     const expires_at = session.expires_at
