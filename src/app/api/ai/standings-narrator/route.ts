@@ -138,8 +138,18 @@ ${standingsSummary}`;
       messages: [{ role: 'user', content: userPrompt }],
     });
 
-    const narrative = (message.content[0] as { type: string; text: string }).text;
-    return NextResponse.json({ narrative });
+    const textBlock = message.content.find((b): b is Anthropic.TextBlock => b.type === 'text');
+    if (!textBlock || !textBlock.text) {
+      console.error(
+        '[standings-narrator] No text block in Claude response.',
+        JSON.stringify({ stop_reason: message.stop_reason, content_types: message.content.map((b) => b.type) })
+      );
+      return NextResponse.json(
+        { error: 'The AI recap had trouble generating just now — try again in a moment.' },
+        { status: 502 }
+      );
+    }
+    return NextResponse.json({ narrative: textBlock.text });
   } catch (error) {
     console.error('Error in POST /api/ai/standings-narrator:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
