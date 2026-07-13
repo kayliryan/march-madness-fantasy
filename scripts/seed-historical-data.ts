@@ -27,6 +27,8 @@ interface FixturePlayer {
   school: string;
   position: 'G' | 'F' | 'C';
   avg_ppg: number;
+  is_bench: boolean;
+  activated_round?: ScoreRoundStage | null;
   scores: Partial<Record<ScoreRoundStage, number>>;
 }
 
@@ -57,8 +59,10 @@ const SCORE_ROUND_STAGES = ROUND_STAGE_ORDER.filter(
 );
 
 // Seasons pending verification of historical scores and winner data.
-// Remove a season from this list once it has been confirmed correct.
-const PENDING_VERIFICATION_SEASONS = [2017, 2018, 2021, 2022, 2023];
+// Remove a season from this list once it has been confirmed correct against the original spreadsheet.
+// NOTE: 2024 was removed from this app's historical_fixture.json pending re-verification from the
+// original spreadsheet — do not add 2024 back until scores are confirmed from source data.
+const PENDING_VERIFICATION_SEASONS = [2017, 2018, 2021, 2022, 2023, 2024];
 
 // Synthetic game dates — historical data has no real per-game dates, just per-round
 // totals. One placeholder date per round_stage/season satisfies the NOT NULL column
@@ -215,9 +219,10 @@ async function seedSeason(season: FixtureSeason, emailToUserId: Map<string, stri
   }
 
   // Resolve unique participants by email, preserving first-seen (draft_slot) order.
-  // 2017 has two entries each for [redacted-email-1] and [redacted-email-2] —
-  // these collapse into one league_member each, but every entry's players are still
-  // imported below under that single user.
+  // 2017 has two participant entries for the same two people (using two different
+  // email addresses each, from an old account switch) — these collapse into one
+  // league_member each, but every entry's players are still imported below under
+  // that single user.
   const seenEmails = new Set<string>();
   const uniqueParticipants: FixtureParticipant[] = [];
   for (const p of season.participants) {
@@ -240,7 +245,7 @@ async function seedSeason(season: FixtureSeason, emailToUserId: Map<string, stri
   const commissionerEmail = uniqueParticipants[0].email!;
   const commissionerId = userIdByEmail.get(commissionerEmail)!;
 
-  const benchSlots = Math.max(0, ...season.participants.map((p) => p.players.length - 5));
+  const benchSlots = Math.max(0, ...season.participants.map((p) => p.players.filter((pl) => pl.is_bench).length));
   const settings: LeagueSettings = { ...HISTORICAL_SETTINGS_BASE, bench_slots: benchSlots };
 
   const { data: league, error: leagueErr } = await supabaseAdmin
@@ -285,6 +290,9 @@ async function seedSeason(season: FixtureSeason, emailToUserId: Map<string, stri
       const playerId = await findOrCreatePlayer(season.season, fp, teamId, playerCache);
 
       counter++;
+      // Activated bench players: acquired_at_round_stage = the round they were subbed in.
+      // Unactivated bench players and starters: acquired_at_round_stage = 'draft'.
+      const acquiredAt: string = (fp.is_bench && fp.activated_round) ? fp.activated_round : 'draft';
       const { error: slotErr } = await supabaseAdmin.from('roster_slots').insert({
         league_id,
         user_id: userId,
@@ -292,8 +300,8 @@ async function seedSeason(season: FixtureSeason, emailToUserId: Map<string, stri
         slot_key: `H${counter}`,
         slot_position: fp.position,
         is_active: true,
-        is_bench: i >= 5,
-        acquired_at_round_stage: 'draft',
+        is_bench: fp.is_bench,
+        acquired_at_round_stage: acquiredAt,
       });
       if (slotErr) throw new Error(`seedSeason ${season.season}: roster_slots insert failed for "${fp.name}": ${slotErr.message}`);
 
