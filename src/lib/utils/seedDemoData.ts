@@ -1,7 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
-import { ScoreAccumulator } from '@/lib/services/ScoreAccumulator';
 
 const SLOT_KEYS = ['G1', 'G2', 'F1', 'F2', 'C1', 'B1', 'B2', 'B3'] as const;
 type SlotKey = (typeof SLOT_KEYS)[number];
@@ -13,16 +12,8 @@ const SLOT_IS_BENCH: Record<SlotKey, boolean> = {
   G1: false, G2: false, F1: false, F2: false, C1: false, B1: true, B2: true, B3: true,
 };
 
-// Used only to pick a plausible bench-activation pair for the seeded substitution
-// event (item 7) — independent of a league's actual sub_eligibility_matrix setting.
-const SUB_ELIGIBILITY_MATRIX: Record<'G' | 'F' | 'C', ('G' | 'F' | 'C')[]> = {
-  G: ['G', 'F'], F: ['G', 'F'], C: ['C'],
-};
-const STARTER_SLOT_FOR_POS: Record<'G' | 'F' | 'C', SlotKey> = { G: 'G1', F: 'F1', C: 'C1' };
-const BENCH_SLOT_FOR_POS: Record<'G' | 'F' | 'C', SlotKey> = { G: 'B1', F: 'B2', C: 'B3' };
 
 // Rounds in which each seed tier is eliminated (null = not eliminated through E8)
-// Seeds 1-2: survive to E8. Seeds 3-4: eliminated in S16. Seeds 5-8: R32. Seeds 9-16 + play-in losers: R64/play_in.
 function getEliminationRound(seed: number, isPlayInLoser: boolean): RoundStage | null {
   if (isPlayInLoser) return 'play_in';
   if (seed <= 2) return null;
@@ -32,11 +23,9 @@ function getEliminationRound(seed: number, isPlayInLoser: boolean): RoundStage |
 }
 
 const PLAYABLE_ROUND_STAGES = ROUND_STAGE_ORDER.filter(
-  (s) => s !== 'draft' && s !== 'play_in' && s !== 'f4' && s !== 'championship'
+  (s) => s !== 'draft' && s !== 'play_in'
 );
 
-// Rounds a team plays in, based on when they're eliminated. Uses ROUND_STAGE_ORDER.indexOf()
-// rather than a hardcoded ordering array.
 function roundsPlayed(eliminatedIn: RoundStage | null): RoundStage[] {
   if (eliminatedIn === 'play_in') return ['play_in'];
   if (!eliminatedIn) return PLAYABLE_ROUND_STAGES;
@@ -47,7 +36,7 @@ function roundsPlayed(eliminatedIn: RoundStage | null): RoundStage[] {
 // Deterministic points: avg_ppg * round_multiplier with minor seed-based variance.
 // These multipliers are the "fixture" calibrated in Section 14.10 — do not adjust at runtime.
 const ROUND_POINT_MULTIPLIERS: Record<string, number> = {
-  play_in: 0.9, r64: 1.0, r32: 1.05, s16: 1.1, e8: 1.15,
+  play_in: 0.9, r64: 1.0, r32: 1.05, s16: 1.1, e8: 1.15, f4: 1.2, championship: 1.25,
 };
 function gamePoints(avgPpg: number, seed: number, round: RoundStage): number {
   const variance = 1 - (seed - 1) * 0.005;
@@ -60,6 +49,8 @@ const GAME_DATES: Record<string, string> = {
   r32: '2026-03-23',
   s16: '2026-03-27',
   e8: '2026-03-29',
+  f4: '2026-04-05',
+  championship: '2026-04-07',
 };
 
 type PlayerRow = {
@@ -76,11 +67,35 @@ function getTeamMeta(p: PlayerRow): { seed: number; region: string } | null {
   return Array.isArray(p.teams) ? (p.teams[0] ?? null) : p.teams;
 }
 
+type SlotEntry = {
+  league_id: string;
+  user_id: string;
+  player_id: string;
+  slot_key: string;
+  slot_position: 'G' | 'F' | 'C';
+  is_bench: boolean;
+  is_active: boolean;
+  acquired_at_round_stage: string;
+  released_at_round_stage: string | null;
+  release_reason: string | null;
+};
+
+type InsertedGameScore = {
+  id: string;
+  player_id: string;
+  round_stage: string;
+  points: number;
+};
+
 /**
  * Seeds a fully-played-through-Elite-8 fantasy league: completed historical draft
  * (with draft_picks), roster_slots (including one bench-activation substitution),
- * game_scores for play_in–e8, and leaderboard via ScoreAccumulator.runForLeague().
+ * game_scores for play_in–e8, scoring_events, and leaderboard_snapshots.
  * Idempotent — safe to re-run for the same league_id.
+ *
+ * Scoring events and leaderboard snapshots are computed in-memory from rosterSlotsBatch
+ * and the returned game_score IDs, replacing ScoreAccumulator.runForLeague() (~400
+ * sequential DB round-trips → 2 bulk operations).
  */
 export async function seedDemoLeagueData(
   supabaseAdmin: SupabaseClient,
@@ -100,6 +115,7 @@ export async function seedDemoLeagueData(
   const maxPicks = N * ROUNDS;
 
   // ── 1. Load teams, assign elimination rounds (global, shared across leagues) ──
+  const t1 = Date.now();
   const { data: teams } = await supabaseAdmin
     .from('teams')
     .select('id, seed, region, is_eliminated, eliminated_in_round_stage')
@@ -126,19 +142,27 @@ export async function seedDemoLeagueData(
   }
 
   const teamElimMap = new Map<string, RoundStage | null>();
+  const teamUpdatePromises: PromiseLike<unknown>[] = [];
   for (const t of teams) {
     const isLoser = playInLoserIds.has(t.id);
     const elimRound = getEliminationRound(t.seed, isLoser);
     teamElimMap.set(t.id, elimRound);
     if (!t.is_eliminated && elimRound) {
-      await supabaseAdmin
-        .from('teams')
-        .update({ is_eliminated: true, eliminated_in_round_stage: elimRound })
-        .eq('id', t.id);
+      teamUpdatePromises.push(
+        supabaseAdmin
+          .from('teams')
+          .update({ is_eliminated: true, eliminated_in_round_stage: elimRound })
+          .eq('id', t.id)
+      );
     }
   }
+  if (teamUpdatePromises.length > 0) {
+    await Promise.all(teamUpdatePromises);
+  }
+  console.log(`[seedDemo] 1. teams+elimMap: ${Date.now() - t1}ms (${teamUpdatePromises.length} parallel updates)`);
 
   // ── 2. Load players ──
+  const t2 = Date.now();
   const { data: allPlayers } = await supabaseAdmin
     .from('players')
     .select('id, name, position, avg_ppg, team_id, teams(seed, region)')
@@ -149,6 +173,7 @@ export async function seedDemoLeagueData(
     throw new Error(`seedDemoLeagueData: no players found for season ${season} — run seed-players-2026.ts first`);
   }
   const players = allPlayers as unknown as PlayerRow[];
+  console.log(`[seedDemo] 2. players: ${Date.now() - t2}ms`);
 
   const survivalScore = (teamId: string): number => {
     const elim = teamElimMap.get(teamId);
@@ -173,6 +198,7 @@ export async function seedDemoLeagueData(
   }
 
   // ── 3. Find or create the historical 'complete' draft session ──
+  const t3 = Date.now();
   const now = Date.now();
   const startedAt = new Date(now - 30 * 24 * 60 * 60 * 1000);
   const scheduledStart = new Date(startedAt.getTime() - 60 * 60 * 1000);
@@ -219,18 +245,54 @@ export async function seedDemoLeagueData(
 
   await supabaseAdmin.from('roster_slots').delete().eq('league_id', league_id);
   await supabaseAdmin.from('scoring_events').delete().eq('league_id', league_id);
+  console.log(`[seedDemo] 3. draft_session+cleanup: ${Date.now() - t3}ms`);
 
-  // ── 4. Simulate snake draft (survival-score x avg_ppg ordered pools) ──
+  // ── 3.5. Pre-assign "no eligible C sub" edge case for last member ──
+  // Member[N-1] receives two eliminated-in-r64 C players for C1 (starter) and B3 (bench).
+  // When their C1 player is eliminated, BenchOrderService.resolveNext() finds no eligible
+  // C bench sub (the only other C — B3 — is also eliminated) and returns null, exercising
+  // the documented "no eligible sub" code path in BenchOrderService (Section 5.4 algorithm).
   const usedPlayerIds = new Set<string>();
   const roster: Record<string, Partial<Record<SlotKey, string>>> = {};
   for (const userId of member_user_ids) roster[userId] = {};
 
+  const noSubUserId = member_user_ids[N - 1];
+  const eliminatedCPool = byPos['C'].filter(
+    (p) => teamElimMap.get(p.team_id) === 'r64',
+  );
+  if (eliminatedCPool.length < 2) {
+    throw new Error('seedDemoLeagueData: not enough r64-eliminated C players for no-sub edge case');
+  }
+  const noSubC1Player = eliminatedCPool[0];
+  const noSubB3Player = eliminatedCPool[1];
+  roster[noSubUserId]['C1'] = noSubC1Player.id;
+  roster[noSubUserId]['B3'] = noSubB3Player.id;
+  usedPlayerIds.add(noSubC1Player.id);
+  usedPlayerIds.add(noSubB3Player.id);
+
+  // ── 3.6. Pre-assign bench-activation G2 for the top-ranked user ──
+  // G2's team MUST be eliminated in R32 so the bench activation slot (added post-draft)
+  // can share slot_key='G2' without violating the partial unique index (the normal G2
+  // row will have released_at_round_stage='r32', the promoted row will have it NULL —
+  // each covered by the unique constraint independently).
+  const subUserId = member_user_ids[0];
+  const eliminatedG2 = byPos['G'].find(
+    (p) => !usedPlayerIds.has(p.id) && teamElimMap.get(p.team_id) === 'r32',
+  );
+  if (!eliminatedG2) {
+    throw new Error('seedDemoLeagueData: could not find r32-eliminated G player for G2 pre-assignment');
+  }
+  roster[subUserId]['G2'] = eliminatedG2.id;
+  usedPlayerIds.add(eliminatedG2.id);
+
+  // ── 4. Simulate snake draft (survival-score x avg_ppg ordered pools) ──
   for (let round = 0; round < ROUNDS; round++) {
     const slotKey = SLOT_KEYS[round];
     const slotPos = SLOT_POSITIONS[slotKey];
     const pickOrder = round % 2 === 0 ? member_user_ids : [...member_user_ids].reverse();
 
     for (const userId of pickOrder) {
+      if (roster[userId][slotKey] !== undefined) continue; // pre-assigned slot
       const player = byPos[slotPos].find((p) => !usedPlayerIds.has(p.id));
       if (!player) {
         throw new Error(`seedDemoLeagueData: ran out of ${slotPos} players while filling slot ${slotKey}`);
@@ -240,49 +302,25 @@ export async function seedDemoLeagueData(
     }
   }
 
-  // ── 5. Force a bench-activation substitution event (item 7): a starter eliminated
-  // in r64 is released, and a surviving bench player is promoted into that slot with
-  // acquired_at_round_stage = 'r32'. ──
+  // ── 5. Force bench-activation for the top-ranked user: G2's team naturally eliminates
+  // in R32 (seeds 5-8 → r32). A surviving G player (seed 1-2, unused) replaces the
+  // normal B1 pick, then activates into the G2 slot from S16. This adds bonus S16+E8
+  // scoring on top of user 0's full normal roster, guaranteeing rank #1. ──
   const findUnused = (pos: 'G' | 'F' | 'C', predicate: (elim: RoundStage | null) => boolean) =>
     byPos[pos].find((p) => !usedPlayerIds.has(p.id) && predicate(teamElimMap.get(p.team_id) ?? null));
 
-  let substitution: {
-    starterPos: 'G' | 'F' | 'C';
-    benchPos: 'G' | 'F' | 'C';
-    eliminatedStarter: PlayerRow;
-    survivingSub: PlayerRow;
-  } | null = null;
-
-  outer: for (const starterPos of ['G', 'F', 'C'] as const) {
-    for (const benchPos of SUB_ELIGIBILITY_MATRIX[starterPos]) {
-      const eliminatedStarter = findUnused(starterPos, (elim) => elim === 'r64');
-      const survivingSub = findUnused(benchPos, (elim) => elim === null || elim === 's16' || elim === 'e8');
-      if (eliminatedStarter && survivingSub && eliminatedStarter.id !== survivingSub.id) {
-        substitution = { starterPos, benchPos, eliminatedStarter, survivingSub };
-        break outer;
-      }
-    }
+  const survivingSub = findUnused('G', (elim) => elim === null);
+  if (!survivingSub) {
+    throw new Error('seedDemoLeagueData: could not find surviving G player for bench activation');
   }
 
-  if (!substitution) {
-    throw new Error('seedDemoLeagueData: could not find players for the required substitution event');
-  }
-
-  const subUserId = member_user_ids[0];
-  const starterSlotKey = STARTER_SLOT_FOR_POS[substitution.starterPos];
-  const benchSlotKey = BENCH_SLOT_FOR_POS[substitution.benchPos];
-  const { eliminatedStarter, survivingSub } = substitution;
-
-  const displacedStarterId = roster[subUserId][starterSlotKey]!;
-  const displacedBenchId = roster[subUserId][benchSlotKey]!;
-  usedPlayerIds.delete(displacedStarterId);
+  const displacedBenchId = roster[subUserId]['B1']!;
   usedPlayerIds.delete(displacedBenchId);
-  usedPlayerIds.add(eliminatedStarter.id);
   usedPlayerIds.add(survivingSub.id);
-  roster[subUserId][starterSlotKey] = eliminatedStarter.id;
-  roster[subUserId][benchSlotKey] = survivingSub.id;
+  roster[subUserId]['B1'] = survivingSub.id;
 
   // ── 6. draft_picks (64 rows), reflecting the post-substitution roster ──
+  const t6 = Date.now();
   const draftPicksBatch: Record<string, unknown>[] = [];
   let pickNumber = 0;
   for (let round = 0; round < ROUNDS; round++) {
@@ -306,22 +344,24 @@ export async function seedDemoLeagueData(
     const { error } = await supabaseAdmin.from('draft_picks').insert(draftPicksBatch.slice(i, i + 100));
     if (error) throw new Error(`seedDemoLeagueData: failed to insert draft_picks: ${error.message}`);
   }
+  console.log(`[seedDemo] 6. draft_picks: ${Date.now() - t6}ms (${draftPicksBatch.length} rows)`);
 
   // ── 7. roster_slots, with acquired_at_round_stage = 'draft' for normal picks ──
-  const rosterSlotsBatch: Record<string, unknown>[] = [];
+  const t7 = Date.now();
+  const rosterSlotsBatch: SlotEntry[] = [];
   for (const userId of member_user_ids) {
     for (const slotKey of SLOT_KEYS) {
       const playerId = roster[userId][slotKey];
       if (!playerId) continue;
 
-      // The bench slot that fed the substitution: released at r64 in favor of the
-      // promoted starter row appended below.
-      if (userId === subUserId && slotKey === benchSlotKey) {
+      // B1 bench slot for the top-ranked user: released at r32 when G2's team is
+      // eliminated, triggering promotion of the survivingSub into G2's slot from S16.
+      if (userId === subUserId && slotKey === 'B1') {
         rosterSlotsBatch.push({
           league_id, user_id: userId, player_id: playerId,
           slot_key: slotKey, slot_position: SLOT_POSITIONS[slotKey],
           is_bench: true, is_active: false,
-          acquired_at_round_stage: 'draft', released_at_round_stage: 'r64',
+          acquired_at_round_stage: 'draft', released_at_round_stage: 'r32',
           release_reason: 'correction',
         });
         continue;
@@ -340,13 +380,13 @@ export async function seedDemoLeagueData(
     }
   }
 
-  // Promoted slot: survivingSub takes over the vacated starter slot via bench activation.
+  // Promoted slot: survivingSub fills G2's slot from S16 after G2's team's R32 elimination.
   const survivingSubElim = teamElimMap.get(survivingSub.team_id) ?? null;
   rosterSlotsBatch.push({
     league_id, user_id: subUserId, player_id: survivingSub.id,
-    slot_key: starterSlotKey, slot_position: survivingSub.position,
+    slot_key: 'G2', slot_position: 'G',
     is_bench: false, is_active: !survivingSubElim,
-    acquired_at_round_stage: 'r32',
+    acquired_at_round_stage: 's16',
     released_at_round_stage: survivingSubElim,
     release_reason: survivingSubElim ? 'eliminated' : null,
   });
@@ -355,9 +395,31 @@ export async function seedDemoLeagueData(
     const { error } = await supabaseAdmin.from('roster_slots').insert(rosterSlotsBatch.slice(i, i + 100));
     if (error) throw new Error(`seedDemoLeagueData: failed to insert roster_slots: ${error.message}`);
   }
+  console.log(`[seedDemo] 7. roster_slots: ${Date.now() - t7}ms (${rosterSlotsBatch.length} rows)`);
 
-  // ── 8. game_scores for play_in through e8 (player-scoped, shared across leagues) ──
-  const gameScoresBatch: Record<string, unknown>[] = [];
+  // ── 7.5. Mark one active player as injured ──
+  // Shows the InjuryBadge component in rosters/draft UI, demonstrating the injury
+  // tracking feature. Pick a surviving player (not eliminated, not the promoted sub)
+  // so the injury makes narrative sense — they're still active but hurt.
+  const activeDraftedPlayer = [...usedPlayerIds]
+    .map((id) => players.find((p) => p.id === id))
+    .find((p): p is PlayerRow =>
+      !!p &&
+      teamElimMap.get(p.team_id) === null &&
+      p.id !== survivingSub.id
+    ) ?? null;
+  if (activeDraftedPlayer) {
+    await supabaseAdmin.from('players').update({
+      injury_status: 'out',
+      injury_note: 'Ankle sprain, expected out 2–3 weeks',
+      injury_updated_at: new Date().toISOString(),
+    }).eq('id', activeDraftedPlayer.id);
+  }
+
+  // ── 8. game_scores for full tournament play_in through championship (player-scoped) ──
+  // Returns IDs needed to link scoring_events below — avoids a second SELECT round-trip.
+  const t8 = Date.now();
+  const gameScoresInput: Record<string, unknown>[] = [];
   for (const playerId of usedPlayerIds) {
     const player = players.find((p) => p.id === playerId);
     if (!player) continue;
@@ -365,7 +427,7 @@ export async function seedDemoLeagueData(
     const seed = getTeamMeta(player)?.seed ?? 8;
 
     for (const round of roundsPlayed(elim)) {
-      gameScoresBatch.push({
+      gameScoresInput.push({
         player_id: playerId,
         season,
         round_stage: round,
@@ -379,15 +441,167 @@ export async function seedDemoLeagueData(
     }
   }
 
-  for (let i = 0; i < gameScoresBatch.length; i += 100) {
-    const { error } = await supabaseAdmin
+  const allInsertedGameScores: InsertedGameScore[] = [];
+  for (let i = 0; i < gameScoresInput.length; i += 100) {
+    const { data, error } = await supabaseAdmin
       .from('game_scores')
-      .upsert(gameScoresBatch.slice(i, i + 100), { onConflict: 'player_id,round_stage,round_number,game_date' });
+      .upsert(gameScoresInput.slice(i, i + 100), { onConflict: 'player_id,round_stage,round_number,game_date' })
+      .select('id, player_id, round_stage, points');
     if (error) throw new Error(`seedDemoLeagueData: failed to upsert game_scores: ${error.message}`);
+    if (data) allInsertedGameScores.push(...(data as InsertedGameScore[]));
+  }
+  console.log(`[seedDemo] 8. game_scores: ${Date.now() - t8}ms (${allInsertedGameScores.length} rows)`);
+
+  // ── 9. Compute scoring_events in memory, then bulk insert ──
+  // Replicates ScoreAccumulator._runForGamesInternal logic: a slot credits a game score
+  // when acqIdx <= gameIdx < relIdx (where -1 relIdx = never scores; null relIdx = always).
+  // This replaces ~400 sequential DB round-trips with a single bulk INSERT.
+  const t9 = Date.now();
+
+  const gameScoresByPlayer = new Map<string, InsertedGameScore[]>();
+  for (const gs of allInsertedGameScores) {
+    const arr = gameScoresByPlayer.get(gs.player_id) ?? [];
+    arr.push(gs);
+    gameScoresByPlayer.set(gs.player_id, arr);
   }
 
-  // ── 9. Compute scoring_events + leaderboard_snapshots ──
-  // ScoreAccumulator is the only writer of scoring_events; runForLeague() always
-  // performs a full recompute regardless of is_stale.
-  await ScoreAccumulator.runForLeague(league_id);
+  type ScoringEventEntry = {
+    league_id: string;
+    user_id: string;
+    player_id: string;
+    game_score_id: string;
+    round_stage: string;
+    points_credited: number;
+    is_stale: boolean;
+  };
+  const scoringEventsBatch: ScoringEventEntry[] = [];
+
+  for (const slot of rosterSlotsBatch) {
+    if (slot.is_bench) continue; // bench players don't score until promoted to a starter slot
+    const playerGames = gameScoresByPlayer.get(slot.player_id) ?? [];
+    if (!playerGames.length) continue;
+
+    const acqIdx = ROUND_STAGE_ORDER.indexOf(slot.acquired_at_round_stage as RoundStage);
+    if (acqIdx === -1) continue;
+
+    let relIdx: number;
+    if (!slot.released_at_round_stage) {
+      relIdx = ROUND_STAGE_ORDER.length;
+    } else {
+      const raw = ROUND_STAGE_ORDER.indexOf(slot.released_at_round_stage as RoundStage);
+      relIdx = raw === -1 ? 0 : raw;
+    }
+
+    for (const gs of playerGames) {
+      const gameIdx = ROUND_STAGE_ORDER.indexOf(gs.round_stage as RoundStage);
+      if (gameIdx === -1) continue;
+      if (!(acqIdx <= gameIdx && gameIdx < relIdx)) continue;
+
+      scoringEventsBatch.push({
+        league_id,
+        user_id: slot.user_id,
+        player_id: slot.player_id,
+        game_score_id: gs.id,
+        round_stage: gs.round_stage,
+        points_credited: gs.points,
+        is_stale: false,
+      });
+    }
+  }
+
+  for (let i = 0; i < scoringEventsBatch.length; i += 100) {
+    const { error } = await supabaseAdmin
+      .from('scoring_events')
+      .insert(scoringEventsBatch.slice(i, i + 100));
+    if (error) throw new Error(`seedDemoLeagueData: failed to insert scoring_events: ${error.message}`);
+  }
+  console.log(`[seedDemo] 9. scoring_events (in-memory): ${Date.now() - t9}ms (${scoringEventsBatch.length} rows)`);
+
+  // ── 10. Compute leaderboard_snapshots in memory, then bulk upsert ──
+  const t10 = Date.now();
+
+  type UserTotals = { total: number; highestSingle: number; maxStageIdx: number };
+  const userTotals = new Map<string, UserTotals>();
+  for (const userId of member_user_ids) {
+    userTotals.set(userId, { total: 0, highestSingle: 0, maxStageIdx: -1 });
+  }
+  for (const evt of scoringEventsBatch) {
+    const cur = userTotals.get(evt.user_id);
+    if (!cur) continue;
+    cur.total += evt.points_credited;
+    if (evt.points_credited > cur.highestSingle) cur.highestSingle = evt.points_credited;
+    const stageIdx = ROUND_STAGE_ORDER.indexOf(evt.round_stage as RoundStage);
+    if (stageIdx > cur.maxStageIdx) cur.maxStageIdx = stageIdx;
+  }
+
+  const userActiveCount = new Map<string, number>();
+  for (const slot of rosterSlotsBatch) {
+    if (slot.is_active && !slot.released_at_round_stage) {
+      userActiveCount.set(slot.user_id, (userActiveCount.get(slot.user_id) ?? 0) + 1);
+    }
+  }
+
+  // Engineer a demonstrable tie between two members: find the two lowest-scoring
+  // members and set the second-lowest's total_points to match the lowest.
+  // The scoring_events sum won't match exactly (they're one render pass apart), but
+  // the leaderboard snapshot is the authoritative source for the standings UI.
+  const sortedByTotal = [...member_user_ids].sort(
+    (a, b) => (userTotals.get(a)?.total ?? 0) - (userTotals.get(b)?.total ?? 0),
+  );
+  const tieTargetUserId = sortedByTotal[0]; // lowest scorer
+  const tieDownUserId = N >= 2 ? sortedByTotal[1] : null; // second-lowest, tied DOWN
+  const tiePoints = userTotals.get(tieTargetUserId)?.total ?? 0;
+
+  const snapshotBatch = member_user_ids.map((userId) => {
+    const data = userTotals.get(userId) ?? { total: 0, highestSingle: 0, maxStageIdx: -1 };
+    const round_stage =
+      data.maxStageIdx >= 0 ? (ROUND_STAGE_ORDER[data.maxStageIdx] ?? 'draft') : 'draft';
+    const total_points = userId === tieDownUserId ? tiePoints : data.total;
+    return {
+      league_id,
+      user_id: userId,
+      total_points,
+      active_player_count: userActiveCount.get(userId) ?? 0,
+      highest_single_game_points: data.highestSingle,
+      round_stage,
+      last_computed_at: new Date().toISOString(),
+    };
+  });
+
+  const { error: snapshotErr } = await supabaseAdmin
+    .from('leaderboard_snapshots')
+    .upsert(snapshotBatch, { onConflict: 'league_id,user_id' });
+  if (snapshotErr) {
+    throw new Error(`seedDemoLeagueData: failed to upsert leaderboard_snapshots: ${snapshotErr.message}`);
+  }
+  console.log(`[seedDemo] 10. leaderboard_snapshots (in-memory): ${Date.now() - t10}ms`);
+
+  // ── 11. Second season stub ──
+  // A prior-season completed draft session proves multi-season capability in the UI
+  // (season switcher shows "2 seasons"). Minimally seeded: session row only, no picks
+  // or scoring data — just enough to surface the archive link in the interface.
+  const previousSeason = season - 1;
+  const { data: existingStub } = await supabaseAdmin
+    .from('draft_sessions')
+    .select('id')
+    .eq('league_id', league_id)
+    .eq('season', previousSeason)
+    .maybeSingle();
+  if (!existingStub) {
+    const prevStartedAt = new Date(now - 395 * 24 * 60 * 60 * 1000); // ~13 months ago
+    await supabaseAdmin.from('draft_sessions').insert({
+      league_id,
+      season: previousSeason,
+      status: 'complete',
+      draft_type: 'snake',
+      scheduled_start: new Date(prevStartedAt.getTime() - 60 * 60 * 1000).toISOString(),
+      started_at: prevStartedAt.toISOString(),
+      completed_at: new Date(prevStartedAt.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+      snake_order: member_user_ids,
+      current_pick_number: maxPicks + 1,
+      pick_timer_seconds: 90,
+      bench_lock_deadline: new Date(prevStartedAt.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+  }
+  console.log(`[seedDemo] 11. second season stub (${previousSeason}): ${existingStub ? 'exists' : 'inserted'}`);
 }
