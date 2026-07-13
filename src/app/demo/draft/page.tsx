@@ -148,8 +148,10 @@ export default function MockDraftPage() {
   const [mockQueue, setMockQueue] = useState<Player[]>([]);
   // 'player' = no controls; 'commissioner' = real-time pick-timer controls
   const [role, setRole] = useState<'player' | 'commissioner'>('player');
-  // Demo default is 30s so hiring managers can see the timeout/auto-pick flow; null = unlimited
-  const [pickTimerSeconds, setPickTimerSeconds] = useState<number | null>(30);
+  // Demo default is 90s — enough time to actually use the AI advisor before the clock
+  // runs out; commissioner controls can drop it to 30s to show off the auto-pick flow.
+  // null = unlimited
+  const [pickTimerSeconds, setPickTimerSeconds] = useState<number | null>(90);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(pickTimerSeconds);
   const [autoPickBanner, setAutoPickBanner] = useState<string | null>(null);
 
@@ -290,9 +292,9 @@ export default function MockDraftPage() {
 
   // "Latest value" ref so the per-turn interval (below) always sees current state
   // without needing to be recreated when these change mid-turn.
-  const autoPickContextRef = useRef({ humanTeam, available, mockQueue, draftedIds, adviceLoading });
+  const autoPickContextRef = useRef({ humanTeam, available, mockQueue, draftedIds });
   useEffect(() => {
-    autoPickContextRef.current = { humanTeam, available, mockQueue, draftedIds, adviceLoading };
+    autoPickContextRef.current = { humanTeam, available, mockQueue, draftedIds };
   });
 
   // Countdown — only runs on the human's turn. A fresh interval is created whenever
@@ -326,11 +328,6 @@ export default function MockDraftPage() {
     let remaining = pickTimerSeconds;
     let fired = false;
     const interval = setInterval(() => {
-      // Pause the countdown while an AI advisor request is in flight — a real Claude
-      // API call takes several seconds, well within a short remaining window, and it's
-      // a bad experience to auto-pick out from under someone mid-thought right after
-      // they asked for help. The clock resumes the instant the response lands.
-      if (autoPickContextRef.current.adviceLoading) return;
       remaining -= 1;
       setTimeRemaining(Math.max(remaining, 0));
       if (remaining <= 0 && !fired) {
