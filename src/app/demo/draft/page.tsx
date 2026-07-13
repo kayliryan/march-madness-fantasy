@@ -131,9 +131,12 @@ function aiPickPlayer(team: Team, available: Player[]): Player | null {
 
 export default function MockDraftPage() {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useState<Team[]>([
+    { id: 0, name: 'You', isHuman: true, roster: [] },
+    ...AI_TEAMS.map((t, i) => ({ id: i + 1, name: t.name, isHuman: false, roster: [] })),
+  ]);
   const [pickNumber, setPickNumber] = useState(1);
-  const [draftComplete, setDraftComplete] = useState(false);
+  const draftComplete = pickNumber > TOTAL_PICKS;
   const [posFilter, setPosFilter] = useState<PosFilter>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [aiAdvice, setAiAdvice] = useState<string>('');
@@ -230,13 +233,6 @@ export default function MockDraftPage() {
   }, [available, posFilter, searchTerm]);
 
   useEffect(() => {
-    setTeams([
-      { id: 0, name: 'You', isHuman: true, roster: [] },
-      ...AI_TEAMS.map((t, i) => ({ id: i + 1, name: t.name, isHuman: false, roster: [] })),
-    ]);
-  }, []);
-
-  useEffect(() => {
     fetch('/api/players?sort=avg_ppg_desc')
       .then((r) => r.json())
       .then((data) => {
@@ -278,25 +274,25 @@ export default function MockDraftPage() {
 
   useEffect(() => {
     if (draftComplete || isHumanTurn || loadingPlayers || teams.length === 0) return;
-    if (pickNumber > TOTAL_PICKS) { setDraftComplete(true); return; }
-    setAiProcessing(true);
-    const timer = setTimeout(() => {
+    if (pickNumber > TOTAL_PICKS) return;
+    // Defer setAiProcessing(true) to next tick so it's not a synchronous setState call
+    // in the effect body — React batches it into the next render before the 800ms pick fires.
+    const loadingTimer = setTimeout(() => setAiProcessing(true), 0);
+    const pickTimer = setTimeout(() => {
       const team = teams[getActiveTeamIndex(pickNumber)];
       const avail = allPlayers.filter((p) => !new Set(teams.flatMap((t) => t.roster.map((r) => r.player.id))).has(p.id));
       const pick = aiPickPlayer(team, avail);
       if (pick) submitPick(pick);
       setAiProcessing(false);
     }, 800);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(loadingTimer); clearTimeout(pickTimer); };
   }, [pickNumber, isHumanTurn, draftComplete, teams, allPlayers, loadingPlayers, submitPick]);
-
-  useEffect(() => { if (pickNumber > TOTAL_PICKS) setDraftComplete(true); }, [pickNumber]);
 
   // "Latest value" ref so the per-turn interval (below) always sees current state
   // without needing to be recreated when these change mid-turn.
-  const autoPickContextRef = useRef({ humanTeam, available, mockQueue, draftedIds });
+  const autoPickContextRef = useRef({ humanTeam, available, mockQueue, draftedIds, adviceLoading });
   useEffect(() => {
-    autoPickContextRef.current = { humanTeam, available, mockQueue, draftedIds };
+    autoPickContextRef.current = { humanTeam, available, mockQueue, draftedIds, adviceLoading };
   });
 
   // Countdown — only runs on the human's turn. A fresh interval is created whenever
@@ -311,15 +307,30 @@ export default function MockDraftPage() {
   //   has back-to-back picks at a snake-draft turnaround — submitPick's state updates
   //   change this effect's deps (pickNumber) and recreate the interval for the new turn,
   //   but the OLD interval's closure already has `fired = true` and is cleared.
-  useEffect(() => {
-    if (draftComplete || !isHumanTurn || pickTimerSeconds === null) {
-      setTimeRemaining(pickTimerSeconds);
-      return;
-    }
+  // Reset the displayed countdown whenever the turn or timer setting changes.
+  // "setState during render" pattern (React docs): when prevResetKey differs from the
+  // computed key, call setState now so React re-renders with the new value in the same
+  // pass — no effect, no extra paint, no eslint-set-state-in-effect violation.
+  const timerResetKey = `${pickNumber}-${String(isHumanTurn)}-${String(draftComplete)}-${String(pickTimerSeconds)}`;
+  const [prevTimerResetKey, setPrevTimerResetKey] = useState(timerResetKey);
+  if (timerResetKey !== prevTimerResetKey) {
+    setPrevTimerResetKey(timerResetKey);
     setTimeRemaining(pickTimerSeconds);
+  }
+
+  // Countdown interval — only ticks on the human's turn with a finite timer.
+  // `remaining`/`fired` are closure vars so the auto-pick fires exactly once per
+  // interval lifecycle, even if this effect re-runs (old interval has `fired = true`).
+  useEffect(() => {
+    if (draftComplete || !isHumanTurn || pickTimerSeconds === null) return;
     let remaining = pickTimerSeconds;
     let fired = false;
     const interval = setInterval(() => {
+      // Pause the countdown while an AI advisor request is in flight — a real Claude
+      // API call takes several seconds, well within a short remaining window, and it's
+      // a bad experience to auto-pick out from under someone mid-thought right after
+      // they asked for help. The clock resumes the instant the response lands.
+      if (autoPickContextRef.current.adviceLoading) return;
       remaining -= 1;
       setTimeRemaining(Math.max(remaining, 0));
       if (remaining <= 0 && !fired) {
@@ -462,10 +473,10 @@ export default function MockDraftPage() {
     <div className="min-h-screen bg-black text-white">
       <div className="border-b border-neutral-800 bg-[#080808] px-4 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div>
+          <Link href="/">
             <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">Mock Draft</span>
-            <h1 className="mt-0.5 text-lg font-black uppercase tracking-tight text-white">March Madness Fantasy 2026</h1>
-          </div>
+            <h1 className="mt-0.5 text-lg font-black uppercase tracking-tight text-white hover:text-neutral-300">March Madness Fantasy 2026</h1>
+          </Link>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 rounded-full border border-neutral-800 bg-neutral-900 p-1">
               {(['player', 'commissioner'] as const).map((r) => (
