@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/client';
 import Anthropic from '@anthropic-ai/sdk';
-import { checkAndIncrementDemoAiCap, DEMO_AI_CAP_MESSAGE } from '@/lib/utils/demoAiCap';
+import { checkAndIncrementDemoAiCap } from '@/lib/utils/demoAiCap';
 
 const anthropic = new Anthropic();
 
@@ -57,12 +57,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not a member of this league' }, { status: 403 });
     }
 
-    // Demo AI cap check (Layers 1 + 3). Real leagues are uncapped.
+    // Demo AI cap check (Layers 1, 3 + 4). Real leagues are uncapped.
     const leagueIsDemo = (session.leagues as { is_demo?: boolean } | null)?.is_demo === true;
     if (leagueIsDemo) {
-      const capResult = await checkAndIncrementDemoAiCap(session.league_id);
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        ?? request.headers.get('x-real-ip')
+        ?? 'unknown';
+      const capResult = await checkAndIncrementDemoAiCap(session.league_id, ip);
       if (!capResult.allowed) {
-        return NextResponse.json({ error: DEMO_AI_CAP_MESSAGE }, { status: 429 });
+        return NextResponse.json({ error: capResult.message }, { status: 429 });
       }
     }
 

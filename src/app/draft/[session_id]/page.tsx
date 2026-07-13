@@ -66,7 +66,9 @@ export default function DraftRoomPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setCurrentUserId(session?.user?.id ?? null));
-    fetchState();
+    // Defer fetchState so its internal setState calls are non-synchronous in the effect body.
+    const t = setTimeout(() => fetchState(), 0);
+    return () => clearTimeout(t);
   }, [fetchState]);
 
   useEffect(() => {
@@ -136,7 +138,7 @@ export default function DraftRoomPage() {
         body: JSON.stringify({ draft_session_id: session_id, question: advisorQuestion.trim() || undefined }),
       });
       const data = await res.json();
-      setAdvisorAdvice(res.ok ? data.advice : 'Could not get advice right now. Try again.');
+      setAdvisorAdvice(res.ok ? data.advice : (data.error ?? 'Could not get advice right now. Try again.'));
     } catch { setAdvisorAdvice('Could not get advice right now. Try again.'); }
     finally { setAdvisorLoading(false); }
   }

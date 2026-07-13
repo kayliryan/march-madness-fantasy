@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/client';
 
-// Sonnet 4.6 pricing: $3/M input tokens, $15/M output tokens.
+// Sonnet pricing: ~$3/M input tokens, ~$15/M output tokens.
 // Typical advisor call: ~3000 input + ~300 output tokens.
 //   = (3000 × $0.000003) + (300 × $0.000015) = $0.009 + $0.0045 ≈ $0.014
 // Range across context sizes: $0.01–$0.08; conservative avg $0.04.
@@ -31,25 +31,41 @@ export const DEMO_CONCURRENT_LEAGUE_CAP = 50;
 export const DEMO_PROVISION_PER_IP_PER_DAY = 5;
 
 // Layer 3 — global daily AI-call cap across all demo sessions:
-//   Tolerable daily spend on this feature: $20.00. $20.00 / $0.04 avg = 500 calls.
-//   This covers the case where many IPs each stay under their per-IP limit but
-//   collectively drive unbounded cumulative spend (distributed low-and-slow, or simply
-//   high organic traffic with leagues provisioned and abandoned in sequence).
-export const DEMO_AI_DAILY_CAP = 500;
+//   Anthropic account is loaded with a hard $5.00/day budget (auto-reload off) for
+//   this launch/testing window. $5.00 / $0.04 avg = 125 calls. This is the real,
+//   account-enforced backstop — everything else here is defense-in-depth on top of it.
+export const DEMO_AI_DAILY_CAP = 125;
 
-export const DEMO_AI_CAP_MESSAGE = "You've used your demo AI queries for this session.";
+// Layer 4 — per-IP cap specifically on AI advisor calls (separate from the Layer 2
+// provision rate limit above, which only governs *creating* demo leagues). Without
+// this, one caller could exhaust the entire shared daily pool above and make the
+// advisor look "down" for every other visitor for the rest of the day. Set generously
+// enough for a hiring manager to genuinely explore (ask ~15 questions across a full
+// mock draft) while capping any single source well below the daily pool.
+export const DEMO_AI_ADVISOR_CALLS_PER_IP_PER_DAY = 15;
+
+export const DEMO_AI_CAP_MESSAGE =
+  "You've reached today's AI advisor limit for this connection (this demo caps usage per visitor to keep things fair and control costs — not a bug). Feel free to keep drafting manually, or check back tomorrow!";
+
+export const DEMO_AI_GLOBAL_CAP_MESSAGE =
+  "The AI advisor has hit its shared usage limit for today across all visitors. This is a deliberate cost-control cap on this demo, not an error — it resets tomorrow. The rest of the site works normally.";
+
+export const DEMO_AI_LEAGUE_CAP_MESSAGE =
+  "This demo league has reached its AI advisor limit. This is an intentional per-league cap to control demo costs, not a bug — everything else in the league still works.";
 
 export type DemoAiCapResult =
   | { allowed: true }
-  | { allowed: false; reason: 'per_league' | 'daily_global' };
+  | { allowed: false; reason: 'per_league' | 'daily_global' | 'ip_rate_limit'; message: string };
 
 /**
- * Checks Layer 1 (per-league) and Layer 3 (global daily) caps before a demo AI call.
- * If both pass, increments both counters.
+ * Checks Layer 1 (per-league), Layer 3 (global daily), and Layer 4 (per-IP advisor
+ * rate) caps before a demo AI call. If all pass, increments all relevant counters.
  * Pass league_id=null for stateless routes (mock-draft-advisor) — Layer 1 is skipped.
+ * Pass ip=null to skip Layer 4 (only do this if the route can't determine an IP).
  */
 export async function checkAndIncrementDemoAiCap(
   league_id: string | null,
+  ip: string | null = null,
 ): Promise<DemoAiCapResult> {
   const today = new Date().toISOString().slice(0, 10);
 
@@ -68,8 +84,23 @@ export async function checkAndIncrementDemoAiCap(
       isDemo = true;
       currentLeagueCalls = leagueRow.demo_ai_calls_used ?? 0;
       if (currentLeagueCalls >= DEMO_AI_CAP_PER_LEAGUE) {
-        return { allowed: false, reason: 'per_league' };
+        return { allowed: false, reason: 'per_league', message: DEMO_AI_LEAGUE_CAP_MESSAGE };
       }
+    }
+  }
+
+  // Layer 4 check (per-IP advisor call rate). Localhost is always the developer.
+  const isLocalhost = ip !== null && (ip === '::1' || ip === '127.0.0.1' || ip.startsWith('::ffff:127.'));
+  if (ip !== null && ip !== 'unknown' && !isLocalhost) {
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: ipCallCount } = await supabaseAdmin
+      .from('demo_ai_call_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('ip', ip)
+      .gte('called_at', since24h);
+
+    if ((ipCallCount ?? 0) >= DEMO_AI_ADVISOR_CALLS_PER_IP_PER_DAY) {
+      return { allowed: false, reason: 'ip_rate_limit', message: DEMO_AI_CAP_MESSAGE };
     }
   }
 
@@ -81,10 +112,10 @@ export async function checkAndIncrementDemoAiCap(
     .maybeSingle();
 
   if ((dailyRow?.calls_used ?? 0) >= DEMO_AI_DAILY_CAP) {
-    return { allowed: false, reason: 'daily_global' };
+    return { allowed: false, reason: 'daily_global', message: DEMO_AI_GLOBAL_CAP_MESSAGE };
   }
 
-  // Both checks passed — increment counters after the AI call succeeds
+  // All checks passed — increment counters after the AI call succeeds
   // (increments fire after this function returns; the caller is responsible)
   if (league_id !== null && isDemo) {
     await supabaseAdmin
@@ -92,6 +123,10 @@ export async function checkAndIncrementDemoAiCap(
       .update({ demo_ai_calls_used: currentLeagueCalls + 1 })
       .eq('id', league_id)
       .eq('is_demo', true);
+  }
+
+  if (ip !== null && ip !== 'unknown' && !isLocalhost) {
+    await supabaseAdmin.from('demo_ai_call_log').insert({ ip });
   }
 
   // Atomic global daily increment via Postgres function

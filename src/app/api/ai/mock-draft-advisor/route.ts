@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { checkAndIncrementDemoAiCap, DEMO_AI_CAP_MESSAGE } from '@/lib/utils/demoAiCap';
+import { checkAndIncrementDemoAiCap } from '@/lib/utils/demoAiCap';
 
 const anthropic = new Anthropic();
 
@@ -50,10 +50,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Layer 3 global daily cap applies to all demo AI routes (no league_id = Layer 1 skipped).
-    const capResult = await checkAndIncrementDemoAiCap(null);
+    // Layer 3 (global daily) and Layer 4 (per-IP) caps apply to all demo AI routes
+    // (no league_id = Layer 1 skipped).
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      ?? request.headers.get('x-real-ip')
+      ?? 'unknown';
+    const capResult = await checkAndIncrementDemoAiCap(null, ip);
     if (!capResult.allowed) {
-      return NextResponse.json({ error: DEMO_AI_CAP_MESSAGE }, { status: 429 });
+      return NextResponse.json({ error: capResult.message }, { status: 429 });
     }
 
     const n = total_teams ?? 5;
