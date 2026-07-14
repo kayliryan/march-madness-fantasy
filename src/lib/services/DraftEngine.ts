@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/client';
 import { getActiveUserId, computeMaxPicks } from '@/lib/utils/draft';
+import { getLeaguePositionOverrides, resolvePosition } from '@/lib/services/PlayerPositionOverrides';
 import type { DraftPick, DraftSession, LeagueSettings } from '@/lib/types';
 
 export interface PositionValidationResult {
@@ -144,11 +145,16 @@ export async function submitPick(
 
   if (!playerRow) throw { code: 404, message: 'Player not found' };
 
+  // Position enforcement must respect THIS league's position override, if any —
+  // players.position is a single row shared by every league in a season.
+  const positionOverrides = await getLeaguePositionOverrides(supabaseAdmin, session.league_id);
+  const effectivePosition = resolvePosition(player_id, playerRow.position, positionOverrides);
+
   const settings = league.settings as LeagueSettings;
   const validation = await validatePositionEnforcement(
     user_id,
     session.league_id,
-    playerRow.position,
+    effectivePosition,
     settings
   );
 
@@ -284,6 +290,7 @@ export async function autoPickForUser(
   if (!league) return null;
 
   const settings = league.settings as LeagueSettings;
+  const positionOverrides = await getLeaguePositionOverrides(supabaseAdmin, session.league_id);
 
   // Get all non-voided picks in the session (to exclude drafted players)
   const { data: picks } = await supabaseAdmin
@@ -310,7 +317,7 @@ export async function autoPickForUser(
       .eq('id', item.player_id)
       .single();
     if (!pRow) continue;
-    const position = pRow.position as 'G' | 'F' | 'C';
+    const position = resolvePosition(item.player_id, pRow.position as 'G' | 'F' | 'C', positionOverrides);
     const validation = await validatePositionEnforcement(user_id, session.league_id, position, settings);
     if (validation.valid) return item.player_id;
   }
@@ -324,7 +331,8 @@ export async function autoPickForUser(
 
   for (const p of players ?? []) {
     if (drafted.has(p.id)) continue;
-    const validation = await validatePositionEnforcement(user_id, session.league_id, p.position as 'G' | 'F' | 'C', settings);
+    const position = resolvePosition(p.id, p.position as 'G' | 'F' | 'C', positionOverrides);
+    const validation = await validatePositionEnforcement(user_id, session.league_id, position, settings);
     if (validation.valid) return p.id;
   }
 

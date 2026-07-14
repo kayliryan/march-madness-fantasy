@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/client';
 import { ScoreAccumulator } from '@/lib/services/ScoreAccumulator';
+import { getLeaguePositionOverrides, resolvePosition } from '@/lib/services/PlayerPositionOverrides';
 import type { DraftPick } from '@/lib/types';
 
 interface VoidPickRequest {
@@ -152,12 +153,20 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (oldSlot && replacementPlayer) {
+      // players.position is shared across every league in a season — resolve THIS
+      // league's override before deciding which slot the replacement occupies.
+      const positionOverrides = await getLeaguePositionOverrides(supabaseAdmin, pick.league_id);
+      const effectivePosition = resolvePosition(
+        body.replacement_player_id,
+        replacementPlayer.position,
+        positionOverrides
+      );
       await supabaseAdmin.from('roster_slots').insert({
         league_id: pick.league_id,
         user_id: pick.user_id,
         player_id: body.replacement_player_id,
         slot_key: oldSlot.slot_key,
-        slot_position: replacementPlayer.position,
+        slot_position: effectivePosition,
         is_active: true,
         is_bench: oldSlot.is_bench,
         acquired_at_round_stage: 'draft',

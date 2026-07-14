@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/client';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
+import { getLeaguePositionOverrides, resolvePosition } from '@/lib/services/PlayerPositionOverrides';
 
 interface RoundEntry {
   user_id: string;
@@ -72,6 +73,10 @@ export async function GET(
       (userRows ?? []).map((u: { id: string; display_name: string }) => [u.id, u.display_name])
     );
 
+    // players.position is shared across every league in a season — show THIS
+    // league's override, if any, rather than the raw column.
+    const positionOverrides = await getLeaguePositionOverrides(supabaseAdmin, league_id);
+
     const roundOrder: RoundStage[] = ROUND_STAGE_ORDER.filter((stage) => stage !== 'draft');
     const entriesByRound = new Map<RoundStage, RoundEntry[]>();
 
@@ -92,7 +97,9 @@ export async function GET(
         player_name: ev.players?.name ?? ev.player_id.slice(0, 8),
         team_name: ev.players?.teams?.name ?? null,
         team_seed: ev.players?.teams?.seed ?? null,
-        position: ev.players?.position ?? '',
+        position: ev.players?.position
+          ? resolvePosition(ev.player_id, ev.players.position as 'G' | 'F' | 'C', positionOverrides)
+          : '',
         points: ev.points_credited,
         is_bench: ev.roster_slots?.is_bench ?? false,
       });

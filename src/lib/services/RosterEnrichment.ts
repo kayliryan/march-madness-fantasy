@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/client';
+import { getLeaguePositionOverrides, applyLeaguePositionOverride } from '@/lib/services/PlayerPositionOverrides';
 import type { RosterSlotEnriched } from '@/components/RosterSlotList';
 
 export interface EnrichedRoster {
@@ -31,8 +32,14 @@ export async function getEnrichedRoster(league_id: string, user_id: string): Pro
         .in('id', playerIds)
     : { data: [] };
 
+  // players.position is a single row shared by every league in a season — show
+  // THIS league's override, if any, rather than the raw column.
+  const positionOverrides = await getLeaguePositionOverrides(supabaseAdmin, league_id);
   const playerMap = new Map(
-    (players ?? []).map((p: { id: string }) => [p.id, p])
+    (players ?? []).map((p: { id: string; position: 'G' | 'F' | 'C' }) => [
+      p.id,
+      applyLeaguePositionOverride(p, positionOverrides),
+    ])
   );
 
   const { data: scoringEvents } = await supabaseAdmin

@@ -63,23 +63,51 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { data: player, error } = await supabaseAdmin
-      .from('players')
-      .update({
-        position: body.position,
-        position_overridden: true,
-        position_override_note: body.override_note.trim(),
-      })
-      .eq('id', body.player_id)
-      .select('*, teams(id, name, seed, region)')
-      .single();
+    // Scoped to this league only — players is a single row shared by every league
+    // in a season, so this used to `update players set position = ...` directly,
+    // which meant overriding a position in a demo league silently overrode it for
+    // every real league using that same player too. Upserting into a per-league
+    // table keeps the override contained to the league that made it.
+    const { error: overrideError } = await supabaseAdmin
+      .from('league_player_position_overrides')
+      .upsert(
+        {
+          league_id: body.league_id,
+          player_id: body.player_id,
+          position: body.position,
+          override_note: body.override_note.trim(),
+          overridden_by: user.id,
+          overridden_at: new Date().toISOString(),
+        },
+        { onConflict: 'league_id,player_id' }
+      );
 
-    if (error || !player) {
-      console.error('Error overriding player position:', error);
+    if (overrideError) {
+      console.error('Error overriding player position:', overrideError);
       return NextResponse.json({ error: 'Failed to override position' }, { status: 500 });
     }
 
-    return NextResponse.json({ player: player as Player });
+    const { data: player, error } = await supabaseAdmin
+      .from('players')
+      .select('*, teams(id, name, seed, region)')
+      .eq('id', body.player_id)
+      .single();
+
+    if (error || !player) {
+      console.error('Error loading player after override:', error);
+      return NextResponse.json({ error: 'Failed to load player' }, { status: 500 });
+    }
+
+    // Reflect the override in the response so the caller's UI shows what this
+    // league will actually see, without implying it changed anywhere else.
+    return NextResponse.json({
+      player: {
+        ...player,
+        position: body.position,
+        position_overridden: true,
+        position_override_note: body.override_note.trim(),
+      } as Player,
+    });
   } catch (error) {
     console.error('Error in PATCH /api/commissioner/player/position:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

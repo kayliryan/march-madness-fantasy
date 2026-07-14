@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
-import type { GetPlayersResponse } from '@/lib/types';
+import { getLeaguePositionOverrides, applyLeaguePositionOverride } from '@/lib/services/PlayerPositionOverrides';
+import type { GetPlayersResponse, Player } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,17 +10,15 @@ export async function GET(request: NextRequest) {
     const teamId = searchParams.get('team_id');
     const search = searchParams.get('search');
     const sort = searchParams.get('sort') || 'avg_ppg_desc';
+    const leagueId = searchParams.get('league_id');
 
     let query = supabase
       .from('players')
       .select('*, teams(id, name, seed, region)')
       .eq('season', 2026);
 
-    // Apply filters
-    if (position) {
-      query = query.eq('position', position);
-    }
-
+    // Position filtering is applied in JS below (after league overrides are merged
+    // in), not here — filtering the raw column would ignore a league's override.
     if (teamId) {
       query = query.eq('team_id', teamId);
     }
@@ -42,8 +41,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Merge in this league's position overrides, if a league_id was provided —
+    // players.position is a single row shared by every league in a season, so the
+    // raw column may not reflect what THIS league sees.
+    let withOverrides: Player[] = players ?? [];
+    if (leagueId) {
+      const overrides = await getLeaguePositionOverrides(supabase, leagueId);
+      if (overrides.size > 0) {
+        withOverrides = withOverrides.map((p) => applyLeaguePositionOverride(p, overrides));
+      }
+    }
+
+    if (position) {
+      withOverrides = withOverrides.filter((p) => p.position === position);
+    }
+
     // Apply search filter by player name or team name
-    let filtered = players || [];
+    let filtered = withOverrides;
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(

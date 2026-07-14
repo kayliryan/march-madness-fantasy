@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/client';
+import { getLeaguePositionOverrides, resolvePosition } from '@/lib/services/PlayerPositionOverrides';
 import type { LeagueSettings, Player } from '@/lib/types';
 
 /**
@@ -34,6 +35,10 @@ export const BenchOrderService = {
     );
 
     if (activeBenchIds.size === 0) return null;
+
+    // Eligibility must respect THIS league's position overrides — players.position
+    // is a single row shared by every league in a season.
+    const positionOverrides = await getLeaguePositionOverrides(supabaseAdmin, league_id);
 
     // Teams already eliminated this season are ineligible as substitutes
     const { data: league } = await supabaseAdmin
@@ -74,25 +79,29 @@ export const BenchOrderService = {
           .single();
 
         if (!player) continue;
-        if (!eligible_positions.includes(player.position as 'G' | 'F' | 'C')) continue;
+        const effectivePosition = resolvePosition(player.id, player.position as 'G' | 'F' | 'C', positionOverrides);
+        if (!eligible_positions.includes(effectivePosition)) continue;
         if (eliminatedTeamIds.has(player.team_id)) continue;
 
-        return player as Player;
+        return { ...player, position: effectivePosition } as Player;
       }
     }
 
-    // Fallback: highest avg_ppg bench player eligible for the slot, on a team still alive
+    // Fallback: highest avg_ppg bench player eligible for the slot, on a team still
+    // alive. Eligibility depends on the league-scoped position, so fetch candidates
+    // by id only and filter/sort in JS rather than filtering `position` in the query.
     const benchPlayerIds = [...activeBenchIds];
     const { data: players } = await supabaseAdmin
       .from('players')
       .select('*')
       .in('id', benchPlayerIds)
-      .in('position', eligible_positions)
       .order('avg_ppg', { ascending: false });
 
-    const eligiblePlayers = (players ?? []).filter(
-      (p: Player) => !eliminatedTeamIds.has(p.team_id)
-    );
+    const eligiblePlayers = (players ?? [])
+      .map((p: Player) => ({ ...p, position: resolvePosition(p.id, p.position, positionOverrides) }))
+      .filter(
+        (p: Player) => eligible_positions.includes(p.position) && !eliminatedTeamIds.has(p.team_id)
+      );
 
     if (eligiblePlayers.length > 0) {
       return eligiblePlayers[0] as Player;
