@@ -37,18 +37,33 @@ export async function getEnrichedRoster(league_id: string, user_id: string): Pro
 
   const { data: scoringEvents } = await supabaseAdmin
     .from('scoring_events')
-    .select('player_id, round_stage, points_credited')
+    .select('player_id, roster_slot_id, round_stage, points_credited')
     .eq('league_id', league_id)
     .eq('user_id', user_id)
     .eq('is_stale', false);
 
-  const pointsByPlayer = new Map<string, { round_stage: string; points: number }[]>();
+  // Credited points must be attributed to the SPECIFIC roster_slot row that earned
+  // them, not just the player — a bench stint and a later promoted starter stint for
+  // the same player are two different roster_slot rows, and each has its own credited
+  // total (only the starter stint should ever show counted points). Falls back to
+  // player_id-only matching for any legacy scoring_events rows that predate
+  // roster_slot_id being populated, but only when that's the sole slot for the player.
+  const pointsBySlotId = new Map<string, { round_stage: string; points: number }[]>();
+  const pointsByPlayerFallback = new Map<string, { round_stage: string; points: number }[]>();
   for (const ev of (scoringEvents ?? [])) {
-    if (!pointsByPlayer.has(ev.player_id)) pointsByPlayer.set(ev.player_id, []);
-    pointsByPlayer.get(ev.player_id)!.push({
-      round_stage: ev.round_stage,
-      points: ev.points_credited,
-    });
+    const entry = { round_stage: ev.round_stage, points: ev.points_credited };
+    if (ev.roster_slot_id) {
+      if (!pointsBySlotId.has(ev.roster_slot_id)) pointsBySlotId.set(ev.roster_slot_id, []);
+      pointsBySlotId.get(ev.roster_slot_id)!.push(entry);
+    } else {
+      if (!pointsByPlayerFallback.has(ev.player_id)) pointsByPlayerFallback.set(ev.player_id, []);
+      pointsByPlayerFallback.get(ev.player_id)!.push(entry);
+    }
+  }
+  const slotCountByPlayer = new Map<string, number>();
+  for (const s of safeSlots) {
+    const pid = (s as { player_id: string }).player_id;
+    slotCountByPlayer.set(pid, (slotCountByPlayer.get(pid) ?? 0) + 1);
   }
 
   const { data: allGameScores } = playerIds.length > 0
@@ -66,7 +81,12 @@ export async function getEnrichedRoster(league_id: string, user_id: string): Pro
 
   const enrichedSlots: RosterSlotEnriched[] = safeSlots.map((slot: Record<string, unknown>) => {
     const player = playerMap.get(slot.player_id as string) ?? null;
-    const per_round = pointsByPlayer.get(slot.player_id as string) ?? [];
+    const bySlot = pointsBySlotId.get(slot.id as string);
+    const per_round = bySlot ?? (
+      slotCountByPlayer.get(slot.player_id as string) === 1
+        ? pointsByPlayerFallback.get(slot.player_id as string) ?? []
+        : []
+    );
     const total_points = per_round.reduce((sum, r) => sum + r.points, 0);
 
     // Full raw game-by-game scores for this player, regardless of acquired/released

@@ -55,11 +55,15 @@ export async function POST(request: NextRequest) {
     if (body.draft_type !== undefined) fields.draft_type = body.draft_type;
     if (body.snake_order !== undefined) fields.snake_order = body.snake_order;
 
-    // Is there already a draft session for this league?
+    // Is there already a draft session for this league+season? Scoped to season
+    // so the demo seed's "previous season" stub session (created after the real
+    // one, purely for a season-switcher link) can't get matched as "the"
+    // existing session and overwritten just because it has a later created_at.
     const { data: existing } = await supabase
       .from('draft_sessions')
       .select('id')
       .eq('league_id', body.league_id)
+      .eq('season', body.season)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

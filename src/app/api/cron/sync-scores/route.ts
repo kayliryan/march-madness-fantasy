@@ -42,15 +42,17 @@ export async function GET(request: NextRequest) {
     // ----------------------------------------------------------------
     const statsProvider = new ESPNStatsProvider();
 
-    // Determine the active season from live/complete draft sessions
-    const { data: activeSessions } = await supabaseAdmin
-      .from('draft_sessions')
-      .select('season')
-      .in('status', ['live', 'complete'])
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    const season: number = activeSessions?.[0]?.season ?? new Date().getFullYear();
+    // The active season is always CURRENT_TOURNAMENT_SEASON — this used to be
+    // inferred from whichever draft_sessions row was created most recently, but
+    // every demo league provision (src/lib/utils/seedDemoData.ts) also creates a
+    // "previous season" stub row *after* the real one purely to power a
+    // season-switcher link in the UI. That stub's created_at is always the
+    // latest, so it would silently hijack the sync into fetching/overwriting
+    // scores for the WRONG season app-wide every time someone clicked
+    // "Try as Commissioner" — a portfolio demo feature breaking live production
+    // scoring is exactly the kind of bug worth naming: single source of truth
+    // beats "infer it from whatever row happens to be newest."
+    const season: number = CURRENT_TOURNAMENT_SEASON;
 
     // Collect all game status data across all playable round stages
     const allGameStatuses: Awaited<ReturnType<typeof statsProvider.getGameStatus>> = [];

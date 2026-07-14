@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase/client';
 import AppHeader from '@/components/AppHeader';
 import { DraftOrderGenerator } from '@/components/DraftOrderGenerator';
@@ -64,18 +65,9 @@ export default function CommissionerPage() {
   const [settingsSuccess, setSettingsSuccess] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
 
-  // Pick void state
-  const [voidPickNumber, setVoidPickNumber] = useState('');
-  const [voidReason, setVoidReason] = useState('');
-  const [replacementSearch, setReplacementSearch] = useState('');
-  const [replacementId, setReplacementId] = useState('');
-  const [voidError, setVoidError] = useState<string | null>(null);
-  const [voidSuccess, setVoidSuccess] = useState<string | null>(null);
-  const [voidingPick, setVoidingPick] = useState(false);
-
-  // Correct a Pick (3-step) state
+  // Swap a Drafted Player (team → pick → replacement → confirm) state
+  const [swapUserId, setSwapUserId] = useState('');
   const [correctPicks, setCorrectPicks] = useState<DraftPick[]>([]);
-  const [correctDisplayNames, setCorrectDisplayNames] = useState<Record<string, string>>({});
   const [correctPicksLoading, setCorrectPicksLoading] = useState(true);
   const [correctStep, setCorrectStep] = useState<1 | 2 | 3>(1);
   const [selectedPick, setSelectedPick] = useState<DraftPick | null>(null);
@@ -171,11 +163,15 @@ export default function CommissionerPage() {
         setPlayers(playersData.players);
       }
 
-      // Existing draft session to prefill schedule/order
+      // Existing draft session to prefill schedule/order — scoped to the league's
+      // active season. Without this, the demo seed's "previous season" stub (created
+      // after the real session, purely to surface a season-switcher link) has a later
+      // created_at and would win the "most recent" pick instead of the real one.
       const { data: session } = await supabase
         .from('draft_sessions')
         .select('*')
         .eq('league_id', leagueId)
+        .eq('season', leagueData.league.season)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -339,43 +335,20 @@ export default function CommissionerPage() {
     } finally { setSavingSettings(false); }
   }
 
-  async function handleVoidPick(e: React.FormEvent) {
-    e.preventDefault();
-    if (!replacementId || !voidReason.trim() || !voidPickNumber) { setVoidError('Fill in all fields.'); return; }
-    const pickNum = parseInt(voidPickNumber, 10);
-    if (isNaN(pickNum) || pickNum < 1) { setVoidError('Enter a valid pick number.'); return; }
-    setVoidingPick(true);
-    setVoidError(null);
-    setVoidSuccess(null);
-    try {
-      // Fetch picks to find the pick_id from the pick number
-      const { data: picks } = await supabase.from('draft_picks')
-        .select('id, player_id')
-        .eq('draft_session_id', draftSession!.id)
-        .eq('pick_number', pickNum)
-        .is('voided_at', null)
-        .maybeSingle();
-      if (!picks) { setVoidError(`Pick #${pickNum} not found or already voided.`); setVoidingPick(false); return; }
-      const res = await fetch('/api/commissioner/pick/void', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pick_id: picks.id, void_reason: voidReason, replacement_player_id: replacementId }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        setVoidError(err.error ?? 'Failed to void pick.');
-      } else {
-        const repName = players.find((p) => p.id === replacementId)?.name ?? replacementId;
-        setVoidSuccess(`Pick #${pickNum} voided. ${repName} inserted as replacement.`);
-        setVoidPickNumber('');
-        setVoidReason('');
-        setReplacementId('');
-        setReplacementSearch('');
-      }
-    } finally { setVoidingPick(false); }
-  }
-
   const playerMap = useMemo(() => new Map(players.map((p) => [p.id, p])), [players]);
+
+  // Applicability of draft-phase-dependent tools: 'pre' = draft not yet started
+  // (order/schedule are still editable, roster-dependent tools aren't relevant yet),
+  // 'live' = draft in progress (order/schedule are locked, roster tools still don't
+  // apply since rosters aren't final), 'post' = draft complete (order/schedule
+  // permanently locked, roster-dependent tools — bench order, injury subs, manual
+  // scoring, player swaps — become available).
+  const draftPhase: 'pre' | 'live' | 'post' =
+    !draftSession || draftSession.status === 'scheduled'
+      ? 'pre'
+      : draftSession.status === 'complete'
+        ? 'post'
+        : 'live';
 
   const pendingInvites = useMemo(() => invites.filter((i) => i.status === 'pending'), [invites]);
   const expiredInvites = useMemo(() => invites.filter((i) => i.status === 'expired'), [invites]);
@@ -390,7 +363,6 @@ export default function CommissionerPage() {
         .filter((p) => !p.voided_at)
         .sort((a, b) => a.round_number - b.round_number || a.pick_number - b.pick_number);
       setCorrectPicks(picks);
-      setCorrectDisplayNames(data.display_names ?? {});
     } finally {
       setCorrectPicksLoading(false);
     }
@@ -402,7 +374,7 @@ export default function CommissionerPage() {
     }
   }, [draftSession?.status, loadCorrectPicks]);
 
-  function resetCorrectFlow() {
+  function resetCorrectFlow(clearTeam = true) {
     setCorrectStep(1);
     setSelectedPick(null);
     setCorrectAvailable([]);
@@ -410,6 +382,7 @@ export default function CommissionerPage() {
     setCorrectReplacementId('');
     setCorrectVoidReason('');
     setCorrectError(null);
+    if (clearTeam) setSwapUserId('');
   }
 
   async function handleSelectPick(pick: DraftPick) {
@@ -713,21 +686,47 @@ export default function CommissionerPage() {
         )}
 
         <div className="flex flex-col gap-6">
-          <DraftOrderGenerator
-            members={members}
-            memberLabels={memberLabels}
-            initialOrder={draftSession?.snake_order}
-            onSave={handleSaveOrder}
-            saving={savingOrder}
-          />
+          {draftPhase === 'pre' ? (
+            <DraftOrderGenerator
+              members={members}
+              memberLabels={memberLabels}
+              initialOrder={draftSession?.snake_order}
+              onSave={handleSaveOrder}
+              saving={savingOrder}
+            />
+          ) : (
+            <section className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-5 shadow-sm">
+              <h3 className="mb-1 text-lg font-semibold text-neutral-400">Draft Order</h3>
+              <p className="mb-3 text-xs text-neutral-500">
+                Locked once the draft starts — reshuffling would contradict picks already made.
+              </p>
+              <ol className="flex flex-col gap-1.5 text-sm text-neutral-500">
+                {(draftSession?.snake_order ?? []).map((uid, i) => (
+                  <li key={uid}>{i + 1}. {memberLabels[uid] ?? uid.slice(0, 8)}</li>
+                ))}
+              </ol>
+            </section>
+          )}
 
-          <DraftScheduler
-            initialScheduledStart={draftSession?.scheduled_start}
-            initialPickTimerSeconds={draftSession?.pick_timer_seconds}
-            onSave={handleSaveSchedule}
-            saving={savingSchedule}
-            showScheduledStart={!league?.is_demo}
-          />
+          {draftPhase === 'pre' ? (
+            <DraftScheduler
+              initialScheduledStart={draftSession?.scheduled_start}
+              initialPickTimerSeconds={draftSession?.pick_timer_seconds}
+              onSave={handleSaveSchedule}
+              saving={savingSchedule}
+              showScheduledStart={!league?.is_demo}
+            />
+          ) : (
+            <section className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-5 shadow-sm">
+              <h3 className="mb-1 text-lg font-semibold text-neutral-400">Draft Schedule</h3>
+              <p className="text-xs text-neutral-500">
+                Locked once the draft starts.
+                {draftSession?.scheduled_start &&
+                  ` Started ${format(new Date(draftSession.scheduled_start), "MMMM d, yyyy 'at' h:mm a")}.`}
+                {' '}Pick timer was {draftSession?.pick_timer_seconds ?? 90}s.
+              </p>
+            </section>
+          )}
 
           <PlayerPositionOverride
             leagueId={leagueId}
@@ -737,12 +736,21 @@ export default function CommissionerPage() {
             }
           />
 
-          <BenchOrderOverride
-            leagueId={leagueId}
-            members={members}
-            memberLabels={memberLabels}
-            loadBench={loadBench}
-          />
+          {draftPhase === 'post' ? (
+            <BenchOrderOverride
+              leagueId={leagueId}
+              members={members}
+              memberLabels={memberLabels}
+              loadBench={loadBench}
+            />
+          ) : (
+            <section className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-5 shadow-sm">
+              <h3 className="mb-1 text-lg font-semibold text-neutral-400">Override Bench Order</h3>
+              <p className="text-xs text-neutral-500">
+                Available after the draft completes — there&apos;s no bench to reorder until rosters are set.
+              </p>
+            </section>
+          )}
 
           {/* League Members & Invites */}
           <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
@@ -896,7 +904,16 @@ export default function CommissionerPage() {
           </div>
 
           {/* Injury Substitution */}
-          {league?.settings.injury_sub_enabled && (
+          {league?.settings.injury_sub_enabled && draftPhase !== 'post' && (
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-6 shadow-sm">
+              <h2 className="mb-1 text-lg font-semibold text-neutral-400">Injury Substitution</h2>
+              <p className="text-xs text-neutral-500">
+                Available after the draft completes — there&apos;s no roster to substitute into yet.
+              </p>
+            </div>
+          )}
+
+          {league?.settings.injury_sub_enabled && draftPhase === 'post' && (
             <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-neutral-200">Injury Substitution</h2>
               <form onSubmit={handleInjurySub} className="flex flex-col gap-3">
@@ -961,6 +978,14 @@ export default function CommissionerPage() {
           )}
 
           {/* Manual Score Entry */}
+          {draftPhase !== 'post' ? (
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-6 shadow-sm">
+              <h2 className="mb-1 text-lg font-semibold text-neutral-400">Enter Score Manually</h2>
+              <p className="text-xs text-neutral-500">
+                Available after the draft completes — nobody has a rostered player to score against yet.
+              </p>
+            </div>
+          ) : (
           <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-neutral-200">Enter Score Manually</h2>
             <form onSubmit={handleManualScore} className="flex flex-col gap-3">
@@ -1073,6 +1098,7 @@ export default function CommissionerPage() {
               </button>
             </form>
           </div>
+          )}
 
           {/* League Settings */}
           {league && (
@@ -1123,176 +1149,157 @@ export default function CommissionerPage() {
             </div>
           )}
 
-          {/* Void & Replace Pick */}
-          {draftSession && (draftSession.status === 'live' || draftSession.status === 'complete') && (
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
-              <h2 className="mb-1 text-lg font-semibold text-neutral-200">Void & Replace Pick</h2>
-              <p className="mb-4 text-xs text-neutral-500">A replacement player is required — void without replacement is not supported.</p>
-              <form onSubmit={handleVoidPick} className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-3">
+          {/* Swap a Drafted Player */}
+          <div className={cn('rounded-lg border border-neutral-800 p-6 shadow-sm', draftPhase === 'post' ? 'bg-neutral-900' : 'bg-neutral-900/60')}>
+            <h2 className={cn('mb-1 text-lg font-semibold', draftPhase === 'post' ? 'text-neutral-200' : 'text-neutral-400')}>
+              Swap a Drafted Player
+            </h2>
+
+            {draftPhase !== 'post' ? (
+              <p className="text-xs text-neutral-500">
+                Available after the draft completes. Once rosters are set, pick any team, choose one of
+                their drafted players, and swap in anyone who hasn&apos;t already been taken — no pick
+                numbers to remember.
+              </p>
+            ) : (
+              <>
+                <p className="mb-4 text-xs text-neutral-500">Step {correctStep} of 3</p>
+                {correctSuccess && <p className="mb-3 text-sm text-green-400">{correctSuccess}</p>}
+
+                {correctStep === 1 && (
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-neutral-300">Pick #</label>
-                    <input type="number" min={1} placeholder="e.g. 5" value={voidPickNumber}
-                      onChange={(e) => setVoidPickNumber(e.target.value)}
-                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-neutral-300">Void Reason</label>
-                    <input type="text" placeholder="Wrong pick, admin error…" value={voidReason}
-                      onChange={(e) => setVoidReason(e.target.value)}
-                      className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-                  </div>
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-neutral-300">Replacement Player</label>
-                  <input type="text" placeholder="Search by name…" value={replacementSearch}
-                    onChange={(e) => { setReplacementSearch(e.target.value); setReplacementId(''); setVoidSuccess(null); }}
-                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-                  {replacementSearch.trim().length >= 2 && !replacementId && (
-                    <ul className="mt-1 max-h-40 overflow-y-auto rounded-md border border-neutral-800 bg-neutral-900 shadow-sm">
-                      {players.filter((p) => p.name.toLowerCase().includes(replacementSearch.toLowerCase())).slice(0, 6).map((p) => (
-                        <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
-                          onClick={() => { setReplacementId(p.id); setReplacementSearch(p.name); }}>
-                          {p.name} <span className="text-neutral-500">({p.position})</span>
-                        </li>
+                    <label className="mb-1 block text-sm font-medium text-neutral-300">Team</label>
+                    <select
+                      value={swapUserId}
+                      onChange={(e) => setSwapUserId(e.target.value)}
+                      className="mb-3 w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    >
+                      <option value="">Select a team…</option>
+                      {members.map((m) => (
+                        <option key={m.user_id} value={m.user_id}>
+                          {memberLabels[m.user_id] ?? m.user_id.slice(0, 8)}
+                        </option>
                       ))}
-                    </ul>
-                  )}
-                  {replacementId && <p className="mt-1 text-xs text-green-400">Selected: {replacementSearch}</p>}
-                </div>
-                {voidError && <p className="text-sm text-red-400">{voidError}</p>}
-                {voidSuccess && <p className="text-sm text-green-400">{voidSuccess}</p>}
-                <button type="submit" disabled={voidingPick || !replacementId || !voidReason.trim() || !voidPickNumber}
-                  className="self-start rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
-                  {voidingPick ? 'Voiding…' : 'Void & Replace'}
-                </button>
-              </form>
-            </div>
-          )}
+                    </select>
 
-          {/* Correct a Pick (3-step) */}
-          {draftSession && draftSession.status === 'complete' && (
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
-              <h2 className="mb-1 text-lg font-semibold text-neutral-200">Correct a Pick</h2>
-              <p className="mb-4 text-xs text-neutral-500">Step {correctStep} of 3</p>
-
-              {correctSuccess && <p className="mb-3 text-sm text-green-400">{correctSuccess}</p>}
-
-              {correctStep === 1 && (
-                <div>
-                  {correctPicksLoading ? (
-                    <p className="text-sm text-neutral-500">Loading picks…</p>
-                  ) : correctPicks.length === 0 ? (
-                    <p className="text-sm text-neutral-500">No picks found.</p>
-                  ) : (
-                    <ul className="max-h-80 divide-y divide-neutral-800 overflow-y-auto rounded-md border border-neutral-800">
-                      {correctPicks.map((pick) => {
-                        const player = playerMap.get(pick.player_id);
-                        return (
-                          <li
-                            key={pick.id}
-                            onClick={() => handleSelectPick(pick)}
-                            className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-neutral-800"
-                          >
-                            <span className="w-10 shrink-0 text-neutral-400">#{pick.pick_number}</span>
-                            <span className="flex-1 text-white">{correctDisplayNames[pick.user_id] ?? pick.user_id}</span>
-                            <span className="flex-1 text-neutral-300">
-                              {player?.name ?? pick.player_id}
-                              {player && (
-                                <span className="text-neutral-500">
-                                  {' '}({player.position}{player.teams ? ` · ${player.teams.name}` : ''})
-                                </span>
-                              )}
-                            </span>
-                          </li>
+                    {swapUserId && (
+                      correctPicksLoading ? (
+                        <p className="text-sm text-neutral-500">Loading picks…</p>
+                      ) : (() => {
+                        const teamPicks = correctPicks.filter((p) => p.user_id === swapUserId);
+                        return teamPicks.length === 0 ? (
+                          <p className="text-sm text-neutral-500">No picks found for this team.</p>
+                        ) : (
+                          <ul className="max-h-80 divide-y divide-neutral-800 overflow-y-auto rounded-md border border-neutral-800">
+                            {teamPicks.map((pick) => {
+                              const player = playerMap.get(pick.player_id);
+                              return (
+                                <li
+                                  key={pick.id}
+                                  onClick={() => handleSelectPick(pick)}
+                                  className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-neutral-800"
+                                >
+                                  <span className="w-10 shrink-0 text-neutral-400">#{pick.pick_number}</span>
+                                  <span className="flex-1 text-neutral-300">
+                                    {player?.name ?? pick.player_id}
+                                    {player && (
+                                      <span className="text-neutral-500">
+                                        {' '}({player.position}{player.teams ? ` · ${player.teams.name}` : ''})
+                                      </span>
+                                    )}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
                         );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              )}
+                      })()
+                    )}
+                  </div>
+                )}
 
-              {correctStep === 2 && selectedPick && (
-                <div>
-                  <p className="mb-2 text-sm text-neutral-300">
-                    Selecting replacement for pick #{selectedPick.pick_number} —{' '}
-                    {playerMap.get(selectedPick.player_id)?.name ?? selectedPick.player_id}
-                  </p>
-                  <input
-                    type="text"
-                    placeholder="Search by name…"
-                    value={correctSearch}
-                    onChange={(e) => setCorrectSearch(e.target.value)}
-                    className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                  />
-                  {correctAvailableLoading ? (
-                    <p className="mt-2 text-sm text-neutral-500">Loading available players…</p>
-                  ) : (
-                    <ul className="mt-2 max-h-60 divide-y divide-neutral-800 overflow-y-auto rounded-md border border-neutral-800">
-                      {correctAvailable
-                        .filter((p) => p.name.toLowerCase().includes(correctSearch.toLowerCase()))
-                        .slice(0, 50)
-                        .map((p) => (
-                          <li
-                            key={p.id}
-                            onClick={() => { setCorrectReplacementId(p.id); setCorrectStep(3); }}
-                            className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
-                          >
-                            {p.name}{' '}
-                            <span className="text-neutral-500">
-                              ({p.position}{p.teams ? ` · ${p.teams.name}` : ''})
-                            </span>
-                          </li>
-                        ))}
-                      {correctAvailable.length === 0 && (
-                        <li className="px-3 py-2 text-sm text-neutral-500">No available players found.</li>
-                      )}
-                    </ul>
-                  )}
-                  <button onClick={resetCorrectFlow} className="mt-3 text-sm text-neutral-400 hover:text-yellow-400">
-                    ← Back to picks
-                  </button>
-                </div>
-              )}
-
-              {correctStep === 3 && selectedPick && (() => {
-                const oldPlayer = playerMap.get(selectedPick.player_id);
-                const newPlayer = correctAvailable.find((p) => p.id === correctReplacementId);
-                return (
+                {correctStep === 2 && selectedPick && (
                   <div>
-                    <p className="mb-3 text-sm text-neutral-300">
-                      Replace{' '}
-                      <span className="font-semibold text-white">{oldPlayer?.name ?? selectedPick.player_id}</span>
-                      {oldPlayer?.teams ? ` (${oldPlayer.teams.name})` : ''} with{' '}
-                      <span className="font-semibold text-white">{newPlayer?.name ?? correctReplacementId}</span>
-                      {newPlayer?.teams ? ` (${newPlayer.teams.name})` : ''}?
+                    <p className="mb-2 text-sm text-neutral-300">
+                      Swapping {memberLabels[swapUserId] ?? swapUserId.slice(0, 8)}&apos;s{' '}
+                      {playerMap.get(selectedPick.player_id)?.name ?? selectedPick.player_id} for —
                     </p>
-                    <label className="mb-1 block text-sm font-medium text-neutral-300">Void Reason</label>
                     <input
                       type="text"
-                      placeholder="Wrong pick, admin error…"
-                      value={correctVoidReason}
-                      onChange={(e) => setCorrectVoidReason(e.target.value)}
+                      placeholder="Search by name…"
+                      value={correctSearch}
+                      onChange={(e) => setCorrectSearch(e.target.value)}
                       className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     />
-                    {correctError && <p className="mt-2 text-sm text-red-400">{correctError}</p>}
-                    <div className="mt-3 flex gap-3">
-                      <button onClick={() => setCorrectStep(2)} className="text-sm text-neutral-400 hover:text-yellow-400">
-                        ← Back
-                      </button>
-                      <button
-                        onClick={handleConfirmCorrection}
-                        disabled={correctSubmitting || !correctVoidReason.trim()}
-                        className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                      >
-                        {correctSubmitting ? 'Saving…' : 'Confirm Correction'}
-                      </button>
-                    </div>
+                    {correctAvailableLoading ? (
+                      <p className="mt-2 text-sm text-neutral-500">Loading available players…</p>
+                    ) : (
+                      <ul className="mt-2 max-h-60 divide-y divide-neutral-800 overflow-y-auto rounded-md border border-neutral-800">
+                        {correctAvailable
+                          .filter((p) => p.name.toLowerCase().includes(correctSearch.toLowerCase()))
+                          .slice(0, 50)
+                          .map((p) => (
+                            <li
+                              key={p.id}
+                              onClick={() => { setCorrectReplacementId(p.id); setCorrectStep(3); }}
+                              className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
+                            >
+                              {p.name}{' '}
+                              <span className="text-neutral-500">
+                                ({p.position}{p.teams ? ` · ${p.teams.name}` : ''})
+                              </span>
+                            </li>
+                          ))}
+                        {correctAvailable.length === 0 && (
+                          <li className="px-3 py-2 text-sm text-neutral-500">No available players found.</li>
+                        )}
+                      </ul>
+                    )}
+                    <button onClick={() => resetCorrectFlow(false)} className="mt-3 text-sm text-neutral-400 hover:text-yellow-400">
+                      ← Back to {memberLabels[swapUserId] ?? 'team'}&apos;s picks
+                    </button>
                   </div>
-                );
-              })()}
-            </div>
-          )}
+                )}
+
+                {correctStep === 3 && selectedPick && (() => {
+                  const oldPlayer = playerMap.get(selectedPick.player_id);
+                  const newPlayer = correctAvailable.find((p) => p.id === correctReplacementId);
+                  return (
+                    <div>
+                      <p className="mb-3 text-sm text-neutral-300">
+                        For {memberLabels[swapUserId] ?? swapUserId.slice(0, 8)}, replace{' '}
+                        <span className="font-semibold text-white">{oldPlayer?.name ?? selectedPick.player_id}</span>
+                        {oldPlayer?.teams ? ` (${oldPlayer.teams.name})` : ''} with{' '}
+                        <span className="font-semibold text-white">{newPlayer?.name ?? correctReplacementId}</span>
+                        {newPlayer?.teams ? ` (${newPlayer.teams.name})` : ''}?
+                      </p>
+                      <label className="mb-1 block text-sm font-medium text-neutral-300">Reason</label>
+                      <input
+                        type="text"
+                        placeholder="Wrong pick, admin error…"
+                        value={correctVoidReason}
+                        onChange={(e) => setCorrectVoidReason(e.target.value)}
+                        className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      />
+                      {correctError && <p className="mt-2 text-sm text-red-400">{correctError}</p>}
+                      <div className="mt-3 flex gap-3">
+                        <button onClick={() => setCorrectStep(2)} className="text-sm text-neutral-400 hover:text-yellow-400">
+                          ← Back
+                        </button>
+                        <button
+                          onClick={handleConfirmCorrection}
+                          disabled={correctSubmitting || !correctVoidReason.trim()}
+                          className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                        >
+                          {correctSubmitting ? 'Saving…' : 'Confirm Swap'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>
+            )}
+          </div>
         </div>
       </div>
       </div>

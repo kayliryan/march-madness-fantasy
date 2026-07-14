@@ -67,11 +67,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'League not found' }, { status: 404 });
     }
 
-    // Upsert the draft session (RLS enforces commissioner-only)
+    // Upsert the draft session (RLS enforces commissioner-only) — scoped to the
+    // league's active season so the demo seed's "previous season" stub session
+    // (created after the real one, purely for a season-switcher link) can't be
+    // picked up as "the" session just because it has a later created_at.
     const { data: existing } = await supabase
       .from('draft_sessions')
       .select('id')
       .eq('league_id', body.league_id)
+      .eq('season', league.season)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

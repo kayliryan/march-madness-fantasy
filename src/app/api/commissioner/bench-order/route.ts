@@ -50,12 +50,23 @@ export async function PATCH(request: NextRequest) {
       .eq('user_id', body.user_id)
       .maybeSingle();
 
+    const { data: leagueRow } = await supabase
+      .from('leagues')
+      .select('season')
+      .eq('id', body.league_id)
+      .maybeSingle();
+
     // Check the lock deadline directly (rather than bench_orders.locked_at) so the lock
     // applies even to a user's first-ever submission, when no bench_orders row exists yet.
+    // Scoped to the league's active season — the demo seed's "previous season" stub
+    // session (created after the real one, purely for a season-switcher link) has a
+    // later created_at and would otherwise win the "most recent" pick, handing back a
+    // bench_lock_deadline over a year in the past.
     const { data: draftSession } = await supabase
       .from('draft_sessions')
       .select('bench_lock_deadline')
       .eq('league_id', body.league_id)
+      .eq('season', leagueRow?.season ?? 0)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

@@ -169,9 +169,25 @@ export default function BenchOrderPage() {
       <AppHeader leagueId={league_id} />
       <div className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="mb-1 text-2xl font-bold text-white">Bench Order</h1>
-        <p className="mb-6 text-sm text-neutral-500">
-          When an active slot opens up, your bench players are activated in this order.
+        <p className="mb-3 text-sm text-neutral-500">
+          When one of your starters&apos; teams is eliminated, the next eligible bench player takes their slot
+          automatically — no action needed mid-tournament. This list controls who&apos;s next in line.
         </p>
+
+        <div className="mb-6 rounded-md border border-neutral-800 bg-neutral-900 p-3 text-xs text-neutral-500">
+          <p className="mb-1.5 font-semibold text-neutral-300">How activation picks the replacement</p>
+          <p>
+            Highest PPG bench player whose <span className="text-neutral-400">position is eligible</span> for the
+            open slot, and whose team hasn&apos;t also been eliminated. Eligibility for this league:
+          </p>
+          <ul className="mt-1.5 space-y-0.5">
+            {Object.entries(league.league.settings.sub_eligibility_matrix ?? {}).map(([slot, eligible]) => (
+              <li key={slot}>
+                <span className="font-mono text-neutral-400">{slot}</span> slot ← {(eligible as string[]).join(', ')}
+              </li>
+            ))}
+          </ul>
+        </div>
 
         {league.is_historical ? (
           <p className="rounded-md border border-dashed border-neutral-700 bg-neutral-900 p-4 text-center text-sm text-neutral-500">

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
+import { REGION_ORDER, simulateBracketRound } from '@/lib/utils/bracketSim';
 
 const SLOT_KEYS = ['G1', 'G2', 'F1', 'F2', 'C1', 'B1', 'B2', 'B3'] as const;
 type SlotKey = (typeof SLOT_KEYS)[number];
@@ -13,14 +14,10 @@ const SLOT_IS_BENCH: Record<SlotKey, boolean> = {
 };
 
 
-// Rounds in which each seed tier is eliminated (null = not eliminated through E8)
-function getEliminationRound(seed: number, isPlayInLoser: boolean): RoundStage | null {
-  if (isPlayInLoser) return 'play_in';
-  if (seed <= 2) return null;
-  if (seed <= 4) return 's16';
-  if (seed <= 8) return 'r32';
-  return 'r64';
-}
+// Bracket order used to pair round-1 matchups within a region — same convention
+// as src/lib/utils/bracketSim.ts (adjacent pairs meet, winners advance).
+const SEED_BRACKET_ORDER = [1, 16, 8, 9, 5, 12, 4, 13, 6, 11, 3, 14, 7, 10, 2, 15];
+const BRACKET_ROUNDS: RoundStage[] = ['r64', 'r32', 's16', 'e8', 'f4', 'championship'];
 
 const PLAYABLE_ROUND_STAGES = ROUND_STAGE_ORDER.filter(
   (s) => s !== 'draft' && s !== 'play_in'
@@ -141,11 +138,35 @@ export async function seedDemoLeagueData(
     if (arr.length > 1) playInLoserIds.add(arr[1].id);
   }
 
+  // Run a REAL paired single-elimination bracket (src/lib/utils/bracketSim.ts) instead
+  // of a seed-tier heuristic. The old version gave every #1/#2 seed in every region a
+  // free pass all the way to the championship (elim=null for any seed<=2), which meant
+  // several teams simultaneously "played" a championship game that only one team can
+  // ever actually reach. This produces exactly one champion, and every other team's
+  // elimination round reflects an actual (simulated) loss to a specific opponent.
+  const regionsPresent = [...new Set(teams.map((t) => t.region))].sort(
+    (a, b) => REGION_ORDER.indexOf(a) - REGION_ORDER.indexOf(b)
+  );
+  let currentField = regionsPresent.flatMap((region) =>
+    SEED_BRACKET_ORDER.map((seed) => {
+      const candidates = teamsByRegionSeed.get(`${region}:${seed}`) ?? [];
+      const winner = candidates.find((t) => !playInLoserIds.has(t.id)) ?? candidates[0];
+      return winner ? { name: winner.id, seed, region } : null;
+    }).filter((t): t is { name: string; seed: number; region: string } => t !== null)
+  );
+
+  const bracketElimRound = new Map<string, RoundStage>(); // team id -> round they lost in
+  for (let i = 0; i < BRACKET_ROUNDS.length && currentField.length > 1; i++) {
+    const { winners, matchups } = simulateBracketRound(currentField);
+    for (const m of matchups) bracketElimRound.set(m.loser.name, BRACKET_ROUNDS[i]);
+    currentField = winners;
+  }
+  // currentField now holds exactly one team: the champion (never eliminated).
+
   const teamElimMap = new Map<string, RoundStage | null>();
   const teamUpdatePromises: PromiseLike<unknown>[] = [];
   for (const t of teams) {
-    const isLoser = playInLoserIds.has(t.id);
-    const elimRound = getEliminationRound(t.seed, isLoser);
+    const elimRound = playInLoserIds.has(t.id) ? 'play_in' : (bracketElimRound.get(t.id) ?? null);
     teamElimMap.set(t.id, elimRound);
     if (!t.is_eliminated && elimRound) {
       teamUpdatePromises.push(
@@ -303,15 +324,17 @@ export async function seedDemoLeagueData(
   }
 
   // ── 5. Force bench-activation for the top-ranked user: G2's team naturally eliminates
-  // in R32 (seeds 5-8 → r32). A surviving G player (seed 1-2, unused) replaces the
-  // normal B1 pick, then activates into the G2 slot from S16. This adds bonus S16+E8
-  // scoring on top of user 0's full normal roster, guaranteeing rank #1. ──
+  // in R32 (seeds 5-8 → r32). A deep-running G player (Final Four or better, unused)
+  // replaces the normal B1 pick, then activates into the G2 slot from S16. This adds
+  // bonus scoring on top of user 0's full normal roster, giving them a strong shot at
+  // rank #1 without requiring the literal eventual champion (that pool is just one team
+  // now that eliminations come from a real bracket sim, not a seed-tier heuristic). ──
   const findUnused = (pos: 'G' | 'F' | 'C', predicate: (elim: RoundStage | null) => boolean) =>
     byPos[pos].find((p) => !usedPlayerIds.has(p.id) && predicate(teamElimMap.get(p.team_id) ?? null));
 
-  const survivingSub = findUnused('G', (elim) => elim === null);
+  const survivingSub = findUnused('G', (elim) => elim === null || elim === 'f4');
   if (!survivingSub) {
-    throw new Error('seedDemoLeagueData: could not find surviving G player for bench activation');
+    throw new Error('seedDemoLeagueData: could not find a deep-running G player for bench activation');
   }
 
   const displacedBenchId = roster[subUserId]['B1']!;
@@ -391,9 +414,25 @@ export async function seedDemoLeagueData(
     release_reason: survivingSubElim ? 'eliminated' : null,
   });
 
+  // Composite key of (user_id, slot_key, acquired_at_round_stage) uniquely identifies
+  // each row we're about to insert (a slot_key can have more than one historical row —
+  // e.g. G2's original draft pick plus the S16 promotion — but never two starting at
+  // the same round stage). Used below to attach the real roster_slot_id to each
+  // scoring_event instead of leaving every credited point keyed by player_id alone,
+  // which is what made two different stints of the same player show identical totals.
+  const slotRowKey = (s: Pick<SlotEntry, 'user_id' | 'slot_key' | 'acquired_at_round_stage'>) =>
+    `${s.user_id}:${s.slot_key}:${s.acquired_at_round_stage}`;
+  const rosterSlotIdByKey = new Map<string, string>();
+
   for (let i = 0; i < rosterSlotsBatch.length; i += 100) {
-    const { error } = await supabaseAdmin.from('roster_slots').insert(rosterSlotsBatch.slice(i, i + 100));
+    const { data, error } = await supabaseAdmin
+      .from('roster_slots')
+      .insert(rosterSlotsBatch.slice(i, i + 100))
+      .select('id, user_id, slot_key, acquired_at_round_stage');
     if (error) throw new Error(`seedDemoLeagueData: failed to insert roster_slots: ${error.message}`);
+    for (const row of (data ?? [])) {
+      rosterSlotIdByKey.set(slotRowKey(row), row.id);
+    }
   }
   console.log(`[seedDemo] 7. roster_slots: ${Date.now() - t7}ms (${rosterSlotsBatch.length} rows)`);
 
@@ -472,6 +511,7 @@ export async function seedDemoLeagueData(
     game_score_id: string;
     round_stage: string;
     points_credited: number;
+    roster_slot_id: string | null;
     is_stale: boolean;
   };
   const scoringEventsBatch: ScoringEventEntry[] = [];
@@ -480,6 +520,12 @@ export async function seedDemoLeagueData(
     if (slot.is_bench) continue; // bench players don't score until promoted to a starter slot
     const playerGames = gameScoresByPlayer.get(slot.player_id) ?? [];
     if (!playerGames.length) continue;
+
+    // Which specific roster_slot row this credit belongs to — critical when the same
+    // player has more than one row (e.g. a bench stint plus a later promoted starter
+    // stint): without this, both rows would show the exact same combined total instead
+    // of each stint's own points.
+    const roster_slot_id = rosterSlotIdByKey.get(slotRowKey(slot)) ?? null;
 
     const acqIdx = ROUND_STAGE_ORDER.indexOf(slot.acquired_at_round_stage as RoundStage);
     if (acqIdx === -1) continue;
@@ -503,6 +549,7 @@ export async function seedDemoLeagueData(
         player_id: slot.player_id,
         game_score_id: gs.id,
         round_stage: gs.round_stage,
+        roster_slot_id,
         points_credited: gs.points,
         is_stale: false,
       });

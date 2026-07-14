@@ -1,6 +1,66 @@
 import Link from 'next/link';
-import { Shuffle, TrendingUp, Bot, Trophy } from 'lucide-react';
+import { Shuffle, TrendingUp, Bot, Trophy, Radio, ShieldCheck } from 'lucide-react';
 import { DemoCTAs } from '@/components/DemoCTAs';
+
+const STACK = [
+  'Next.js 16 (App Router)',
+  'TypeScript (strict)',
+  'Supabase Postgres + RLS',
+  'Supabase Realtime',
+  'Claude API',
+  'Tailwind CSS v4',
+];
+
+const HOW_IT_WORKS = [
+  {
+    step: '1',
+    title: 'Draft against 4 bots',
+    body: 'Click "Explore as Commissioner" and you\'re instantly in a live 5-team snake draft — no signup, no waiting on other players.',
+  },
+  {
+    step: '2',
+    title: 'Set your lineup, simulate the bracket',
+    body: 'Arrange starters vs. bench, then step round-by-round through a real single-elimination tournament simulation.',
+  },
+  {
+    step: '3',
+    title: 'Watch scoring and standings react',
+    body: 'Eliminations, bench promotions, and an AI-generated recap update live — the same engine that runs real leagues.',
+  },
+];
+
+const FEATURES = [
+  {
+    icon: <Radio className="w-6 h-6 text-yellow-400" />,
+    title: 'Live Draft Room',
+    body: 'Supabase Realtime broadcasts every pick instantly, with server-enforced pick timers, snake order, and full reconnect/rejoin state recovery.',
+  },
+  {
+    icon: <TrendingUp className="w-6 h-6 text-yellow-400" />,
+    title: 'Real Bracket Simulation',
+    body: 'Scoring is driven by an actual single-elimination bracket sim — not independent coin flips — so eliminations and fantasy points stay consistent with each other.',
+  },
+  {
+    icon: <Bot className="w-6 h-6 text-yellow-400" />,
+    title: 'Claude-Powered Advisors',
+    body: 'A Sonnet-backed draft advisor reasons about positional needs and seed risk; a Haiku-backed narrator writes a fresh recap after every round.',
+  },
+  {
+    icon: <ShieldCheck className="w-6 h-6 text-yellow-400" />,
+    title: 'Multi-Tenant by Design',
+    body: 'Every league is isolated with Postgres row-level security — commissioner tools, rosters, and draft state are enforced at the database layer, not just in the UI.',
+  },
+  {
+    icon: <Shuffle className="w-6 h-6 text-yellow-400" />,
+    title: 'Full Commissioner Toolkit',
+    body: 'Draft order, scheduling, bench-order overrides, injury subs, and manual score corrections — each one gated to the draft phase it actually applies to.',
+  },
+  {
+    icon: <Trophy className="w-6 h-6 text-yellow-400" />,
+    title: 'Round-by-Round Leaderboard',
+    body: 'Per-player, per-round breakdowns show exactly which games counted, which were bench strikethroughs, and when a player was eliminated.',
+  },
+];
 
 export default function Home() {
   return (
@@ -36,35 +96,34 @@ export default function Home() {
         <p className="mx-auto mt-8 max-w-xl text-lg text-neutral-400 leading-relaxed">
           Snake-draft NCAA players, score points as they survive each round, and watch your team rise on the live leaderboard.
         </p>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-neutral-600">
+          A full-stack project built solo, end to end — real-time draft room, an actual bracket
+          simulation engine, and two Claude-powered AI features. Try the whole thing below, no signup required.
+        </p>
 
         <DemoCTAs />
       </main>
 
+      {/* How the demo works */}
+      <section className="mx-auto max-w-5xl px-6 pb-16 sm:px-10">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          {HOW_IT_WORKS.map(({ step, title, body }) => (
+            <div key={step} className="rounded-lg border border-neutral-800 bg-[#0d0d0d] p-5">
+              <span className="mb-3 flex size-7 items-center justify-center rounded-full bg-yellow-400/20 text-sm font-bold text-yellow-400">
+                {step}
+              </span>
+              <p className="text-sm font-black uppercase tracking-wide text-white">{title}</p>
+              <p className="mt-2 text-sm text-neutral-500 leading-relaxed">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Feature grid */}
-      <section className="mx-auto max-w-5xl px-6 pb-20 sm:px-10">
-        <div className="grid grid-cols-1 gap-px bg-neutral-800 sm:grid-cols-2 lg:grid-cols-4 rounded-lg overflow-hidden border border-neutral-800">
-          {[
-            {
-              icon: <Shuffle className="w-6 h-6 text-yellow-400" />,
-              title: 'Snake Draft',
-              body: 'Live draft room with pick timer, position enforcement, and AI advisor to guide every pick.',
-            },
-            {
-              icon: <TrendingUp className="w-6 h-6 text-yellow-400" />,
-              title: 'Live Scoring',
-              body: 'Points update automatically as games finish. Bench subs activate when your players are eliminated.',
-            },
-            {
-              icon: <Bot className="w-6 h-6 text-yellow-400" />,
-              title: 'AI Advisor',
-              body: 'Claude-powered draft and standings advisor. Ask about seed risk, positional needs, or who to pick.',
-            },
-            {
-              icon: <Trophy className="w-6 h-6 text-yellow-400" />,
-              title: 'Leaderboard',
-              body: 'Per-round breakdowns, roster drill-downs, and an AI-generated standings narrative after each round.',
-            },
-          ].map(({ icon, title, body }) => (
+      <section className="mx-auto max-w-5xl px-6 pb-16 sm:px-10">
+        <p className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-600">What&apos;s actually running under the hood</p>
+        <div className="grid grid-cols-1 gap-px bg-neutral-800 sm:grid-cols-2 lg:grid-cols-3 rounded-lg overflow-hidden border border-neutral-800">
+          {FEATURES.map(({ icon, title, body }) => (
             <div key={title} className="bg-[#0d0d0d] p-6">
               <div className="mb-3">{icon}</div>
               <p className="text-sm font-black uppercase tracking-wide text-white">{title}</p>
@@ -74,7 +133,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer CTA */}
+      {/* Stack */}
+      <section className="mx-auto max-w-5xl px-6 pb-20 sm:px-10">
+        <p className="mb-3 text-xs font-bold uppercase tracking-widest text-neutral-600">Stack</p>
+        <div className="flex flex-wrap gap-2">
+          {STACK.map((item) => (
+            <span
+              key={item}
+              className="rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-400"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
       <div className="border-t border-neutral-900 px-6 py-8 text-center sm:px-10">
         <p className="text-sm text-neutral-500">
           Ready to play for real?{' '}
@@ -82,6 +156,11 @@ export default function Home() {
             Create an account
           </Link>{' '}
           and invite your friends.
+        </p>
+        <p className="mt-3 text-xs text-neutral-700">
+          <Link href="/demo/draft" className="hover:text-neutral-500">
+            Try the mock draft simulator →
+          </Link>
         </p>
       </div>
     </div>

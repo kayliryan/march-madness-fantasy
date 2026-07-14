@@ -121,13 +121,13 @@ export default function DemoLeaguePage() {
     try {
       // 1. Roster slots with lifecycle fields
       type SlotRaw = {
-        slot_key: string; slot_position: string; is_bench: boolean; is_active: boolean;
+        id: string; slot_key: string; slot_position: string; is_bench: boolean; is_active: boolean;
         player_id: string; acquired_at_round_stage: string; released_at_round_stage: string | null;
         players: { name: string; teams: { name: string; seed: number } | { name: string; seed: number }[] | null } | null;
       };
       const { data: slots } = await supabase
         .from('roster_slots')
-        .select('slot_key, slot_position, is_bench, is_active, player_id, acquired_at_round_stage, released_at_round_stage, players(name, teams(name, seed))')
+        .select('id, slot_key, slot_position, is_bench, is_active, player_id, acquired_at_round_stage, released_at_round_stage, players(name, teams(name, seed))')
         .eq('league_id', DEMO_LEAGUE_ID)
         .eq('user_id', user_id)
         .order('is_bench')
@@ -138,20 +138,32 @@ export default function DemoLeaguePage() {
         return;
       }
 
-      const playerIds = [...new Set((slots as unknown as SlotRaw[]).map((s) => s.player_id))];
+      const typedSlots = slots as unknown as SlotRaw[];
+      const playerIds = [...new Set(typedSlots.map((s) => s.player_id))];
 
-      // 2. Credited points (scoring_events) for this user
+      // 2. Credited points (scoring_events) for this user — attributed to the specific
+      // roster_slot row that earned them (a bench stint and a later promoted starter
+      // stint for the same player are different rows with different totals; keying by
+      // player_id alone would show the same combined total on both).
       const { data: events } = await supabase
         .from('scoring_events')
-        .select('player_id, round_stage, points_credited')
+        .select('player_id, roster_slot_id, round_stage, points_credited')
         .eq('league_id', DEMO_LEAGUE_ID)
         .eq('user_id', user_id);
 
-      const countedMap: Record<string, Record<string, number>> = {};
+      const countedBySlot: Record<string, Record<string, number>> = {};
+      const countedByPlayerFallback: Record<string, Record<string, number>> = {};
       for (const e of (events ?? [])) {
-        countedMap[e.player_id] ??= {};
-        countedMap[e.player_id][e.round_stage] = (countedMap[e.player_id][e.round_stage] ?? 0) + e.points_credited;
+        if (e.roster_slot_id) {
+          countedBySlot[e.roster_slot_id] ??= {};
+          countedBySlot[e.roster_slot_id][e.round_stage] = (countedBySlot[e.roster_slot_id][e.round_stage] ?? 0) + e.points_credited;
+        } else {
+          countedByPlayerFallback[e.player_id] ??= {};
+          countedByPlayerFallback[e.player_id][e.round_stage] = (countedByPlayerFallback[e.player_id][e.round_stage] ?? 0) + e.points_credited;
+        }
       }
+      const slotCountByPlayer: Record<string, number> = {};
+      for (const s of typedSlots) slotCountByPlayer[s.player_id] = (slotCountByPlayer[s.player_id] ?? 0) + 1;
 
       // 3. Raw game points (game_scores) for all player_ids — includes bench and elimination rounds
       const { data: gameScores } = await supabase
@@ -165,9 +177,12 @@ export default function DemoLeaguePage() {
         rawMap[gs.player_id][gs.round_stage] = (rawMap[gs.player_id][gs.round_stage] ?? 0) + gs.points;
       }
 
-      const mapped: SlotDetail[] = (slots as unknown as SlotRaw[]).map((s) => {
+      const mapped: SlotDetail[] = typedSlots.map((s) => {
         const p = s.players;
         const team = Array.isArray(p?.teams) ? p?.teams[0] : p?.teams;
+        const counted_pts = countedBySlot[s.id] ?? (
+          slotCountByPlayer[s.player_id] === 1 ? countedByPlayerFallback[s.player_id] ?? {} : {}
+        );
         return {
           slot_key: s.slot_key,
           player_id: s.player_id,
@@ -179,7 +194,7 @@ export default function DemoLeaguePage() {
           team_seed: team?.seed ?? 0,
           acquired_at_round_stage: s.acquired_at_round_stage,
           released_at_round_stage: s.released_at_round_stage,
-          counted_pts: countedMap[s.player_id] ?? {},
+          counted_pts,
           raw_pts: rawMap[s.player_id] ?? {},
         };
       });

@@ -61,11 +61,17 @@ export async function GET(
       return NextResponse.json({ error: 'Not a member of this league' }, { status: 403 });
     }
 
-    const [{ data: session }, { count }] = await Promise.all([
+    const [{ data: session }, { count }, { count: rosterCount }] = await Promise.all([
+      // Scoped to the league's active season — without this, the demo seed's
+      // "previous season" stub session (created after the real one, purely to
+      // surface a season-switcher link) has a later created_at and would win
+      // the "most recent" pick, handing the whole app a >1-year-stale
+      // bench_lock_deadline/draft_status for the CURRENT season's draft.
       supabase
         .from('draft_sessions')
         .select('id, bench_lock_deadline, status, scheduled_start')
         .eq('league_id', league_id)
+        .eq('season', (league as League).season)
         .neq('status', 'cancelled')
         .order('created_at', { ascending: false })
         .maybeSingle(),
@@ -74,6 +80,10 @@ export async function GET(
         .select('id', { count: 'exact', head: true })
         .eq('season', (league as League).season)
         .eq('game_status', 'in_progress'),
+      supabase
+        .from('roster_slots')
+        .select('id', { count: 'exact', head: true })
+        .eq('league_id', league_id),
     ]);
 
     const response: GetLeagueResponse = {
@@ -86,6 +96,7 @@ export async function GET(
       scheduled_start: session?.scheduled_start ?? null,
       season_in_progress: (count ?? 0) > 0,
       is_historical: (league as League).season < CURRENT_TOURNAMENT_SEASON,
+      has_roster_data: (rosterCount ?? 0) > 0,
     };
 
     return NextResponse.json(response);
