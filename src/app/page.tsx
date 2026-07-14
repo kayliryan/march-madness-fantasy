@@ -157,11 +157,6 @@ export default function Home() {
           </Link>{' '}
           and invite your friends.
         </p>
-        <p className="mt-3 text-xs text-neutral-700">
-          <Link href="/demo/draft" className="hover:text-neutral-500">
-            Try the mock draft simulator →
-          </Link>
-        </p>
       </div>
     </div>
   );
