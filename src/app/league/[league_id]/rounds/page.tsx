@@ -30,9 +30,9 @@ export default function RoundsPage() {
   const [data, setData] = useState<RoundsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [roundIdx, setRoundIdx] = useState<number | null>(null);
 
   useEffect(() => {
-    setLoading(true);
     fetch(`/api/league/${league_id}/rounds`)
       .then((res) => {
         if (res.status === 401) {
@@ -71,6 +71,13 @@ export default function RoundsPage() {
     );
   }
 
+  const lastIdx = data.rounds.length - 1;
+  if (roundIdx === null && lastIdx >= 0) {
+    setRoundIdx(lastIdx);
+  }
+  const idx = roundIdx ?? lastIdx;
+  const visibleRounds = data.rounds.slice(0, idx + 1);
+
   return (
     <div className="min-h-screen bg-black">
       <AppHeader leagueId={league_id} />
@@ -80,8 +87,49 @@ export default function RoundsPage() {
         {data.rounds.length === 0 ? (
           <p className="py-12 text-center text-neutral-500">No scoring yet — tournament hasn&apos;t started.</p>
         ) : (
+          <>
+            <div className="mb-6 flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setRoundIdx((v) => Math.max(0, (v ?? lastIdx) - 1))}
+                disabled={idx <= 0}
+                className="rounded border border-neutral-800 px-2 py-1 text-xs font-bold text-neutral-400 hover:border-yellow-400/50 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-30"
+                aria-label="Previous round"
+              >
+                ◀
+              </button>
+              {data.rounds.map((round, i) => (
+                <button
+                  key={round.round_stage}
+                  type="button"
+                  onClick={() => setRoundIdx(i)}
+                  className={`rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                    i === idx
+                      ? 'border border-yellow-400 bg-yellow-400/20 text-yellow-400'
+                      : 'border border-neutral-800 text-neutral-500 hover:border-yellow-400/40 hover:text-yellow-400'
+                  }`}
+                >
+                  {ROUND_LABELS[round.round_stage] ?? round.round_stage}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setRoundIdx((v) => Math.min(lastIdx, (v ?? lastIdx) + 1))}
+                disabled={idx >= lastIdx}
+                className="rounded border border-neutral-800 px-2 py-1 text-xs font-bold text-neutral-400 hover:border-yellow-400/50 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-30"
+                aria-label="Next round"
+              >
+                ▶
+              </button>
+              {idx < lastIdx && (
+                <span className="ml-1 text-[11px] text-neutral-500">
+                  Viewing through {ROUND_LABELS[data.rounds[idx].round_stage] ?? data.rounds[idx].round_stage} — {lastIdx - idx} more round{lastIdx - idx === 1 ? '' : 's'} already played beyond here.
+                </span>
+              )}
+            </div>
+
           <div className="flex flex-col gap-6">
-            {data.rounds.map((round) => (
+            {visibleRounds.map((round) => (
               <div key={round.round_stage} className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
                 <div className="border-b border-neutral-800 bg-black px-4 py-3">
                   <h2 className="text-base font-semibold text-white">
@@ -129,6 +177,7 @@ export default function RoundsPage() {
               </div>
             ))}
           </div>
+          </>
         )}
       </div>
     </div>

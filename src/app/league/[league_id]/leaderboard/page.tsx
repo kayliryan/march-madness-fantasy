@@ -59,6 +59,11 @@ export default function LeaderboardPage() {
   const [narrativeLoading, setNarrativeLoading] = useState(false);
   const [view, setView] = useState<'standings' | 'rounds'>('standings');
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
+  // Index into activeColumns — lets you step back through the season and see the
+  // leaderboard/breakdown exactly as it stood after an earlier round, without
+  // affecting the underlying (already-final) data. Set to the last played round
+  // once data loads, so the default view still shows everything.
+  const [viewAsOfIdx, setViewAsOfIdx] = useState<number | null>(null);
   const [rosterCache, setRosterCache] = useState<Map<string, RosterSlotForRounds[]>>(new Map());
   const [rawScoresCache, setRawScoresCache] = useState<Map<string, Map<string, Map<string, number>>>>(new Map());
   const [rosterLoading, setRosterLoading] = useState<Set<string>>(new Set());
@@ -149,6 +154,22 @@ export default function LeaderboardPage() {
     for (const r of entry.per_round) playedRounds.add(r.round_stage);
   }
   const activeColumns = ROUND_COLUMNS.filter((s) => playedRounds.has(s));
+  const lastIdx = activeColumns.length - 1;
+
+  // Defaults viewAsOfIdx to "everything played so far" the first time data loads,
+  // without needing an effect (setState-during-render, same pattern used elsewhere
+  // in this codebase). Stepping back/forward below only changes which already-final
+  // rounds are shown — it never touches the underlying data.
+  if (viewAsOfIdx === null && lastIdx >= 0) {
+    setViewAsOfIdx(lastIdx);
+  }
+  const asOfIdx = viewAsOfIdx ?? lastIdx;
+  const visibleColumns = activeColumns.slice(0, asOfIdx + 1);
+
+  function asOfTotal(per_round: { round_stage: string; points: number }[]): number {
+    const pts = roundPointsMap(per_round);
+    return visibleColumns.reduce((sum, stage) => sum + (pts.get(stage) ?? 0), 0);
+  }
 
   return (
     <div className="min-h-screen bg-black">
@@ -232,6 +253,48 @@ export default function LeaderboardPage() {
               </button>
             </div>
 
+            {activeColumns.length > 0 && (
+              <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setViewAsOfIdx((v) => Math.max(0, (v ?? lastIdx) - 1))}
+                  disabled={asOfIdx <= 0}
+                  className="rounded border border-neutral-800 px-2 py-1 text-xs font-bold text-neutral-400 hover:border-yellow-400/50 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-30"
+                  aria-label="Previous round"
+                >
+                  ◀
+                </button>
+                {activeColumns.map((stage, i) => (
+                  <button
+                    key={stage}
+                    type="button"
+                    onClick={() => setViewAsOfIdx(i)}
+                    className={`rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                      i === asOfIdx
+                        ? 'border border-yellow-400 bg-yellow-400/20 text-yellow-400'
+                        : 'border border-neutral-800 text-neutral-500 hover:border-yellow-400/40 hover:text-yellow-400'
+                    }`}
+                  >
+                    {ROUND_LABELS[stage] ?? stage}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setViewAsOfIdx((v) => Math.min(lastIdx, (v ?? lastIdx) + 1))}
+                  disabled={asOfIdx >= lastIdx}
+                  className="rounded border border-neutral-800 px-2 py-1 text-xs font-bold text-neutral-400 hover:border-yellow-400/50 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-30"
+                  aria-label="Next round"
+                >
+                  ▶
+                </button>
+                {asOfIdx < lastIdx && (
+                  <span className="ml-1 text-[11px] text-neutral-500">
+                    Viewing as of {ROUND_LABELS[activeColumns[asOfIdx]] ?? activeColumns[asOfIdx]} — {lastIdx - asOfIdx} more round{lastIdx - asOfIdx === 1 ? '' : 's'} already played beyond here.
+                  </span>
+                )}
+              </div>
+            )}
+
             {view === 'standings' ? (
               <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
                 <table className="w-full text-sm">
@@ -245,7 +308,9 @@ export default function LeaderboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-800">
-                    {data.standings.map((entry, i) => {
+                    {[...data.standings]
+                      .sort((a, b) => asOfTotal(b.per_round) - asOfTotal(a.per_round))
+                      .map((entry, i) => {
                       const rank = i + 1;
                       const isExpanded = expandedUsers.has(entry.user_id);
                       const isLoadingRoster = rosterLoading.has(entry.user_id);
@@ -269,7 +334,7 @@ export default function LeaderboardPage() {
                               </button>
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
-                              {entry.total_points}
+                              {asOfTotal(entry.per_round)}
                             </td>
                             <td className="px-4 py-3 text-right text-neutral-300 tabular-nums hidden sm:table-cell">
                               {entry.active_player_count}
@@ -293,7 +358,7 @@ export default function LeaderboardPage() {
                                   <thead>
                                     <tr className="border-b border-neutral-800">
                                       <th className="py-2 pl-10 pr-3 text-left font-bold text-white">Player</th>
-                                      {activeColumns.map((stage) => (
+                                      {visibleColumns.map((stage) => (
                                         <th key={stage} className="px-2 py-2 text-right font-bold text-white whitespace-nowrap">
                                           {ROUND_LABELS[stage as RoundStage] ?? stage}
                                         </th>
@@ -321,7 +386,7 @@ export default function LeaderboardPage() {
                                               <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
                                             )}
                                           </td>
-                                          {activeColumns.map((stage) => {
+                                          {visibleColumns.map((stage) => {
                                             const cell = getRoundCell(stage, countedPts, rawPts, slot);
                                             return (
                                               <td key={stage} className="px-2 py-2 text-right tabular-nums">
@@ -330,7 +395,10 @@ export default function LeaderboardPage() {
                                             );
                                           })}
                                           <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
-                                            {slot.total_points ? Math.round(slot.total_points) : '—'}
+                                            {(() => {
+                                              const t = visibleColumns.reduce((sum, s) => sum + (countedPts.get(s) ?? 0), 0);
+                                              return t ? Math.round(t) : '—';
+                                            })()}
                                           </td>
                                         </tr>
                                       );
@@ -352,7 +420,7 @@ export default function LeaderboardPage() {
                   <thead className="border-b border-neutral-800 bg-black">
                     <tr>
                       <th className="px-4 py-3 text-left font-medium text-neutral-300">Team</th>
-                      {ROUND_COLUMNS.map((stage) => (
+                      {visibleColumns.map((stage) => (
                         <th key={stage} className="px-3 py-3 text-right font-medium text-neutral-300 whitespace-nowrap">
                           {ROUND_LABELS[stage] ?? stage}
                         </th>
@@ -361,7 +429,9 @@ export default function LeaderboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-800">
-                    {data.standings.map((entry, i) => {
+                    {[...data.standings]
+                      .sort((a, b) => asOfTotal(b.per_round) - asOfTotal(a.per_round))
+                      .map((entry, i) => {
                       const rank = i + 1;
                       const points = roundPointsMap(entry.per_round);
                       const isExpanded = expandedUsers.has(entry.user_id);
@@ -380,18 +450,18 @@ export default function LeaderboardPage() {
                                 {entry.display_name}
                               </button>
                             </td>
-                            {ROUND_COLUMNS.map((stage) => (
+                            {visibleColumns.map((stage) => (
                               <td key={stage} className="px-3 py-3 text-right text-neutral-300 tabular-nums">
                                 {points.has(stage) ? points.get(stage) : '—'}
                               </td>
                             ))}
                             <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
-                              {entry.total_points}
+                              {asOfTotal(entry.per_round)}
                             </td>
                           </tr>
                           {isExpanded && isLoadingRoster && (
                             <tr className="bg-neutral-950">
-                              <td colSpan={ROUND_COLUMNS.length + 2} className="px-10 py-2 text-xs italic text-neutral-500">
+                              <td colSpan={visibleColumns.length + 2} className="px-10 py-2 text-xs italic text-neutral-500">
                                 Loading players…
                               </td>
                             </tr>
@@ -399,6 +469,7 @@ export default function LeaderboardPage() {
                           {isExpanded && !isLoadingRoster && slots.map((slot) => {
                             const countedPts = roundPointsMap(slot.per_round);
                             const rawPts = rawScoresCache.get(entry.user_id)?.get(slot.player_id) ?? new Map<string, number>();
+                            const slotTotal = visibleColumns.reduce((sum, s) => sum + (countedPts.get(s) ?? 0), 0);
                             return (
                               <tr key={slot.id} className="bg-neutral-950 border-b border-neutral-900">
                                 <td className="py-2 pl-10 pr-4 text-xs">
@@ -415,7 +486,7 @@ export default function LeaderboardPage() {
                                     <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
                                   )}
                                 </td>
-                                {ROUND_COLUMNS.map((stage) => {
+                                {visibleColumns.map((stage) => {
                                   const cell = getRoundCell(stage, countedPts, rawPts, slot);
                                   return (
                                     <td key={stage} className="px-3 py-2 text-right text-xs tabular-nums">
@@ -424,7 +495,7 @@ export default function LeaderboardPage() {
                                   );
                                 })}
                                 <td className="px-4 py-2 text-right text-xs font-medium text-neutral-400 tabular-nums">
-                                  {slot.total_points ? Math.round(slot.total_points) : '—'}
+                                  {slotTotal ? Math.round(slotTotal) : '—'}
                                 </td>
                               </tr>
                             );
