@@ -321,6 +321,7 @@ export interface GetLeagueResponse {
   scheduled_start: string | null;
   season_in_progress: boolean;
   is_historical: boolean;
+  has_roster_data: boolean;
 }
 
 export interface InviteListItem {
