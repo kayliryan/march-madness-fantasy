@@ -61,12 +61,19 @@ export async function GET(
       return NextResponse.json({ error: 'Not a member of this league' }, { status: 403 });
     }
 
-    const [{ data: session }, { count }, { count: rosterCount }] = await Promise.all([
+    const [{ data: session, error: sessionError }, { count }, { count: rosterCount }] = await Promise.all([
       // Scoped to the league's active season — without this, the demo seed's
       // "previous season" stub session (created after the real one, purely to
       // surface a season-switcher link) has a later created_at and would win
       // the "most recent" pick, handing the whole app a >1-year-stale
       // bench_lock_deadline/draft_status for the CURRENT season's draft.
+      //
+      // .limit(1) before .maybeSingle() is required, not cosmetic: if this
+      // query ever matches more than one row (e.g. a stray extra session from
+      // an earlier re-provisioning attempt), .maybeSingle() alone returns an
+      // error and `data` comes back null — which silently produced
+      // draft_status: null and the "No draft yet" empty state for leagues
+      // that very much have a completed draft, roster, and scores already.
       supabase
         .from('draft_sessions')
         .select('id, bench_lock_deadline, status, scheduled_start')
@@ -74,6 +81,7 @@ export async function GET(
         .eq('season', (league as League).season)
         .neq('status', 'cancelled')
         .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle(),
       supabase
         .from('game_scores')
@@ -85,6 +93,10 @@ export async function GET(
         .select('id', { count: 'exact', head: true })
         .eq('league_id', league_id),
     ]);
+
+    if (sessionError) {
+      console.error('Error fetching draft_session for league (falling back to draft_status=null):', sessionError);
+    }
 
     const response: GetLeagueResponse = {
       league: league as League,
