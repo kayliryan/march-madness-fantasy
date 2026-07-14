@@ -6,6 +6,8 @@ import AppHeader from '@/components/AppHeader';
 import { supabase } from '@/lib/supabase/client';
 import { ROUND_STAGE_ORDER, ROUND_LABELS } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
+import { getRoundCell, toRoundPointsMap } from '@/lib/utils/roundBreakdown';
+import { RoundCellBadge } from '@/components/RoundCellBadge';
 
 interface StandingEntry {
   user_id: string;
@@ -36,52 +38,7 @@ interface RosterSlotForRounds {
 const ROUND_COLUMNS = ROUND_STAGE_ORDER.filter((s) => s !== 'draft') as RoundStage[];
 
 function roundPointsMap(per_round: { round_stage: string; points: number }[]) {
-  const map = new Map<string, number>();
-  for (const r of per_round) map.set(r.round_stage, r.points);
-  return map;
-}
-
-type RoundCell =
-  | { kind: 'counted'; value: number }    // credited to user total
-  | { kind: 'raw'; value: number }        // played but not credited (bench or elim round)
-  | { kind: 'elim' }                      // team no longer playing
-  | null;
-
-function getRoundContent(
-  stage: RoundStage,
-  countedPoints: Map<string, number>,
-  rawPoints: Map<string, number>,
-  slot: Pick<RosterSlotForRounds, 'is_bench' | 'acquired_at_round_stage' | 'released_at_round_stage'>,
-): RoundCell {
-  const stageIdx = ROUND_STAGE_ORDER.indexOf(stage);
-  const acqIdx = ROUND_STAGE_ORDER.indexOf(slot.acquired_at_round_stage as RoundStage);
-  const relIdx = slot.released_at_round_stage
-    ? ROUND_STAGE_ORDER.indexOf(slot.released_at_round_stage as RoundStage)
-    : ROUND_STAGE_ORDER.length;
-
-  if (stageIdx < acqIdx) return null;
-
-  if (slot.is_bench) {
-    const inBenchPeriod = stageIdx < relIdx || (slot.released_at_round_stage !== null && stageIdx === relIdx);
-    if (!inBenchPeriod) return null;
-    const pts = rawPoints.get(stage);
-    return pts !== undefined ? { kind: 'raw', value: pts } : null;
-  }
-
-  // Active player — in scoring window
-  if (stageIdx < relIdx) {
-    const pts = countedPoints.get(stage);
-    return pts !== undefined ? { kind: 'counted', value: pts } : null;
-  }
-
-  // Elimination round — team played (and lost); show raw game score
-  if (stageIdx === relIdx && slot.released_at_round_stage !== null) {
-    const pts = rawPoints.get(stage);
-    return pts !== undefined ? { kind: 'raw', value: pts } : null;
-  }
-
-  // After elimination
-  return { kind: 'elim' };
+  return toRoundPointsMap(per_round);
 }
 
 function getRankLabel(rank: number): string {
@@ -365,18 +322,10 @@ export default function LeaderboardPage() {
                                             )}
                                           </td>
                                           {activeColumns.map((stage) => {
-                                            const cell = getRoundContent(stage, countedPts, rawPts, slot);
+                                            const cell = getRoundCell(stage, countedPts, rawPts, slot);
                                             return (
                                               <td key={stage} className="px-2 py-2 text-right tabular-nums">
-                                                {cell === null ? (
-                                                  <span className="text-neutral-700">—</span>
-                                                ) : cell.kind === 'counted' ? (
-                                                  <span className="text-neutral-300">{Math.round(cell.value)}</span>
-                                                ) : cell.kind === 'raw' ? (
-                                                  <span className="text-neutral-600 line-through">{Math.round(cell.value)}</span>
-                                                ) : (
-                                                  <span className="rounded bg-red-900/30 px-1 py-0.5 text-red-500 text-[10px]">Elim</span>
-                                                )}
+                                                <RoundCellBadge cell={cell} />
                                               </td>
                                             );
                                           })}
@@ -467,18 +416,10 @@ export default function LeaderboardPage() {
                                   )}
                                 </td>
                                 {ROUND_COLUMNS.map((stage) => {
-                                  const cell = getRoundContent(stage, countedPts, rawPts, slot);
+                                  const cell = getRoundCell(stage, countedPts, rawPts, slot);
                                   return (
                                     <td key={stage} className="px-3 py-2 text-right text-xs tabular-nums">
-                                      {cell === null ? (
-                                        <span className="text-neutral-700">—</span>
-                                      ) : cell.kind === 'counted' ? (
-                                        <span className="text-neutral-400">{Math.round(cell.value)}</span>
-                                      ) : cell.kind === 'raw' ? (
-                                        <span className="text-neutral-600 line-through">{Math.round(cell.value)}</span>
-                                      ) : (
-                                        <span className="rounded bg-red-900/30 px-1 py-0.5 text-red-500 text-[10px]">Elim</span>
-                                      )}
+                                      <RoundCellBadge cell={cell} />
                                     </td>
                                   );
                                 })}

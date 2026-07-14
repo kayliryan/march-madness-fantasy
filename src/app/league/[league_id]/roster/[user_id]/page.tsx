@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
-import { Section, type RosterSlotEnriched } from '@/components/RosterSlotList';
+import { Section, visibleRoundsFor, type RosterSlotEnriched } from '@/components/RosterSlotList';
 import { supabase } from '@/lib/supabase/client';
 import type { GetLeagueResponse } from '@/lib/types';
 
@@ -35,7 +35,6 @@ export default function RosterPage() {
   }, [user_id]);
 
   useEffect(() => {
-    setLoading(true);
     Promise.all([
       fetch(`/api/league/${league_id}/roster/${user_id}`),
       fetch(`/api/league/${league_id}`),
@@ -87,6 +86,7 @@ export default function RosterPage() {
   const totalPoints = allSlots.reduce((sum, s) => sum + s.total_points, 0);
   const isHistorical = league?.is_historical ?? false;
   const historicalSlots = [...allSlots].sort((a, b) => b.total_points - a.total_points);
+  const visibleRounds = visibleRoundsFor(allSlots);
 
   return (
     <div className="min-h-screen bg-black">
@@ -116,13 +116,13 @@ export default function RosterPage() {
 
         <div className="flex flex-col gap-5">
           {isHistorical ? (
-            <Section title="Roster" slots={historicalSlots} historical />
+            <Section title="Roster" slots={historicalSlots} historical visibleRounds={visibleRounds} />
           ) : (
             <>
-              <Section title="Active Starters" slots={data.active_starters} />
-              <Section title="Active Bench" slots={data.active_bench} />
-              <Section title="Released Starters" slots={data.released_starters} muted />
-              <Section title="Released Bench" slots={data.released_bench} muted />
+              <Section title="Active Starters" slots={data.active_starters} visibleRounds={visibleRounds} />
+              <Section title="Active Bench" slots={data.active_bench} visibleRounds={visibleRounds} />
+              <Section title="Released Starters" slots={data.released_starters} muted visibleRounds={visibleRounds} />
+              <Section title="Released Bench" slots={data.released_bench} muted visibleRounds={visibleRounds} />
             </>
           )}
         </div>

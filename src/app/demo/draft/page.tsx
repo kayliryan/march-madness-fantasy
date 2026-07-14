@@ -1,9 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { Fragment, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import type { RoundStage } from '@/lib/constants/rounds';
+import { buildInitialField, simulateBracketRound, REGION_ORDER, type BracketTeam } from '@/lib/utils/bracketSim';
+import { getRoundCell } from '@/lib/utils/roundBreakdown';
+import { RoundCellBadge } from '@/components/RoundCellBadge';
+import { NcaaBracketView } from '@/components/NcaaBracketView';
 
 interface Player {
   id: string;
@@ -710,7 +714,9 @@ export default function MockDraftPage() {
 }
 
 function DraftComplete({ teams }: { teams: Team[] }) {
-  const [showSim, setShowSim] = useState(false);
+  const [phase, setPhase] = useState<'review' | 'lineup' | 'sim'>('review');
+  const [finalTeams, setFinalTeams] = useState<Team[] | null>(null);
+  const humanTeam = teams.find((t) => t.isHuman)!;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -743,16 +749,28 @@ function DraftComplete({ teams }: { teams: Team[] }) {
         ))}
       </div>
 
-      <div className="mt-6 text-center">
-        <button
-          onClick={() => setShowSim((v) => !v)}
-          className="rounded border border-yellow-400/40 px-4 py-2 text-sm font-bold uppercase tracking-wide text-yellow-400 hover:bg-yellow-400/10"
-        >
-          {showSim ? 'Hide Season Simulator ▲' : 'Simulate the Season ▼'}
-        </button>
-      </div>
+      {phase === 'review' && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setPhase('lineup')}
+            className="rounded border border-yellow-400/40 px-4 py-2 text-sm font-bold uppercase tracking-wide text-yellow-400 hover:bg-yellow-400/10"
+          >
+            Set Your Lineup →
+          </button>
+        </div>
+      )}
 
-      {showSim && <SeasonSimulator teams={teams} />}
+      {phase === 'lineup' && (
+        <LineupEditor
+          team={humanTeam}
+          onConfirm={(roster) => {
+            setFinalTeams(teams.map((t) => (t.isHuman ? { ...t, roster } : t)));
+            setPhase('sim');
+          }}
+        />
+      )}
+
+      {phase === 'sim' && finalTeams && <SeasonSimulator teams={finalTeams} />}
 
       <div className="mt-8 rounded-lg border border-yellow-400/30 bg-yellow-400/5 p-6 text-center">
         <p className="font-black uppercase tracking-wide text-yellow-400">Like what you drafted?</p>
@@ -766,13 +784,100 @@ function DraftComplete({ teams }: { teams: Team[] }) {
   );
 }
 
+// ── Lineup Editor ───────────────────────────────────────────────────────
+// One last chance to reorder your starting five before the season plays out.
+// E.g. start a likely one-and-done bench superstar to bank their game-1
+// points, then let a deep-tournament #1 seed take that slot automatically
+// once their team gets knocked out (same position-matched swap the real
+// bench-order feature does — just done up front here instead of mid-season).
+function LineupEditor({ team, onConfirm }: { team: Team; onConfirm: (roster: RosterSlot[]) => void }) {
+  const [roster, setRoster] = useState<RosterSlot[]>(team.roster);
+  const starterSlots = SLOT_SEQUENCE.filter((s) => !s.bench);
+  const benchSlots = SLOT_SEQUENCE.filter((s) => s.bench);
+
+  function swap(starterKey: string, benchKey: string) {
+    setRoster((prev) => {
+      const next = prev.map((r) => ({ ...r }));
+      const starterEntry = next.find((r) => r.slot_key === starterKey);
+      const benchEntry = next.find((r) => r.slot_key === benchKey);
+      if (!starterEntry || !benchEntry) return prev;
+      const tmp = starterEntry.player;
+      starterEntry.player = benchEntry.player;
+      benchEntry.player = tmp;
+      return next;
+    });
+  }
+
+  return (
+    <div className="mt-6 rounded-lg border border-yellow-400/30 bg-[#0d0d0d] p-5">
+      <p className="text-xs font-bold uppercase tracking-widest text-yellow-400">Set Your Lineup</p>
+      <h3 className="mt-1 text-lg font-black uppercase text-white">Last Chance Before the Season Starts</h3>
+      <p className="mt-1 text-xs text-neutral-500">
+        Swap a bench player into your starting five if you think they&apos;ll only last a round or two — you&apos;ll
+        bank their points now, and whoever they replace slides to the bench to activate later if your starter&apos;s
+        team goes out.
+      </p>
+
+      <div className="mt-4 space-y-2">
+        {starterSlots.map((slot) => {
+          const entry = roster.find((r) => r.slot_key === slot.key);
+          const eligibleBench = benchSlots
+            .map((b) => roster.find((r) => r.slot_key === b.key))
+            .filter((b): b is RosterSlot => b != null && b.player.position === slot.pos);
+          return (
+            <div key={slot.key} className="flex flex-wrap items-center gap-2 rounded border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs">
+              <span className="w-20 shrink-0 font-bold uppercase tracking-wide text-neutral-500">{slot.label}</span>
+              <span className="min-w-0 flex-1 truncate text-white">
+                {entry?.player.name} <span className="text-neutral-500">· {entry?.player.team_name} #{entry?.player.team_seed} · {entry?.player.avg_ppg} PPG</span>
+              </span>
+              {eligibleBench.length > 0 && (
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (e.target.value) swap(slot.key, e.target.value);
+                    e.target.value = '';
+                  }}
+                  className="shrink-0 rounded border border-neutral-700 bg-black px-2 py-1 text-xs text-neutral-300 focus:border-yellow-400/50 focus:outline-none"
+                >
+                  <option value="">Swap in from bench…</option>
+                  {eligibleBench.map((b) => (
+                    <option key={b.slot_key} value={b.slot_key}>
+                      {b.player.name} ({b.player.team_name} #{b.player.team_seed}, {b.player.avg_ppg} PPG)
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-neutral-600">Bench</p>
+      <p className="mt-1 text-xs text-neutral-500">
+        {benchSlots.map((b) => roster.find((r) => r.slot_key === b.key)?.player.name).join(' · ')}
+      </p>
+
+      <div className="mt-4 text-center">
+        <button
+          onClick={() => onConfirm(roster)}
+          className="rounded bg-yellow-400 px-4 py-2 text-sm font-black uppercase tracking-wide text-black hover:bg-yellow-300"
+        >
+          Confirm Lineup — Simulate the Season →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Season Simulator ────────────────────────────────────────────────────
 // Mock post-draft scoring walkthrough (client-side only, no DB writes).
-// Mirrors the real ScoreAccumulator/BenchOrderService/RosterActivationService
-// flow at a conceptual level: each scoring round awards points to active
-// (non-eliminated, non-bench) roster slots, then teams are "eliminated" and
-// any vacated starter slot is backfilled from the bench by position + PPG —
-// same as Section 5.4's bench-order fallback.
+// A real single-elimination bracket (src/lib/utils/bracketSim.ts) drives which
+// teams survive each round; fantasy scoring and the bracket visual both read
+// off that one source of truth. Roster bookkeeping mirrors the real
+// roster_slots model (see RosterActivationService): each player's stint in a
+// slot is its own "assignment" with an acquired/released round, so the exact
+// same getRoundCell()/RoundCellBadge used on the leaderboard and roster pages
+// works here unchanged.
 
 const SCORING_ROUNDS: { stage: RoundStage; label: string; short: string }[] = [
   { stage: 'r64', label: 'Round of 64', short: 'R64' },
@@ -783,43 +888,58 @@ const SCORING_ROUNDS: { stage: RoundStage; label: string; short: string }[] = [
   { stage: 'championship', label: 'Championship', short: 'CHAMP' },
 ];
 
-// Lower seeds are more likely to advance; higher seeds more likely to be eliminated each round.
-function eliminationChance(seed: number): number {
-  if (seed <= 4) return 0.15;
-  if (seed <= 8) return 0.30;
-  if (seed <= 12) return 0.45;
-  return 0.65;
-}
-
 // Real box-score points are always whole numbers (2pt/3pt field goals, 1pt free throws).
 function rollScore(avgPpg: number): number {
   return Math.round(avgPpg * (0.6 + Math.random() * 0.8));
 }
 
-interface SimSlot {
+function requiredPosForSlot(slot_key: string): 'G' | 'F' | 'C' | null {
+  return SLOT_SEQUENCE.find((s) => s.key === slot_key)?.pos ?? null;
+}
+
+function stageForRoundIdx(idx: number | null): RoundStage | null {
+  if (idx === null) return null;
+  return SCORING_ROUNDS[idx]?.stage ?? null;
+}
+
+// One player's stint in one physical slot — mirrors a roster_slots row.
+// A promotion ends the bench stint (releasedIdx set, reason 'promoted_out')
+// and opens a brand new assignment for the same slot_key with the promoted
+// player, exactly like RosterActivationService creating a new row instead of
+// mutating the old one.
+interface SimAssignment {
+  key: string;
   slot_key: string;
-  required_pos: 'G' | 'F' | 'C' | null; // what this slot needs (null = bench, no requirement)
   is_bench: boolean;
-  player: Player | null;
-  active: boolean; // currently scoring / eligible to score next round
-  consumed: boolean; // bench slot already promoted into a starter slot — can't be reused
-  pointsByRound: Partial<Record<RoundStage, number>>;
-  lastChangeRoundIdx?: number; // index into SCORING_ROUNDS when this slot last changed (elimination/sub/promotion)
-  lastChangeNote?: string;
+  player: Player;
+  acquiredIdx: number;
+  releasedIdx: number | null;
+  releaseReason: 'eliminated' | 'promoted_out' | null;
+  countedPts: Partial<Record<RoundStage, number>>;
+  rawPts: Partial<Record<RoundStage, number>>;
 }
 
 interface SimTeam {
   id: number;
   name: string;
   isHuman: boolean;
-  slots: SimSlot[];
+  assignments: SimAssignment[];
+}
+
+interface RoundRecapPerTeam {
+  team_name: string;
+  isHuman: boolean;
+  eliminatedPlayers: { name: string; team_name: string; team_seed: number }[];
+  promotions: { in_player: string; out_player: string; slot_label: string }[];
 }
 
 interface RoundRecap {
   stage: RoundStage;
   label: string;
-  eliminated: { team_name: string; team_seed: number }[];
-  subs: { team_name: string; out_player: string; in_player: string; slot_label: string }[];
+  eliminatedTeams: { team_name: string; team_seed: number }[];
+  perTeam: RoundRecapPerTeam[];
+  topPerformer: { team_name: string; isHuman: boolean; player_name: string; team_name_played: string; points: number } | null;
+  leftOnBench: { team_name: string; isHuman: boolean; points: number; players: string[] } | null;
 }
 
 function buildInitialSimTeams(teams: Team[]): SimTeam[] {
@@ -827,169 +947,243 @@ function buildInitialSimTeams(teams: Team[]): SimTeam[] {
     id: t.id,
     name: t.name,
     isHuman: t.isHuman,
-    slots: t.roster.map((r) => ({
+    assignments: t.roster.map((r) => ({
+      key: `${r.slot_key}#0`,
       slot_key: r.slot_key,
-      required_pos: SLOT_SEQUENCE.find((s) => s.key === r.slot_key)?.pos ?? null,
       is_bench: r.is_bench,
       player: r.player,
-      active: !r.is_bench,
-      consumed: false,
-      pointsByRound: {},
+      acquiredIdx: 0,
+      releasedIdx: null,
+      releaseReason: null,
+      countedPts: {},
+      rawPts: {},
     })),
   }));
 }
 
-function buildAliveTeams(simTeams: SimTeam[]): { alive: Set<string>; seeds: Record<string, number> } {
-  const alive = new Set<string>();
-  const seeds: Record<string, number> = {};
-  for (const t of simTeams) {
-    for (const s of t.slots) {
-      if (s.player) {
-        alive.add(s.player.team_name);
-        seeds[s.player.team_name] = s.player.team_seed;
-      }
-    }
-  }
-  return { alive, seeds };
-}
-
-// Pure: simulates one round for all teams and returns the next state + a recap.
-function simulateRound(
+// Pure: plays one fantasy scoring round given the bracket field that entered
+// it and which teams lost. Returns updated teams plus a recap.
+function simulateFantasyRound(
   teams: SimTeam[],
-  alive: Set<string>,
-  seeds: Record<string, number>,
-  stage: RoundStage,
-  label: string,
-  roundIdx: number
-): { teams: SimTeam[]; alive: Set<string>; recap: RoundRecap } {
-  const nextAlive = new Set(alive);
-  const eliminated: RoundRecap['eliminated'] = [];
-  for (const name of alive) {
-    if (Math.random() < eliminationChance(seeds[name] ?? 16)) {
-      eliminated.push({ team_name: name, team_seed: seeds[name] ?? 16 });
-      nextAlive.delete(name);
-    }
-  }
+  fieldBefore: BracketTeam[],
+  eliminatedNames: Set<string>,
+  roundIdx: number,
+): { teams: SimTeam[]; recap: RoundRecap } {
+  const { stage, label } = SCORING_ROUNDS[roundIdx];
+  const fieldNames = new Set(fieldBefore.map((t) => t.name));
+  const perTeamRecap: RoundRecapPerTeam[] = [];
+  let topPerformer: RoundRecap['topPerformer'] = null;
+  const benchTotals = new Map<string, { isHuman: boolean; points: number; players: string[] }>();
 
-  const subs: RoundRecap['subs'] = [];
   const nextTeams = teams.map((team) => {
-    const slots = team.slots.map((s) => ({ ...s, pointsByRound: { ...s.pointsByRound } }));
+    const assignments = team.assignments.map((a) => ({ ...a, countedPts: { ...a.countedPts }, rawPts: { ...a.rawPts } }));
 
-    // Active slots whose team was alive entering this round score for it
-    // (the team played the game before any elimination is applied).
-    for (const slot of slots) {
-      if (slot.active && slot.player && alive.has(slot.player.team_name)) {
-        slot.pointsByRound[stage] = rollScore(slot.player.avg_ppg);
+    // 1. Roll a raw score for every still-ongoing assignment whose team played this round.
+    for (const a of assignments) {
+      if (a.releasedIdx !== null || !fieldNames.has(a.player.team_name)) continue;
+      const pts = rollScore(a.player.avg_ppg);
+      a.rawPts[stage] = pts;
+      if (!a.is_bench) {
+        a.countedPts[stage] = pts;
+        if (topPerformer === null || pts > topPerformer.points) {
+          topPerformer = { team_name: team.name, isHuman: team.isHuman, player_name: a.player.name, team_name_played: a.player.team_name, points: pts };
+        }
+      } else {
+        const bucket = benchTotals.get(team.name) ?? { isHuman: team.isHuman, points: 0, players: [] };
+        bucket.points += pts;
+        bucket.players.push(a.player.name);
+        benchTotals.set(team.name, bucket);
       }
     }
 
-    // Starter slots whose player's team was just eliminated get backfilled
-    // from the bench (same position, highest PPG, still alive).
-    for (const slot of slots) {
-      if (slot.is_bench || !slot.active || !slot.player) continue;
-      if (!eliminated.some((e) => e.team_name === slot.player!.team_name)) continue;
-      slot.active = false;
-
-      const candidates = slots
-        .map((b, i) => ({ b, i }))
-        .filter(({ b }) => b.is_bench && !b.consumed && b.player && b.player.position === slot.required_pos && nextAlive.has(b.player.team_name))
-        .sort((x, y) => y.b.player!.avg_ppg - x.b.player!.avg_ppg);
-
-      if (candidates.length === 0) {
-        slot.lastChangeRoundIdx = roundIdx;
-        slot.lastChangeNote = `${slot.player.team_name} (#${slot.player.team_seed}) eliminated — out for the season`;
-        continue;
+    // 2. Bench stints whose OWN team just went out end here too (never activated).
+    for (const a of assignments) {
+      if (a.releasedIdx !== null || !a.is_bench) continue;
+      if (eliminatedNames.has(a.player.team_name)) {
+        a.releasedIdx = roundIdx;
+        a.releaseReason = 'eliminated';
       }
-      const { b: bench, i: benchIdx } = candidates[0];
-      const slotLabel = SLOT_SEQUENCE.find((sl) => sl.key === slot.slot_key)?.label ?? slot.slot_key;
-      subs.push({
-        team_name: team.name,
-        out_player: slot.player!.name,
-        in_player: bench.player!.name,
-        slot_label: slotLabel,
-      });
-      const outPlayer = slot.player;
-      slot.player = bench.player;
-      slot.active = true;
-      slot.lastChangeRoundIdx = roundIdx;
-      slot.lastChangeNote = `In for ${outPlayer.name} (${outPlayer.team_name} #${outPlayer.team_seed}, eliminated)`;
-      slots[benchIdx] = {
-        ...slots[benchIdx],
-        player: null,
-        consumed: true,
-        active: false,
-        lastChangeRoundIdx: roundIdx,
-        lastChangeNote: `Promoted to ${slotLabel}`,
-      };
     }
 
-    return { ...team, slots };
+    // 3. Starter stints whose team was eliminated end here; try to promote a
+    // same-position bench player whose team is still alive.
+    const promotions: RoundRecapPerTeam['promotions'] = [];
+    for (const a of assignments) {
+      if (a.releasedIdx !== null || a.is_bench) continue;
+      if (!eliminatedNames.has(a.player.team_name)) continue;
+      a.releasedIdx = roundIdx;
+      a.releaseReason = 'eliminated';
+
+      const requiredPos = requiredPosForSlot(a.slot_key);
+      // A bench player can only be promoted if their own team is still alive
+      // going into next round — no point activating someone whose team also
+      // just lost.
+      const candidates = assignments
+        .filter(
+          (b) =>
+            b.is_bench &&
+            b.releasedIdx === null &&
+            b.player.position === requiredPos &&
+            !eliminatedNames.has(b.player.team_name)
+        )
+        .sort((x, y) => y.player.avg_ppg - x.player.avg_ppg);
+
+      if (candidates.length > 0) {
+        const promoted = candidates[0];
+        promoted.releasedIdx = roundIdx;
+        promoted.releaseReason = 'promoted_out';
+        const slotLabel = SLOT_SEQUENCE.find((s) => s.key === a.slot_key)?.label ?? a.slot_key;
+        promotions.push({ in_player: promoted.player.name, out_player: a.player.name, slot_label: slotLabel });
+        assignments.push({
+          key: `${a.slot_key}#${roundIdx + 1}`,
+          slot_key: a.slot_key,
+          is_bench: false,
+          player: promoted.player,
+          acquiredIdx: roundIdx + 1,
+          releasedIdx: null,
+          releaseReason: null,
+          countedPts: {},
+          rawPts: {},
+        });
+      }
+    }
+
+    const eliminatedPlayers = assignments
+      .filter((a) => a.releasedIdx === roundIdx && a.releaseReason === 'eliminated')
+      .map((a) => ({ name: a.player.name, team_name: a.player.team_name, team_seed: a.player.team_seed }));
+
+    if (eliminatedPlayers.length > 0 || promotions.length > 0) {
+      perTeamRecap.push({ team_name: team.name, isHuman: team.isHuman, eliminatedPlayers, promotions });
+    }
+
+    return { ...team, assignments };
   });
 
-  return { teams: nextTeams, alive: nextAlive, recap: { stage, label, eliminated, subs } };
+  let leftOnBench: RoundRecap['leftOnBench'] = null;
+  for (const [team_name, bucket] of benchTotals) {
+    if (bucket.points > 0 && (!leftOnBench || bucket.points > leftOnBench.points)) {
+      leftOnBench = { team_name, isHuman: bucket.isHuman, points: bucket.points, players: bucket.players };
+    }
+  }
+
+  return {
+    teams: nextTeams,
+    recap: {
+      stage,
+      label,
+      eliminatedTeams: [...eliminatedNames].map((name) => ({
+        team_name: name,
+        team_seed: fieldBefore.find((t) => t.name === name)?.seed ?? 0,
+      })),
+      perTeam: perTeamRecap,
+      topPerformer,
+      leftOnBench,
+    },
+  };
 }
 
 function SeasonSimulator({ teams }: { teams: Team[] }) {
   const [simTeams, setSimTeams] = useState<SimTeam[]>(() => buildInitialSimTeams(teams));
-  const [aliveTeams, setAliveTeams] = useState<Set<string>>(() => buildAliveTeams(buildInitialSimTeams(teams)).alive);
-  const [teamSeeds] = useState<Record<string, number>>(() => buildAliveTeams(buildInitialSimTeams(teams)).seeds);
+  const [roundsHistory, setRoundsHistory] = useState<BracketTeam[][]>([]);
+  const [loadingBracket, setLoadingBracket] = useState(true);
   const [roundIdx, setRoundIdx] = useState(0);
   const [recaps, setRecaps] = useState<RoundRecap[]>([]);
+  const [expandedTeamIds, setExpandedTeamIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    fetch('/api/teams')
+      .then((r) => r.json())
+      .then((data) => {
+        const raw = (data.teams ?? []) as { name: string; seed: number; region: string }[];
+        setRoundsHistory([buildInitialField(raw)]);
+      })
+      .finally(() => setLoadingBracket(false));
+  }, []);
 
   const isComplete = roundIdx >= SCORING_ROUNDS.length;
 
+  function toggleExpand(id: number) {
+    setExpandedTeamIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function playOneRound(history: BracketTeam[][], curTeams: SimTeam[], idx: number): { history: BracketTeam[][]; teams: SimTeam[]; recap: RoundRecap } | null {
+    const current = history[history.length - 1];
+    if (!current || current.length <= 1) return null;
+    const { winners, matchups } = simulateBracketRound(current);
+    const eliminatedNames = new Set(matchups.map((m) => m.loser.name));
+    const { teams: nextTeams, recap } = simulateFantasyRound(curTeams, current, eliminatedNames, idx);
+    return { history: [...history, winners], teams: nextTeams, recap };
+  }
+
   function advanceRound() {
-    if (roundIdx >= SCORING_ROUNDS.length) return;
-    const { stage, label } = SCORING_ROUNDS[roundIdx];
-    const result = simulateRound(simTeams, aliveTeams, teamSeeds, stage, label, roundIdx);
+    if (isComplete) return;
+    const result = playOneRound(roundsHistory, simTeams, roundIdx);
+    if (!result) return;
+    setRoundsHistory(result.history);
     setSimTeams(result.teams);
-    setAliveTeams(result.alive);
     setRecaps((prev) => [...prev, result.recap]);
     setRoundIdx((n) => n + 1);
   }
 
   function autoComplete() {
+    let curHistory = roundsHistory;
     let curTeams = simTeams;
-    let curAlive = aliveTeams;
     const newRecaps: RoundRecap[] = [];
-    for (let i = roundIdx; i < SCORING_ROUNDS.length; i++) {
-      const { stage, label } = SCORING_ROUNDS[i];
-      const result = simulateRound(curTeams, curAlive, teamSeeds, stage, label, i);
+    let i = roundIdx;
+    for (; i < SCORING_ROUNDS.length; i++) {
+      const result = playOneRound(curHistory, curTeams, i);
+      if (!result) break;
+      curHistory = result.history;
       curTeams = result.teams;
-      curAlive = result.alive;
       newRecaps.push(result.recap);
     }
+    setRoundsHistory(curHistory);
     setSimTeams(curTeams);
-    setAliveTeams(curAlive);
     setRecaps((prev) => [...prev, ...newRecaps]);
-    setRoundIdx(SCORING_ROUNDS.length);
+    setRoundIdx(i);
   }
 
   function reset() {
-    const init = buildInitialSimTeams(teams);
-    setSimTeams(init);
-    setAliveTeams(buildAliveTeams(init).alive);
-    setRoundIdx(0);
+    setSimTeams(buildInitialSimTeams(teams));
+    setRoundsHistory((prev) => (prev.length > 0 ? [prev[0]] : prev));
     setRecaps([]);
+    setRoundIdx(0);
+    setExpandedTeamIds(new Set());
   }
 
   const totals = simTeams
     .map((t) => {
       const perRound: Partial<Record<RoundStage, number>> = {};
       for (const r of SCORING_ROUNDS) {
-        perRound[r.stage] = t.slots.reduce((sum, s) => sum + (s.pointsByRound[r.stage] ?? 0), 0);
+        perRound[r.stage] = t.assignments.reduce((sum, a) => sum + (a.countedPts[r.stage] ?? 0), 0);
       }
-      const total = t.slots.reduce(
-        (sum, s) => sum + Object.values(s.pointsByRound).reduce((a: number, b) => a + (b ?? 0), 0),
+      const total = t.assignments.reduce(
+        (sum, a) => sum + Object.values(a.countedPts).reduce((x: number, y) => x + (y ?? 0), 0),
         0
       );
       return { id: t.id, name: t.name, isHuman: t.isHuman, total, perRound };
     })
     .sort((a, b) => b.total - a.total);
 
+  const rosteredTeamNames = useMemo(() => {
+    const s = new Set<string>();
+    for (const t of simTeams) for (const a of t.assignments) s.add(a.player.team_name);
+    return s;
+  }, [simTeams]);
+
   const humanTeam = simTeams.find((t) => t.isHuman);
-  const humanSlots = humanTeam?.slots ?? [];
-  const humanTeamName = humanTeam?.name ?? '';
+
+  function currentOccupant(slot_key: string) {
+    return humanTeam?.assignments.find((a) => a.slot_key === slot_key && a.releasedIdx === null) ?? null;
+  }
+  function lastEndedFor(slot_key: string) {
+    return [...(humanTeam?.assignments ?? [])].reverse().find((a) => a.slot_key === slot_key && a.releasedIdx !== null) ?? null;
+  }
 
   return (
     <div className="mt-6 rounded-lg border border-neutral-800 bg-[#0d0d0d] p-5">
@@ -1001,14 +1195,14 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={advanceRound}
-            disabled={isComplete}
+            disabled={isComplete || loadingBracket}
             className="rounded bg-yellow-400 px-3 py-1.5 text-xs font-bold uppercase text-black hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Simulate Next Round →
           </button>
           <button
             onClick={autoComplete}
-            disabled={isComplete}
+            disabled={isComplete || loadingBracket}
             className="rounded border border-neutral-700 px-3 py-1.5 text-xs font-bold uppercase text-neutral-300 hover:border-yellow-400/50 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Auto-Complete Season
@@ -1039,7 +1233,7 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
         ))}
       </div>
 
-      {/* Leaderboard */}
+      {/* Leaderboard — click a team name to see their full player-by-player breakdown */}
       <div className="mb-4 overflow-x-auto rounded-lg border border-neutral-800">
         <table className="w-full text-left text-xs">
           <thead className="bg-neutral-900 text-[10px] uppercase tracking-wide text-neutral-500">
@@ -1053,44 +1247,134 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
             </tr>
           </thead>
           <tbody>
-            {totals.map((t, idx) => (
-              <tr key={t.id} className={`border-t border-neutral-800 ${t.isHuman ? 'bg-yellow-400/10' : ''}`}>
-                <td className="px-3 py-2 font-bold text-neutral-500">{idx + 1}</td>
-                <td className={`px-3 py-2 font-bold ${t.isHuman ? 'text-yellow-400' : 'text-white'}`}>
-                  {t.isHuman ? `${t.name} (You)` : t.name}
-                </td>
-                {SCORING_ROUNDS.map((r, i) => (
-                  <td key={r.stage} className="px-2 py-2 text-right tabular-nums text-neutral-400">
-                    {i < roundIdx ? (t.perRound[r.stage] ?? 0) : '—'}
-                  </td>
-                ))}
-                <td className="px-3 py-2 text-right font-bold tabular-nums text-white">{t.total}</td>
-              </tr>
-            ))}
+            {totals.map((t, idx) => {
+              const team = simTeams.find((st) => st.id === t.id)!;
+              const expanded = expandedTeamIds.has(t.id);
+              const sortedAssignments = [...team.assignments].sort(
+                (a, b) => a.acquiredIdx - b.acquiredIdx || a.slot_key.localeCompare(b.slot_key)
+              );
+              return (
+                <Fragment key={t.id}>
+                  <tr className={`border-t border-neutral-800 ${t.isHuman ? 'bg-yellow-400/10' : ''}`}>
+                    <td className="px-3 py-2 font-bold text-neutral-500">{idx + 1}</td>
+                    <td className={`px-3 py-2 font-bold ${t.isHuman ? 'text-yellow-400' : 'text-white'}`}>
+                      <button type="button" onClick={() => toggleExpand(t.id)} className="flex items-center gap-1.5 hover:underline">
+                        <span className="w-2 shrink-0 text-[10px] text-neutral-500">{expanded ? '▼' : '▶'}</span>
+                        {t.isHuman ? `${t.name} (You)` : t.name}
+                      </button>
+                    </td>
+                    {SCORING_ROUNDS.map((r, i) => (
+                      <td key={r.stage} className="px-2 py-2 text-right tabular-nums text-neutral-400">
+                        {i < roundIdx ? (t.perRound[r.stage] ?? 0) : '—'}
+                      </td>
+                    ))}
+                    <td className="px-3 py-2 text-right font-bold tabular-nums text-white">{t.total}</td>
+                  </tr>
+                  {expanded && (
+                    <tr className="border-t border-neutral-900 bg-black/40">
+                      <td colSpan={SCORING_ROUNDS.length + 3} className="px-0 py-2">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="border-b border-neutral-800 text-neutral-500">
+                              <th className="py-1.5 pl-8 pr-2 text-left font-bold">Player</th>
+                              {SCORING_ROUNDS.map((r) => (
+                                <th key={r.stage} className="px-2 py-1.5 text-right font-bold">{r.short}</th>
+                              ))}
+                              <th className="py-1.5 pl-2 pr-4 text-right font-bold">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sortedAssignments.map((a) => {
+                              const acquired_at_round_stage = stageForRoundIdx(a.acquiredIdx) ?? 'r64';
+                              const released_at_round_stage = stageForRoundIdx(a.releasedIdx);
+                              const rowTotal = Object.values(a.countedPts).reduce((s: number, v) => s + (v ?? 0), 0);
+                              return (
+                                <tr key={a.key} className="border-b border-neutral-900 last:border-0">
+                                  <td className="py-1.5 pl-8 pr-2">
+                                    <span className={a.releasedIdx === null && !a.is_bench ? 'font-medium text-neutral-200' : 'font-medium text-neutral-500'}>
+                                      {a.player.name}
+                                    </span>
+                                    <span className="ml-1 text-neutral-600">{a.player.team_name} #{a.player.team_seed}</span>
+                                    {a.is_bench && <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>}
+                                    {a.releaseReason === 'promoted_out' && (
+                                      <span className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500">promoted out</span>
+                                    )}
+                                  </td>
+                                  {SCORING_ROUNDS.map((r) => {
+                                    const cell = getRoundCell(r.stage, a.countedPts, a.rawPts, {
+                                      is_bench: a.is_bench,
+                                      acquired_at_round_stage,
+                                      released_at_round_stage,
+                                    });
+                                    return (
+                                      <td key={r.stage} className="px-2 py-1.5 text-right tabular-nums">
+                                        <RoundCellBadge cell={cell} />
+                                      </td>
+                                    );
+                                  })}
+                                  <td className="py-1.5 pl-2 pr-4 text-right font-medium tabular-nums text-neutral-400">
+                                    {rowTotal || '—'}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* Round recaps */}
+      {/* Round recaps — eliminated teams, per-user roster impact, and a couple of fun stats */}
       {recaps.length > 0 && (
-        <div className="mb-4 max-h-56 space-y-2 overflow-y-auto rounded-lg border border-neutral-800 bg-black/40 p-3">
+        <div className="mb-4 max-h-64 space-y-3 overflow-y-auto rounded-lg border border-neutral-800 bg-black/40 p-3">
           {[...recaps].reverse().map((recap) => (
             <div key={recap.stage} className="text-xs">
               <p className="font-bold uppercase tracking-wide text-neutral-300">{recap.label}</p>
-              {recap.eliminated.length === 0 ? (
+              {recap.eliminatedTeams.length === 0 ? (
                 <p className="text-neutral-600">No eliminations.</p>
               ) : (
                 <p className="text-neutral-500">
-                  ❌ Eliminated: {recap.eliminated.map((e) => `#${e.team_seed} ${e.team_name}`).join(', ')}
+                  ❌ Eliminated: {recap.eliminatedTeams.map((e) => `#${e.team_seed} ${e.team_name}`).join(', ')}
                 </p>
               )}
-              {recap.subs.map((s, i) => (
-                <p key={i} className={s.team_name === humanTeamName ? 'font-bold text-yellow-400' : 'text-yellow-500/80'}>
-                  🔄 {s.team_name === humanTeamName ? 'You' : s.team_name}: {s.in_player} activated at {s.slot_label} (replacing {s.out_player})
+              {recap.perTeam.map((pt) => (
+                <p key={pt.team_name} className={pt.isHuman ? 'font-bold text-yellow-400' : 'text-neutral-400'}>
+                  {pt.isHuman ? 'You' : pt.team_name}:{' '}
+                  {pt.eliminatedPlayers.length > 0 && (
+                    <>lost {pt.eliminatedPlayers.map((p) => `${p.name} (${p.team_name})`).join(', ')}. </>
+                  )}
+                  {pt.promotions.length > 0 && (
+                    <>activated {pt.promotions.map((p) => `${p.in_player} at ${p.slot_label}`).join(', ')}.</>
+                  )}
                 </p>
               ))}
+              {recap.topPerformer && (
+                <p className="text-neutral-500">
+                  🔥 Top scorer: {recap.topPerformer.isHuman ? 'You' : recap.topPerformer.team_name} — {recap.topPerformer.player_name} (
+                  {recap.topPerformer.team_name_played}) put up {recap.topPerformer.points}.
+                </p>
+              )}
+              {recap.leftOnBench && (
+                <p className="text-neutral-500">
+                  🪑 Left the most on the bench: {recap.leftOnBench.isHuman ? 'You' : recap.leftOnBench.team_name} — {recap.leftOnBench.players.join(', ')} combined for {recap.leftOnBench.points} unused points.
+                </p>
+              )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Visual bracket — same round-by-round data driving the scoring above */}
+      {!loadingBracket && roundsHistory.length > 0 && (
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-yellow-400">Tournament Bracket</p>
+          <NcaaBracketView regions={REGION_ORDER} roundsHistory={roundsHistory} rosteredTeamNames={rosteredTeamNames} />
         </div>
       )}
 
@@ -1098,46 +1382,60 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
       <div>
         <p className="mb-2 text-xs font-bold uppercase tracking-wide text-yellow-400">Your Roster</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {humanSlots.map((slot) => {
-            const justChanged = slot.lastChangeRoundIdx === roundIdx - 1;
+          {SLOT_SEQUENCE.map((slot) => {
+            const occupant = currentOccupant(slot.key);
+            const justChanged = roundIdx > 0 && occupant?.acquiredIdx === roundIdx;
+            const ended = !occupant ? lastEndedFor(slot.key) : null;
+
             return (
               <div
-                key={slot.slot_key}
+                key={slot.key}
                 className={`rounded border p-2.5 ${
-                  !slot.player
+                  !occupant
                     ? 'border-dashed border-neutral-800'
-                    : slot.active
-                      ? justChanged
+                    : occupant.is_bench
+                      ? 'border-neutral-800 bg-neutral-900'
+                      : justChanged
                         ? 'border-yellow-400 bg-yellow-400/10'
                         : 'border-yellow-400/20 bg-yellow-400/10'
-                      : 'border-red-900/50 bg-neutral-900 opacity-60'
                 }`}
               >
                 <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-500">
-                  {SLOT_SEQUENCE.find((s) => s.key === slot.slot_key)?.label}
-                  {!slot.active && slot.player && <span className="ml-1 rounded bg-red-900/60 px-1 py-0.5 text-red-300">OUT</span>}
-                  {justChanged && slot.active && slot.player && <span className="ml-1 rounded bg-yellow-400 px-1 py-0.5 text-black">NEW</span>}
+                  {slot.label}
+                  {occupant?.is_bench && <span className="ml-1 rounded bg-neutral-800 px-1 py-0.5 text-neutral-400">Bench</span>}
+                  {!occupant && <span className="ml-1 rounded bg-red-900/60 px-1 py-0.5 text-red-300">Eliminated</span>}
+                  {justChanged && occupant && !occupant.is_bench && <span className="ml-1 rounded bg-yellow-400 px-1 py-0.5 text-black">NEW</span>}
                 </p>
-                {slot.player ? (
+                {occupant ? (
                   <>
-                    <p className="mt-0.5 truncate text-sm font-bold text-white">{slot.player.name}</p>
-                    <p className="text-xs text-neutral-500">{slot.player.team_name} #{slot.player.team_seed}</p>
-                    {Object.keys(slot.pointsByRound).length > 0 && (
-                      <p className="mt-1 flex flex-wrap gap-1.5 text-[10px] text-neutral-500">
-                        {SCORING_ROUNDS.filter((r) => slot.pointsByRound[r.stage] !== undefined).map((r) => (
-                          <span key={r.stage}>{r.short}: {slot.pointsByRound[r.stage]}</span>
-                        ))}
+                    <p className="mt-0.5 truncate text-sm font-bold text-white">{occupant.player.name}</p>
+                    <p className="text-xs text-neutral-500">{occupant.player.team_name} #{occupant.player.team_seed}</p>
+                    {roundIdx > 0 && (
+                      <p className="mt-1 flex flex-wrap gap-1.5 text-[10px]">
+                        {SCORING_ROUNDS.slice(0, roundIdx).map((r) => {
+                          const cell = getRoundCell(r.stage, occupant.countedPts, occupant.rawPts, {
+                            is_bench: occupant.is_bench,
+                            acquired_at_round_stage: stageForRoundIdx(occupant.acquiredIdx) ?? 'r64',
+                            released_at_round_stage: stageForRoundIdx(occupant.releasedIdx),
+                          });
+                          if (cell === null) return null;
+                          return (
+                            <span key={r.stage} className="flex items-center gap-1 text-neutral-600">
+                              {r.short}: <RoundCellBadge cell={cell} />
+                            </span>
+                          );
+                        })}
                       </p>
                     )}
-                    {slot.lastChangeNote && (
-                      <p className={`mt-1 text-[10px] ${justChanged ? 'font-bold text-yellow-400' : 'text-neutral-600'}`}>
-                        {slot.lastChangeNote}
-                      </p>
+                    {occupant.is_bench && (
+                      <p className="mt-1 text-[10px] text-neutral-600">On the bench — activates automatically if your starter&apos;s team goes out.</p>
                     )}
                   </>
                 ) : (
-                  <p className={`text-xs ${justChanged ? 'font-bold text-yellow-400' : 'text-neutral-700'}`}>
-                    {slot.lastChangeNote ?? 'Empty bench slot'}
+                  <p className="text-xs text-neutral-500">
+                    {ended
+                      ? `${ended.player.name} (${ended.player.team_name} #${ended.player.team_seed}) eliminated — no eligible bench sub`
+                      : 'Empty bench slot'}
                   </p>
                 )}
               </div>
