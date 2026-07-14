@@ -9,9 +9,6 @@ type SlotKey = (typeof SLOT_KEYS)[number];
 const SLOT_POSITIONS: Record<SlotKey, 'G' | 'F' | 'C'> = {
   G1: 'G', G2: 'G', F1: 'F', F2: 'F', C1: 'C', B1: 'G', B2: 'F', B3: 'C',
 };
-const SLOT_IS_BENCH: Record<SlotKey, boolean> = {
-  G1: false, G2: false, F1: false, F2: false, C1: false, B1: true, B2: true, B3: true,
-};
 
 
 // Bracket order used to pair round-1 matchups within a region — same convention
@@ -268,43 +265,20 @@ export async function seedDemoLeagueData(
   await supabaseAdmin.from('scoring_events').delete().eq('league_id', league_id);
   console.log(`[seedDemo] 3. draft_session+cleanup: ${Date.now() - t3}ms`);
 
-  // ── 3.5. Pre-assign "no eligible C sub" edge case for last member ──
-  // Member[N-1] receives two eliminated-in-r64 C players for C1 (starter) and B3 (bench).
-  // When their C1 player is eliminated, BenchOrderService.resolveNext() finds no eligible
-  // C bench sub (the only other C — B3 — is also eliminated) and returns null, exercising
-  // the documented "no eligible sub" code path in BenchOrderService (Section 5.4 algorithm).
   const usedPlayerIds = new Set<string>();
   const roster: Record<string, Partial<Record<SlotKey, string>>> = {};
   for (const userId of member_user_ids) roster[userId] = {};
 
-  const noSubUserId = member_user_ids[N - 1];
-  const eliminatedCPool = byPos['C'].filter(
-    (p) => teamElimMap.get(p.team_id) === 'r64',
-  );
-  if (eliminatedCPool.length < 2) {
-    throw new Error('seedDemoLeagueData: not enough r64-eliminated C players for no-sub edge case');
-  }
-  const noSubC1Player = eliminatedCPool[0];
-  const noSubB3Player = eliminatedCPool[1];
-  roster[noSubUserId]['C1'] = noSubC1Player.id;
-  roster[noSubUserId]['B3'] = noSubB3Player.id;
-  usedPlayerIds.add(noSubC1Player.id);
-  usedPlayerIds.add(noSubB3Player.id);
-
-  // ── 3.6. Pre-assign bench-activation G2 for the top-ranked user ──
-  // G2's team MUST be eliminated in R32 so the bench activation slot (added post-draft)
-  // can share slot_key='G2' without violating the partial unique index (the normal G2
-  // row will have released_at_round_stage='r32', the promoted row will have it NULL —
-  // each covered by the unique constraint independently).
-  const subUserId = member_user_ids[0];
-  const eliminatedG2 = byPos['G'].find(
-    (p) => !usedPlayerIds.has(p.id) && teamElimMap.get(p.team_id) === 'r32',
-  );
-  if (!eliminatedG2) {
-    throw new Error('seedDemoLeagueData: could not find r32-eliminated G player for G2 pre-assignment');
-  }
-  roster[subUserId]['G2'] = eliminatedG2.id;
-  usedPlayerIds.add(eliminatedG2.id);
+  // ── 3.5. Load this league's sub_eligibility_matrix ── needed below to simulate
+  // bench promotions the same way BenchOrderService/RosterActivationService would
+  // in a real league (Section 5.4 algorithm), for every user — not just one.
+  const { data: leagueRow } = await supabaseAdmin
+    .from('leagues')
+    .select('settings')
+    .eq('id', league_id)
+    .single();
+  const subEligibilityMatrix = (leagueRow?.settings as { sub_eligibility_matrix?: Record<'G' | 'F' | 'C', ('G' | 'F' | 'C')[]> } | null)
+    ?.sub_eligibility_matrix ?? { G: ['G', 'F'], F: ['G', 'F'], C: ['C'] };
 
   // ── 4. Simulate snake draft (survival-score x avg_ppg ordered pools) ──
   for (let round = 0; round < ROUNDS; round++) {
@@ -313,7 +287,6 @@ export async function seedDemoLeagueData(
     const pickOrder = round % 2 === 0 ? member_user_ids : [...member_user_ids].reverse();
 
     for (const userId of pickOrder) {
-      if (roster[userId][slotKey] !== undefined) continue; // pre-assigned slot
       const player = byPos[slotPos].find((p) => !usedPlayerIds.has(p.id));
       if (!player) {
         throw new Error(`seedDemoLeagueData: ran out of ${slotPos} players while filling slot ${slotKey}`);
@@ -323,26 +296,7 @@ export async function seedDemoLeagueData(
     }
   }
 
-  // ── 5. Force bench-activation for the top-ranked user: G2's team naturally eliminates
-  // in R32 (seeds 5-8 → r32). A deep-running G player (Final Four or better, unused)
-  // replaces the normal B1 pick, then activates into the G2 slot from S16. This adds
-  // bonus scoring on top of user 0's full normal roster, giving them a strong shot at
-  // rank #1 without requiring the literal eventual champion (that pool is just one team
-  // now that eliminations come from a real bracket sim, not a seed-tier heuristic). ──
-  const findUnused = (pos: 'G' | 'F' | 'C', predicate: (elim: RoundStage | null) => boolean) =>
-    byPos[pos].find((p) => !usedPlayerIds.has(p.id) && predicate(teamElimMap.get(p.team_id) ?? null));
-
-  const survivingSub = findUnused('G', (elim) => elim === null || elim === 'f4');
-  if (!survivingSub) {
-    throw new Error('seedDemoLeagueData: could not find a deep-running G player for bench activation');
-  }
-
-  const displacedBenchId = roster[subUserId]['B1']!;
-  usedPlayerIds.delete(displacedBenchId);
-  usedPlayerIds.add(survivingSub.id);
-  roster[subUserId]['B1'] = survivingSub.id;
-
-  // ── 6. draft_picks (64 rows), reflecting the post-substitution roster ──
+  // ── 6. draft_picks (64 rows) ──
   const t6 = Date.now();
   const draftPicksBatch: Record<string, unknown>[] = [];
   let pickNumber = 0;
@@ -369,50 +323,103 @@ export async function seedDemoLeagueData(
   }
   console.log(`[seedDemo] 6. draft_picks: ${Date.now() - t6}ms (${draftPicksBatch.length} rows)`);
 
-  // ── 7. roster_slots, with acquired_at_round_stage = 'draft' for normal picks ──
+  // ── 7. roster_slots — simulates real bench promotions for EVERY user, not just
+  // one hardcoded example. When a starter's team is eliminated, the highest-avg_ppg
+  // remaining bench player who is (a) eligible for that slot's position per this
+  // league's sub_eligibility_matrix and (b) still alive past that round takes over,
+  // exactly like BenchOrderService.resolveNext + RosterActivationService.activateSlot
+  // would do in a real league. This can cascade (a promoted player can later be
+  // replaced too) and correctly produces "no eligible sub — slot stays vacant" when
+  // nobody on the bench qualifies. Previously only ONE user's roster had promotion
+  // logic at all; everyone else's starters just went dead the moment they were
+  // eliminated, which is what made most demo teams' scoring look broken/frozen. ──
   const t7 = Date.now();
-  const rosterSlotsBatch: SlotEntry[] = [];
-  for (const userId of member_user_ids) {
-    for (const slotKey of SLOT_KEYS) {
+  const STARTER_SLOT_KEYS: SlotKey[] = ['G1', 'G2', 'F1', 'F2', 'C1'];
+  const BENCH_SLOT_KEYS: SlotKey[] = ['B1', 'B2', 'B3'];
+  const playerById = new Map(players.map((p) => [p.id, p]));
+
+  function simulateUserRoster(userId: string): SlotEntry[] {
+    const rows: SlotEntry[] = [];
+    const benchAvailable = new Set(
+      BENCH_SLOT_KEYS.map((k) => roster[userId][k]).filter((id): id is string => !!id)
+    );
+    const benchPromotedAt = new Map<string, RoundStage>();
+
+    type Vacancy = { slot_key: SlotKey; position: 'G' | 'F' | 'C'; round: RoundStage };
+    const pending: Vacancy[] = [];
+
+    for (const slotKey of STARTER_SLOT_KEYS) {
       const playerId = roster[userId][slotKey];
       if (!playerId) continue;
-
-      // B1 bench slot for the top-ranked user: released at r32 when G2's team is
-      // eliminated, triggering promotion of the survivingSub into G2's slot from S16.
-      if (userId === subUserId && slotKey === 'B1') {
-        rosterSlotsBatch.push({
-          league_id, user_id: userId, player_id: playerId,
-          slot_key: slotKey, slot_position: SLOT_POSITIONS[slotKey],
-          is_bench: true, is_active: false,
-          acquired_at_round_stage: 'draft', released_at_round_stage: 'r32',
-          release_reason: 'correction',
-        });
-        continue;
-      }
-
-      const player = players.find((p) => p.id === playerId);
-      const elimRound = player ? teamElimMap.get(player.team_id) ?? null : null;
-      rosterSlotsBatch.push({
+      const player = playerById.get(playerId);
+      const elim = player ? teamElimMap.get(player.team_id) ?? null : null;
+      rows.push({
         league_id, user_id: userId, player_id: playerId,
         slot_key: slotKey, slot_position: SLOT_POSITIONS[slotKey],
-        is_bench: SLOT_IS_BENCH[slotKey], is_active: !elimRound,
+        is_bench: false, is_active: !elim,
         acquired_at_round_stage: 'draft',
-        released_at_round_stage: elimRound,
-        release_reason: elimRound ? 'eliminated' : null,
+        released_at_round_stage: elim,
+        release_reason: elim ? 'eliminated' : null,
+      });
+      if (elim) pending.push({ slot_key: slotKey, position: SLOT_POSITIONS[slotKey], round: elim });
+    }
+
+    while (pending.length > 0) {
+      pending.sort((a, b) => ROUND_STAGE_ORDER.indexOf(a.round) - ROUND_STAGE_ORDER.indexOf(b.round));
+      const vac = pending.shift()!;
+
+      const eligiblePositions = subEligibilityMatrix[vac.position] ?? [vac.position];
+      const candidates = [...benchAvailable]
+        .map((id) => playerById.get(id))
+        .filter((p): p is PlayerRow => !!p && eligiblePositions.includes(p.position))
+        .filter((p) => {
+          const pElim = teamElimMap.get(p.team_id) ?? null;
+          if (!pElim) return true; // never eliminated — always eligible
+          return ROUND_STAGE_ORDER.indexOf(pElim) > ROUND_STAGE_ORDER.indexOf(vac.round);
+        })
+        .sort((a, b) => b.avg_ppg - a.avg_ppg);
+
+      if (candidates.length === 0) continue; // no eligible sub — slot stays vacant
+
+      const chosen = candidates[0];
+      benchAvailable.delete(chosen.id);
+      benchPromotedAt.set(chosen.id, vac.round);
+
+      const chosenElim = teamElimMap.get(chosen.team_id) ?? null;
+      rows.push({
+        league_id, user_id: userId, player_id: chosen.id,
+        slot_key: vac.slot_key, slot_position: vac.position,
+        is_bench: false, is_active: !chosenElim,
+        acquired_at_round_stage: vac.round,
+        released_at_round_stage: chosenElim,
+        release_reason: chosenElim ? 'eliminated' : null,
+      });
+      if (chosenElim) pending.push({ slot_key: vac.slot_key, position: vac.position, round: chosenElim });
+    }
+
+    // Bench rows: released either when promoted off the bench (release_reason
+    // 'eliminated', matching activateSlot's treatment of the vacated bench row)
+    // or when their own team is eliminated — whichever comes first.
+    for (const slotKey of BENCH_SLOT_KEYS) {
+      const playerId = roster[userId][slotKey];
+      if (!playerId) continue;
+      const player = playerById.get(playerId);
+      const ownElim = player ? teamElimMap.get(player.team_id) ?? null : null;
+      const released = benchPromotedAt.get(playerId) ?? ownElim;
+      rows.push({
+        league_id, user_id: userId, player_id: playerId,
+        slot_key: slotKey, slot_position: player?.position ?? SLOT_POSITIONS[slotKey],
+        is_bench: true, is_active: !released,
+        acquired_at_round_stage: 'draft',
+        released_at_round_stage: released,
+        release_reason: released ? 'eliminated' : null,
       });
     }
+
+    return rows;
   }
 
-  // Promoted slot: survivingSub fills G2's slot from S16 after G2's team's R32 elimination.
-  const survivingSubElim = teamElimMap.get(survivingSub.team_id) ?? null;
-  rosterSlotsBatch.push({
-    league_id, user_id: subUserId, player_id: survivingSub.id,
-    slot_key: 'G2', slot_position: 'G',
-    is_bench: false, is_active: !survivingSubElim,
-    acquired_at_round_stage: 's16',
-    released_at_round_stage: survivingSubElim,
-    release_reason: survivingSubElim ? 'eliminated' : null,
-  });
+  const rosterSlotsBatch: SlotEntry[] = member_user_ids.flatMap((userId) => simulateUserRoster(userId));
 
   // Composite key of (user_id, slot_key, acquired_at_round_stage) uniquely identifies
   // each row we're about to insert (a slot_key can have more than one historical row —
@@ -438,15 +445,11 @@ export async function seedDemoLeagueData(
 
   // ── 7.5. Mark one active player as injured ──
   // Shows the InjuryBadge component in rosters/draft UI, demonstrating the injury
-  // tracking feature. Pick a surviving player (not eliminated, not the promoted sub)
-  // so the injury makes narrative sense — they're still active but hurt.
+  // tracking feature. Pick a surviving player so the injury makes narrative sense —
+  // they're still active but hurt.
   const activeDraftedPlayer = [...usedPlayerIds]
     .map((id) => players.find((p) => p.id === id))
-    .find((p): p is PlayerRow =>
-      !!p &&
-      teamElimMap.get(p.team_id) === null &&
-      p.id !== survivingSub.id
-    ) ?? null;
+    .find((p): p is PlayerRow => !!p && teamElimMap.get(p.team_id) === null) ?? null;
   if (activeDraftedPlayer) {
     await supabaseAdmin.from('players').update({
       injury_status: 'out',
