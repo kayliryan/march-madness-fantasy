@@ -68,6 +68,7 @@ interface GameScoreEntry {
   round_stage: RoundStage;
   game_date: string;
   points: number;
+  event_id: string;
 }
 
 interface FetchState {
@@ -156,10 +157,18 @@ function processOne(eventId: string) {
   for (const p of cache.players) {
     if (p.espn_player_id) espnPlayerIds.set(`${p.member}|${p.slot_key}`, p.espn_player_id);
   }
-  // Drop any stale rows previously recorded for this exact game (round_stage +
-  // date uniquely identify it), so re-processing an event_id is idempotent.
+  // Drop any stale rows previously recorded for this exact event_id, so
+  // re-processing an event_id is idempotent.
+  //
+  // IMPORTANT: this must key on event_id, NOT (round_stage, date) — multiple
+  // real games commonly share the same round_stage AND date (e.g. four
+  // different r64 games all on 2026-03-19), so a (round_stage, date) key
+  // would delete entries belonging to a *different* game on the same day
+  // every time another same-day game got processed afterward, silently
+  // losing data. Older entries from before this fix won't have an event_id
+  // and are filtered out, so a full re-run is required after this change.
   const gameScores = cache.game_scores.filter(
-    (gs) => !(gs.round_stage === game.round_stage && gs.game_date === game.date)
+    (gs) => gs.event_id !== undefined && gs.event_id !== eventId
   );
 
   for (const teamKey of game.teams) {
@@ -196,6 +205,7 @@ function processOne(eventId: string) {
         round_stage: game.round_stage,
         game_date: game.date,
         points,
+        event_id: eventId,
       });
     }
   }
