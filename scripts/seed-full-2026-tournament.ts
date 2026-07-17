@@ -127,19 +127,30 @@ async function purgeFictionalPool() {
     fictionalPlayerIds.push(...(playersOnTeams ?? []).map((p) => p.id));
   }
 
-  // Batched: a single .in() with 300+ UUIDs serializes into the request URL
-  // and can exceed the server's max URI length ("URI too long").
-  for (let i = 0; i < fictionalPlayerIds.length; i += BATCH) {
-    const batch = fictionalPlayerIds.slice(i, i + BATCH);
-    const { error } = await db.from('game_scores').delete().in('player_id', batch);
-    if (error) throw new Error(`delete fictional game_scores (batch ${i}): ${error.message}`);
+  // Every table with a (non-cascading) player_id FK must be cleared before the
+  // players themselves can go, and players before teams. This covers rows
+  // belonging to ANY league that ever drafted from the fictional pool, not
+  // just leagues marked is_demo=true — e.g. early test leagues created before
+  // real data existed. scoring_events also FKs to game_score_id, but its
+  // player_id column covers the same rows, so a single player_id-keyed delete
+  // is sufficient (league_player_position_overrides.player_id is
+  // ON DELETE CASCADE already, so it needs no manual handling).
+  // Batched throughout: a single .in() with 300+ UUIDs serializes into the
+  // request URL and can exceed the server's max URI length ("URI too long").
+  const playerScopedTables = ['scoring_events', 'roster_slots', 'draft_picks', 'draft_queues', 'game_scores'] as const;
+  for (const table of playerScopedTables) {
+    for (let i = 0; i < fictionalPlayerIds.length; i += BATCH) {
+      const batch = fictionalPlayerIds.slice(i, i + BATCH);
+      const { error } = await db.from(table).delete().in('player_id', batch);
+      if (error) throw new Error(`delete fictional ${table} (batch ${i}): ${error.message}`);
+    }
   }
   for (let i = 0; i < fictionalPlayerIds.length; i += BATCH) {
     const batch = fictionalPlayerIds.slice(i, i + BATCH);
     const { error } = await db.from('players').delete().in('id', batch);
     if (error) throw new Error(`delete fictional players (batch ${i}): ${error.message}`);
   }
-  console.log(`  removed ${fictionalPlayerIds.length} fictional players (+ their game_scores)`);
+  console.log(`  removed ${fictionalPlayerIds.length} fictional players (+ dependent rows in ${playerScopedTables.join(', ')})`);
 
   const { error: teamsDeleteError, count } = await db
     .from('teams')
