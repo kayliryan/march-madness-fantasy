@@ -2093,3 +2093,285 @@ All date comparisons use explicit null checks per Section 15.5.
 - Email digest wiring (deferred)
 - Mobile push notifications (deferred)
 - League chat (removed from scope)
+
+
+---
+
+# 16. Adaptive Score Sync & Live Polling
+
+## 16.1 Overview
+
+During the NCAA tournament, game scores need to update frequently while games are in progress. Outside of game windows — including most of the year and most hours even during tournament weeks — polling the stats API wastes quota and adds unnecessary load. This section specifies the adaptive polling strategy that makes the sync job aggressive during live games and nearly dormant otherwise.
+
+---
+
+## 16.2 Three Sync States
+
+The sync job operates in one of three states, detected automatically on every execution:
+
+**State 1 — Off-season**
+No tournament games exist in the schedule for the current season. The job exits immediately after a lightweight schedule check. Poll cost: ~1 API call per execution, ~500/year during off-season.
+
+**State 2 — Tournament scheduled, no games active today**
+The tournament bracket exists but no games are scheduled or in progress today. The job checks for games starting within the next 2 hours. If none, exits early. If games are imminent, stays active to catch the start. Poll cost: ~5 API calls/day on non-game days.
+
+**State 3 — Games in progress or imminent**
+One or more games have `game_status = 'in_progress'` or are scheduled to start within 2 hours. Full score sync runs. Continues until all games for the day return `game_status = 'final'`, then transitions back to State 2.
+
+---
+
+## 16.3 Sync Job Execution Flow with Adaptive Logic
+
+Add the following early-exit logic at the top of the sync job, before any score processing:
+
+```typescript
+// Step 0: Adaptive state detection (runs before acquiring cron lock)
+const gamesToday = await statsProvider.getGameStatus({ date: today, season: CURRENT_TOURNAMENT_SEASON })
+
+if (gamesToday.length === 0) {
+  // No games scheduled today — check if any starting within 2 hours
+  const upcoming = await statsProvider.getUpcomingGames({ withinHours: 2, season: CURRENT_TOURNAMENT_SEASON })
+  if (upcoming.length === 0) {
+    // State 1 or 2 — nothing happening, exit without acquiring lock
+    return Response.json({ skipped: true, reason: 'no_games_imminent' })
+  }
+}
+
+const allFinal = gamesToday.length > 0 && gamesToday.every(g => g.game_status === 'final')
+if (allFinal) {
+  // All games today are final — run one cleanup accumulator pass then exit
+  // Acquire lock, run ScoreAccumulator.runForLeague for all active leagues, release lock
+  await runFinalCleanupPass()
+  return Response.json({ skipped: false, reason: 'all_games_final_cleanup_complete' })
+}
+
+// State 3 — games in progress or imminent, proceed with full sync
+// (existing sync job logic continues here)
+```
+
+The cron job fires on its normal schedule. The vast majority of executions exit in milliseconds at Step 0. Only during live game windows does the full sync execute.
+
+---
+
+## 16.4 Cron Schedule by Period
+
+```json
+// vercel.json — tournament weeks (mid-March to early April)
+{ "path": "/api/cron/sync-scores", "schedule": "* * * * *" }
+
+// vercel.json — off-season
+{ "path": "/api/cron/sync-scores", "schedule": "*/5 * * * *" }
+```
+
+During tournament weeks, set the cron to every minute. The adaptive early-exit (Section 16.3) means 90%+ of those executions are free. During off-season, every 5 minutes is sufficient — each execution exits immediately via Step 0.
+
+Update the schedule manually in `vercel.json` at the start and end of tournament season. A future improvement would store the active schedule in the database so it can be updated without a deploy.
+
+---
+
+## 16.5 Season Finalization
+
+When the championship game goes final, the season's game_scores should become permanently read-only. The sync job must never overwrite historical data.
+
+**Schema addition:**
+```sql
+ALTER TABLE leagues ADD COLUMN season_finalized_at TIMESTAMPTZ;
+```
+
+**Sync job guard (add after Step 0):**
+```typescript
+// Skip finalized seasons
+const { data: leagueData } = await supabase
+  .from('leagues')
+  .select('season_finalized_at')
+  .eq('id', league_id)
+  .single()
+
+if (leagueData?.season_finalized_at) {
+  continue // Never touch finalized season data
+}
+```
+
+**Finalization trigger:** Commissioner clicks "Finalize Season" in commissioner tools after confirming all championship game scores are final. This sets `season_finalized_at = now()` on all leagues for the current season and prevents any future sync job writes to those game_scores rows.
+
+Until the Finalize Season UI is built, the `CURRENT_TOURNAMENT_SEASON` constant in `src/lib/constants/season.ts` serves as the guard — the sync job only writes to rows where `players.season = CURRENT_TOURNAMENT_SEASON`. Updating this constant to next year's value at the start of a new season implicitly freezes the prior year's data.
+
+---
+
+## 16.6 SportsRadar Upgrade Path
+
+When the ESPN unofficial API is no longer sufficient (rate limits during peak tournament traffic, or need for reliable SLA), the upgrade path is `SportsRadarStatsProvider` implementing the existing `StatsProvider` interface. No schema changes required.
+
+SportsRadar offers push notifications via webhooks — you register a URL and they POST to it whenever a score changes. This eliminates polling entirely:
+
+```typescript
+// New route: POST /api/webhooks/sportsradar
+// SportsRadar calls this on every score update
+// Handler: validate signature, upsert game_scores, call ScoreAccumulator.runForGames
+```
+
+The `StatsProvider` adapter pattern (Section 4.1) was designed for this upgrade. Swapping providers is: implement `SportsRadarStatsProvider`, register the webhook URL with SportsRadar, update `stats_provider` in league settings. The rest of the system is unchanged.
+
+---
+
+# 17. Infrastructure & Cost Tradeoffs
+
+## 17.1 Overview
+
+This section documents the key infrastructure decisions made during the design process, the alternatives considered, and the rationale for the choices made. These decisions were made deliberately — optimizing for shipping speed and zero infrastructure cost at family-app scale, with documented upgrade paths for each. An interviewer asking "why did you choose X?" should find the answer here.
+
+---
+
+## 17.2 Stats Provider: ESPN Unofficial vs. SportsRadar
+
+**What was chosen:** ESPN unofficial API (free, no authentication, no SLA)
+
+**Why:** For a portfolio project and family use case, paying for a stats provider before validating the product is premature. The ESPN unofficial API is free and sufficient for the family-scale usage pattern (7 participants, one active league, 3-week tournament window).
+
+**What SportsRadar offers and why it's the right long-term choice:**
+- **Official SLA:** Guaranteed uptime during March Madness — the highest-traffic sports event of the year, exactly when the ESPN API is most likely to fail
+- **Push notifications via webhooks:** Eliminates polling entirely. SportsRadar POSTs to your endpoint when scores change, rather than you requesting every 30-60 seconds. Dramatically reduces API call volume and eliminates the adaptive polling complexity in Section 16.
+- **Structured data:** Consistent player IDs, team IDs, and round identification across seasons. ESPN unofficial requires fragile string parsing and has been known to change response shapes without notice.
+- **Historical data access:** Full historical box scores going back decades via API, rather than manual spreadsheet imports.
+
+**Cost:** SportsRadar NCAA basketball data access starts at approximately $150/month for a development license and scales with usage. For a family app this is not justifiable. For a product with paying users, it's a straightforward business expense that eliminates a category of reliability risk.
+
+**Upgrade path:** Implement `SportsRadarStatsProvider` implementing the `StatsProvider` interface (Section 4.1). Run a one-time player/team ID mapping script to align historical ESPN IDs with SportsRadar IDs. Update `stats_provider` in league settings to `'sportsradar'`. No schema changes. No downtime. The adapter pattern was designed specifically for this.
+
+**The tradeoff in one sentence:** ESPN is free and fragile. SportsRadar costs $150/month and is reliable. The correct choice depends entirely on whether you have paying users.
+
+---
+
+## 17.3 Hosting: Vercel Hobby vs. Pro vs. Dedicated Server
+
+**What was chosen:** Vercel Hobby (free tier)
+
+**Why:** Zero infrastructure management, one-click Next.js deployment, and the free tier is sufficient for a family app with 7 users and a 3-week active season.
+
+**Vercel Hobby limitations relevant to this app:**
+- Serverless function execution time capped at 10 seconds. The sync job's score accumulation pass could approach this limit during large tournament rounds with many simultaneous game updates.
+- Cron job minimum interval: 5 minutes. Cannot poll more frequently than every 5 minutes without self-scheduling hacks (which have their own complexity and reliability issues).
+- No persistent connections: each cron execution is a cold start, adding ~200-500ms overhead to every sync.
+
+**Vercel Pro ($20/month) unlocks:**
+- Serverless function timeout: 60 seconds (6x more headroom for the sync job)
+- Cron minimum interval: 1 minute (sufficient for live game polling without self-scheduling)
+- Better cold start performance
+
+**Dedicated server (e.g., $20/month Hetzner VPS or $12/month DigitalOcean Droplet) offers:**
+- Persistent process: a long-running Node.js process can maintain WebSocket connections to SportsRadar's push API, eliminating polling entirely
+- Unlimited execution time: the sync job can run as long as needed
+- Configurable cron at any interval, including sub-minute
+- BullMQ + Redis for the job queue upgrade path documented in Section 11 — this requires a persistent server and cannot run on serverless
+- **Cost is comparable to Vercel Pro** but requires managing infrastructure (deployments, monitoring, uptime)
+
+**The upgrade decision tree:**
+1. Family app, free tier constraints acceptable → Vercel Hobby (current)
+2. Need 1-minute polling and longer function timeouts → Vercel Pro ($20/month, no infrastructure work)
+3. Need persistent connections, sub-minute polling, or BullMQ job queue → Dedicated server ($12-20/month, requires DevOps work)
+4. Need 1M+ DAU, multi-region, SLA guarantees → AWS/GCP with dedicated services (Section 11 scaling plan)
+
+**The tradeoff in one sentence:** Vercel Hobby costs nothing and requires nothing. A dedicated server costs $12-20/month and gives you full control. Vercel Pro is the middle ground that eliminates the main Hobby limitations for $20/month with zero additional infrastructure work.
+
+---
+
+## 17.4 Real-time Updates: Supabase Realtime vs. Ably vs. WebSockets on a Dedicated Server
+
+**What was chosen:** Supabase Realtime (included with Supabase free tier)
+
+**Why:** Supabase Realtime is already in the stack for the live draft room. Using it for leaderboard score updates adds zero marginal cost and zero additional dependencies. For 7 concurrent users during a 3-week tournament, Supabase's free tier limit of 200 concurrent connections is more than sufficient.
+
+**Supabase Realtime limitations:**
+- Free tier: 200 concurrent connections, 2GB bandwidth
+- Not designed for millions of concurrent WebSocket connections
+- Connection reliability during high-traffic periods (like tournament tipoffs) is not guaranteed under heavy load
+- Server-side broadcast from the sync job requires the service role key, which adds a security surface
+
+**Ably ($0-$35/month depending on usage) offers:**
+- Purpose-built for real-time at scale: millions of concurrent connections, guaranteed delivery, message history
+- Built-in presence (know who's viewing the leaderboard)
+- Better reliability SLAs during traffic spikes
+- The `RealtimeProvider` abstraction in the codebase (Section 11.3) means swapping Supabase for Ably is a config-layer change — no component rewrites
+
+**WebSockets on a dedicated server** (combined with Section 17.3's server option):
+- Eliminate the third-party real-time dependency entirely
+- Full control over connection management, message format, and scaling strategy
+- Requires implementing WebSocket server logic (manageable with `ws` or `socket.io`)
+- Only viable if you're already running a dedicated server
+
+**The tradeoff in one sentence:** Supabase Realtime is free and already integrated. Ably is purpose-built for real-time at scale but adds cost. A dedicated WebSocket server gives full control but adds infrastructure complexity.
+
+---
+
+## 17.5 Background Jobs: Vercel Cron vs. BullMQ vs. Cloud Scheduler
+
+**What was chosen:** Vercel Cron (included with Vercel, minimum 5-minute interval on Hobby)
+
+**Why:** Zero additional infrastructure. The sync job is simple enough (one league, one active tournament per year) that a periodic cron is the correct tool. The complexity of a job queue is not warranted at this scale.
+
+**When Vercel Cron breaks down:**
+- Multiple leagues running simultaneously: a single cron job that processes all leagues sequentially becomes a bottleneck. If each league takes 10 seconds and you have 100 leagues, one cron execution takes 1000 seconds — well beyond any serverless timeout.
+- Need for job retries with backoff: Vercel Cron has no built-in retry logic. A failed sync is simply missed until the next cron fires.
+- Need for job prioritization: live games need immediate processing; historical recomputes can wait. Cron treats all work equally.
+
+**BullMQ + Redis (upgrade path documented in Section 11.4):**
+- One job per active league per round: parallelizable, isolated failures, retriable
+- Priority queues: live score updates get processed before historical recomputes
+- Job history and monitoring via Bull Board UI
+- Requires Redis ($7-15/month on Upstash or Redis Cloud) and a persistent worker process
+- The ScoreAccumulator service code is identical — BullMQ just changes how it's invoked
+
+**Cloud Scheduler (AWS EventBridge, GCP Cloud Scheduler):**
+- More reliable than Vercel Cron for production workloads
+- Sub-minute scheduling available
+- Still invokes a serverless function — doesn't solve the execution time limit problem
+- Adds cloud vendor dependency
+
+**The tradeoff in one sentence:** Vercel Cron is sufficient for one league. BullMQ is the right tool for 100+ concurrent leagues. The migration path is documented and the service code doesn't change.
+
+---
+
+## 17.6 Database: Supabase (Managed Postgres) vs. Self-Managed Postgres vs. PlanetScale
+
+**What was chosen:** Supabase managed Postgres (free tier: 500MB database, 2 CPU, shared)
+
+**Why:** Supabase provides RLS, Realtime, Auth, and Postgres in one platform. For a solo developer building a portfolio project, eliminating the operational overhead of managing a database is worth the vendor dependency. The free tier is sufficient for a family app.
+
+**Supabase free tier limitations:**
+- 500MB storage (sufficient for years of family app data — a full tournament season generates ~1MB of game_scores and scoring_events)
+- Pauses after 1 week of inactivity (on free tier) — not a concern for an app with regular usage
+- Shared CPU — performance can be unpredictable during Supabase-wide traffic spikes
+- Connection limits: 60 direct connections (mitigated by PgBouncer, available on paid plans)
+
+**Supabase Pro ($25/month) unlocks:**
+- 8GB storage, dedicated CPU, no inactivity pausing, PgBouncer connection pooling
+- Point-in-time recovery
+- Priority support
+
+**Self-managed Postgres (on the same dedicated server from Section 17.3):**
+- Full control over configuration, extensions, and maintenance windows
+- No connection limits beyond what the server can handle
+- Eliminates the Supabase vendor dependency
+- Requires managing backups, upgrades, and failover yourself
+- The database is standard Postgres — portable to Aurora, Cloud Spanner, or self-managed at any time
+
+**PlanetScale (MySQL-compatible, serverless):**
+- Not a good fit: this app uses Postgres-specific features (RLS, JSONB, partial indexes, uuid_generate_v5) that don't exist in MySQL. Migration would require significant schema rewrites.
+
+**The tradeoff in one sentence:** Supabase managed Postgres eliminates all database operations overhead at the cost of $0-25/month and a vendor dependency. Self-managed Postgres gives full control at the cost of operational work. The database is standard Postgres and is portable to any provider at any time.
+
+---
+
+## 17.7 Summary: The Decision Matrix
+
+| Component | Current Choice | Cost | Next Upgrade | Upgrade Cost | Upgrade Trigger |
+|---|---|---|---|---|---|
+| Stats API | ESPN unofficial | $0 | SportsRadar | ~$150/month | Reliability issues during tournament or paying users |
+| Hosting | Vercel Hobby | $0 | Vercel Pro | $20/month | Need 1-min cron or 60-sec function timeout |
+| Real-time | Supabase Realtime | $0 | Ably | $0-35/month | >200 concurrent users or reliability issues |
+| Background jobs | Vercel Cron | $0 | BullMQ + Redis | $7-15/month | >10 concurrent active leagues |
+| Database | Supabase free | $0 | Supabase Pro | $25/month | >500MB data or need connection pooling |
+| **Total current** | | **$0/month** | | | |
+| **Total at scale** | | | | **~$200-230/month** | ~1K active leagues |
+
+The entire production infrastructure for a family app costs $0/month. A version serving 1,000 active leagues would cost approximately $200-230/month with well-understood upgrade paths for each component. None of the upgrades require rewriting application code — they are infrastructure provider swaps enabled by the abstraction layers built into the design.
