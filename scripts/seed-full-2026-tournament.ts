@@ -100,17 +100,35 @@ async function purgeDemoLeagues() {
 async function purgeFictionalPool() {
   console.log('Purging old fictional season=2026 teams/players...');
 
-  const { data: fictionalPlayers, error: selError } = await db
-    .from('players')
+  // Determine fictional TEAMS first (by the synthetic espn_team_id pattern),
+  // then delete every player referencing one of those teams — regardless of
+  // the player's own espn_player_id pattern. Filtering players by their own
+  // 'espn-player-%' id first (as an earlier version of this script did) missed
+  // player rows created some other way (e.g. commissioner overrides/injury
+  // subs) that still pointed at a fictional team_id, which then blocked the
+  // team delete with a FK violation.
+  const { data: fictionalTeams, error: teamSelError } = await db
+    .from('teams')
     .select('id')
     .eq('season', SEASON)
-    .like('espn_player_id', 'espn-player-%');
-  if (selError) throw new Error(`select fictional players: ${selError.message}`);
+    .like('espn_team_id', 'espn-%');
+  if (teamSelError) throw new Error(`select fictional teams: ${teamSelError.message}`);
+  const fictionalTeamIds = (fictionalTeams ?? []).map((t) => t.id);
 
-  const fictionalPlayerIds = (fictionalPlayers ?? []).map((p) => p.id);
+  const BATCH = 100;
+  const fictionalPlayerIds: string[] = [];
+  for (let i = 0; i < fictionalTeamIds.length; i += BATCH) {
+    const batch = fictionalTeamIds.slice(i, i + BATCH);
+    const { data: playersOnTeams, error: playerSelError } = await db
+      .from('players')
+      .select('id')
+      .in('team_id', batch);
+    if (playerSelError) throw new Error(`select players on fictional teams (batch ${i}): ${playerSelError.message}`);
+    fictionalPlayerIds.push(...(playersOnTeams ?? []).map((p) => p.id));
+  }
+
   // Batched: a single .in() with 300+ UUIDs serializes into the request URL
   // and can exceed the server's max URI length ("URI too long").
-  const BATCH = 100;
   for (let i = 0; i < fictionalPlayerIds.length; i += BATCH) {
     const batch = fictionalPlayerIds.slice(i, i + BATCH);
     const { error } = await db.from('game_scores').delete().in('player_id', batch);
