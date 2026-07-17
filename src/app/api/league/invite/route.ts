@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     // Confirm the requester is the commissioner of this league (RLS also enforces this on insert)
     const { data: league, error: leagueError } = await supabase
       .from('leagues')
-      .select('id, name, commissioner_id')
+      .select('id, name, commissioner_id, is_demo')
       .eq('id', body.league_id)
       .single();
 
@@ -101,6 +101,21 @@ export async function POST(request: NextRequest) {
     if (inviteError || !invite) {
       console.error('Error creating invite:', inviteError);
       return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const inviteUrl = `${appUrl}/league/invite/${token}`;
+
+    if (league.is_demo) {
+      // Category C (Section 3): demo leagues always suppress email with explicit disclosure.
+      // The invite row is real and the link works — only the Resend dispatch is skipped.
+      console.log(`[demo invite stub] League "${league.name}" — ${inviteUrl}`);
+      const response: SendInviteResponse = {
+        invite: invite as LeagueInvite,
+        email_stub: true,
+        invite_url: inviteUrl,
+      };
+      return NextResponse.json(response, { status: 201 });
     }
 
     await sendInviteEmail(body.email, league.name, token);

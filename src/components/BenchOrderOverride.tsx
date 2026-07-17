@@ -26,23 +26,27 @@ export function BenchOrderOverride({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  // Clear bench during render when selection is cleared (React-blessed derived-state pattern)
+  const [prevSelectedUserId, setPrevSelectedUserId] = useState(selectedUserId);
+  if (selectedUserId !== prevSelectedUserId) {
+    setPrevSelectedUserId(selectedUserId);
+    if (!selectedUserId) setBench([]);
+  }
+
   useEffect(() => {
-    if (!selectedUserId) {
-      setBench([]);
-      return;
-    }
+    if (!selectedUserId) return;
     let active = true;
-    setLoading(true);
-    setMessage(null);
-    loadBench(selectedUserId)
-      .then((players) => {
-        if (active) setBench(players);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    const t = setTimeout(() => {
+      if (!active) return;
+      setLoading(true);
+      setMessage(null);
+      loadBench(selectedUserId)
+        .then((players) => { if (active) setBench(players); })
+        .finally(() => { if (active) setLoading(false); });
+    }, 0);
     return () => {
       active = false;
+      clearTimeout(t);
     };
   }, [selectedUserId, loadBench]);
 

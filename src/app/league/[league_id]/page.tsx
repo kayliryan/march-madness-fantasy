@@ -48,7 +48,6 @@ export default function LeagueHomePage() {
   const [narrativeLoading, setNarrativeLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
     fetch(`/api/league/${league_id}`)
       .then((res) => {
         if (res.status === 401) {
@@ -136,7 +135,7 @@ export default function LeagueHomePage() {
           )}
         </div>
 
-        {!league.is_historical && league.draft_status === null ? (
+        {!league.is_historical && league.draft_status === null && !league.has_roster_data ? (
           <div className="mb-6 rounded-lg border border-dashed border-neutral-700 bg-neutral-900 p-6 text-center">
             <p className="font-semibold text-white">No draft yet</p>
             <p className="mt-1 text-sm text-neutral-500">

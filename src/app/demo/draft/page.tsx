@@ -1087,6 +1087,11 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
   const [roundsHistory, setRoundsHistory] = useState<BracketTeam[][]>([]);
   const [loadingBracket, setLoadingBracket] = useState(true);
   const [roundIdx, setRoundIdx] = useState(0);
+  // Which round is currently being VIEWED — lets you scrub back through already-played
+  // rounds without losing simulation progress. Always jumps to the latest round the
+  // moment you actually simulate one (see the effect below), so "Simulate Next Round"
+  // still feels immediate.
+  const [viewRoundIdx, setViewRoundIdx] = useState(0);
   const [recaps, setRecaps] = useState<RoundRecap[]>([]);
   const [expandedTeamIds, setExpandedTeamIds] = useState<Set<number>>(new Set());
 
@@ -1099,6 +1104,15 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
       })
       .finally(() => setLoadingBracket(false));
   }, []);
+
+  // "setState during render" pattern (same technique used for the draft pick timer
+  // above): whenever roundIdx moves forward (a round was actually simulated), snap the
+  // view to it in the same render pass — no extra effect/paint needed.
+  const [prevRoundIdxForView, setPrevRoundIdxForView] = useState(roundIdx);
+  if (roundIdx !== prevRoundIdxForView) {
+    setPrevRoundIdxForView(roundIdx);
+    setViewRoundIdx(roundIdx);
+  }
 
   const isComplete = roundIdx >= SCORING_ROUNDS.length;
 
@@ -1153,19 +1167,20 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
     setRoundsHistory((prev) => (prev.length > 0 ? [prev[0]] : prev));
     setRecaps([]);
     setRoundIdx(0);
+    setViewRoundIdx(0);
     setExpandedTeamIds(new Set());
   }
 
+  // Totals/standings as of the round being VIEWED, not necessarily the latest simulated
+  // round — this is what makes "step back through the season" actually show the
+  // standings as they stood at that point instead of always the final numbers.
   const totals = simTeams
     .map((t) => {
       const perRound: Partial<Record<RoundStage, number>> = {};
       for (const r of SCORING_ROUNDS) {
         perRound[r.stage] = t.assignments.reduce((sum, a) => sum + (a.countedPts[r.stage] ?? 0), 0);
       }
-      const total = t.assignments.reduce(
-        (sum, a) => sum + Object.values(a.countedPts).reduce((x: number, y) => x + (y ?? 0), 0),
-        0
-      );
+      const total = SCORING_ROUNDS.slice(0, viewRoundIdx).reduce((sum, r) => sum + (perRound[r.stage] ?? 0), 0);
       return { id: t.id, name: t.name, isHuman: t.isHuman, total, perRound };
     })
     .sort((a, b) => b.total - a.total);
@@ -1178,11 +1193,21 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
 
   const humanTeam = simTeams.find((t) => t.isHuman);
 
-  function currentOccupant(slot_key: string) {
-    return humanTeam?.assignments.find((a) => a.slot_key === slot_key && a.releasedIdx === null) ?? null;
+  // "As of the round being viewed" — not just the latest state — so scrubbing back
+  // shows who was actually starting at that point in the season.
+  function occupantAsOf(slot_key: string, asOfRoundIdx: number) {
+    return (
+      humanTeam?.assignments.find(
+        (a) => a.slot_key === slot_key && a.acquiredIdx <= asOfRoundIdx && (a.releasedIdx === null || a.releasedIdx >= asOfRoundIdx)
+      ) ?? null
+    );
   }
-  function lastEndedFor(slot_key: string) {
-    return [...(humanTeam?.assignments ?? [])].reverse().find((a) => a.slot_key === slot_key && a.releasedIdx !== null) ?? null;
+  function lastEndedAsOf(slot_key: string, asOfRoundIdx: number) {
+    return (
+      [...(humanTeam?.assignments ?? [])]
+        .filter((a) => a.slot_key === slot_key && a.releasedIdx !== null && a.releasedIdx < asOfRoundIdx)
+        .sort((a, b) => (b.releasedIdx ?? -1) - (a.releasedIdx ?? -1))[0] ?? null
+    );
   }
 
   return (
@@ -1215,23 +1240,57 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
         </div>
       </div>
 
-      {/* Round stepper */}
-      <div className="mb-4 flex flex-wrap gap-1.5">
+      {/* Round stepper — click any already-simulated round to review it, or use the
+          arrows. Viewing the past doesn't affect simulation progress. */}
+      <div className="mb-4 flex flex-wrap items-center gap-1.5">
+        <button
+          onClick={() => setViewRoundIdx((v) => Math.max(0, v - 1))}
+          disabled={viewRoundIdx <= 0}
+          className="rounded border border-neutral-800 px-2 py-1 text-xs font-bold text-neutral-400 hover:border-yellow-400/50 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-30"
+          aria-label="Previous round"
+        >
+          ◀
+        </button>
         {SCORING_ROUNDS.map((r, i) => (
-          <span
+          <button
             key={r.stage}
-            className={`rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
-              i < roundIdx
-                ? 'bg-yellow-400/20 text-yellow-400'
-                : i === roundIdx && !isComplete
-                  ? 'border border-yellow-400 text-yellow-400'
-                  : 'border border-neutral-800 text-neutral-600'
+            onClick={() => i <= roundIdx && setViewRoundIdx(i)}
+            disabled={i > roundIdx}
+            className={`rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors ${
+              i === viewRoundIdx
+                ? 'border border-yellow-400 bg-yellow-400/20 text-yellow-400'
+                : i < roundIdx
+                  ? 'bg-yellow-400/10 text-yellow-500 hover:bg-yellow-400/20'
+                  : i === roundIdx && !isComplete
+                    ? 'border border-yellow-400/50 text-yellow-400'
+                    : 'border border-neutral-800 text-neutral-600'
             }`}
           >
             {r.label}
-          </span>
+          </button>
         ))}
+        <button
+          onClick={() => setViewRoundIdx((v) => Math.min(roundIdx, v + 1))}
+          disabled={viewRoundIdx >= roundIdx}
+          className="rounded border border-neutral-800 px-2 py-1 text-xs font-bold text-neutral-400 hover:border-yellow-400/50 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-30"
+          aria-label="Next round"
+        >
+          ▶
+        </button>
+        {viewRoundIdx < roundIdx && (
+          <button
+            onClick={() => setViewRoundIdx(roundIdx)}
+            className="rounded border border-yellow-400/30 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-yellow-400 hover:bg-yellow-400/10"
+          >
+            Jump to Latest
+          </button>
+        )}
       </div>
+      {viewRoundIdx < roundIdx && (
+        <p className="mb-3 text-[11px] text-neutral-500">
+          Viewing standings as of {viewRoundIdx === 0 ? 'before the season started' : `after ${SCORING_ROUNDS[viewRoundIdx - 1].label}`} — {roundIdx - viewRoundIdx} more round{roundIdx - viewRoundIdx === 1 ? '' : 's'} already simulated ahead of here.
+        </p>
+      )}
 
       {/* Leaderboard — click a team name to see their full player-by-player breakdown */}
       <div className="mb-4 overflow-x-auto rounded-lg border border-neutral-800">
@@ -1265,7 +1324,7 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                     </td>
                     {SCORING_ROUNDS.map((r, i) => (
                       <td key={r.stage} className="px-2 py-2 text-right tabular-nums text-neutral-400">
-                        {i < roundIdx ? (t.perRound[r.stage] ?? 0) : '—'}
+                        {i < viewRoundIdx ? (t.perRound[r.stage] ?? 0) : '—'}
                       </td>
                     ))}
                     <td className="px-3 py-2 text-right font-bold tabular-nums text-white">{t.total}</td>
@@ -1287,7 +1346,7 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                             {sortedAssignments.map((a) => {
                               const acquired_at_round_stage = stageForRoundIdx(a.acquiredIdx) ?? 'r64';
                               const released_at_round_stage = stageForRoundIdx(a.releasedIdx);
-                              const rowTotal = Object.values(a.countedPts).reduce((s: number, v) => s + (v ?? 0), 0);
+                              const rowTotal = SCORING_ROUNDS.slice(0, viewRoundIdx).reduce((s, r) => s + (a.countedPts[r.stage] ?? 0), 0);
                               return (
                                 <tr key={a.key} className="border-b border-neutral-900 last:border-0">
                                   <td className="py-1.5 pl-8 pr-2">
@@ -1300,12 +1359,14 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                                       <span className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500">promoted out</span>
                                     )}
                                   </td>
-                                  {SCORING_ROUNDS.map((r) => {
-                                    const cell = getRoundCell(r.stage, a.countedPts, a.rawPts, {
-                                      is_bench: a.is_bench,
-                                      acquired_at_round_stage,
-                                      released_at_round_stage,
-                                    });
+                                  {SCORING_ROUNDS.map((r, i) => {
+                                    const cell = i < viewRoundIdx
+                                      ? getRoundCell(r.stage, a.countedPts, a.rawPts, {
+                                          is_bench: a.is_bench,
+                                          acquired_at_round_stage,
+                                          released_at_round_stage,
+                                        })
+                                      : null;
                                     return (
                                       <td key={r.stage} className="px-2 py-1.5 text-right tabular-nums">
                                         <RoundCellBadge cell={cell} />
@@ -1330,10 +1391,11 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
         </table>
       </div>
 
-      {/* Round recaps — eliminated teams, per-user roster impact, and a couple of fun stats */}
+      {/* Round recaps — eliminated teams, per-user roster impact, and a couple of fun stats.
+          Sliced to the round being viewed so scrubbing back doesn't spoil later rounds. */}
       {recaps.length > 0 && (
         <div className="mb-4 max-h-64 space-y-3 overflow-y-auto rounded-lg border border-neutral-800 bg-black/40 p-3">
-          {[...recaps].reverse().map((recap) => (
+          {[...recaps.slice(0, viewRoundIdx)].reverse().map((recap) => (
             <div key={recap.stage} className="text-xs">
               <p className="font-bold uppercase tracking-wide text-neutral-300">{recap.label}</p>
               {recap.eliminatedTeams.length === 0 ? (
@@ -1370,22 +1432,29 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
         </div>
       )}
 
-      {/* Visual bracket — same round-by-round data driving the scoring above */}
+      {/* Visual bracket — same round-by-round data driving the scoring above, truncated
+          to whatever round is currently being viewed */}
       {!loadingBracket && roundsHistory.length > 0 && (
         <div className="mb-4">
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-yellow-400">Tournament Bracket</p>
-          <NcaaBracketView regions={REGION_ORDER} roundsHistory={roundsHistory} rosteredTeamNames={rosteredTeamNames} />
+          <NcaaBracketView
+            regions={REGION_ORDER}
+            roundsHistory={roundsHistory.slice(0, viewRoundIdx + 1)}
+            rosteredTeamNames={rosteredTeamNames}
+          />
         </div>
       )}
 
-      {/* Your roster, live */}
+      {/* Your roster, as of the round being viewed */}
       <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-yellow-400">Your Roster</p>
+        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-yellow-400">
+          Your Roster {viewRoundIdx < roundIdx && <span className="text-neutral-500">(as viewed)</span>}
+        </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {SLOT_SEQUENCE.map((slot) => {
-            const occupant = currentOccupant(slot.key);
-            const justChanged = roundIdx > 0 && occupant?.acquiredIdx === roundIdx;
-            const ended = !occupant ? lastEndedFor(slot.key) : null;
+            const occupant = occupantAsOf(slot.key, viewRoundIdx);
+            const justChanged = viewRoundIdx > 0 && occupant?.acquiredIdx === viewRoundIdx;
+            const ended = !occupant ? lastEndedAsOf(slot.key, viewRoundIdx) : null;
 
             return (
               <div
@@ -1410,9 +1479,9 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                   <>
                     <p className="mt-0.5 truncate text-sm font-bold text-white">{occupant.player.name}</p>
                     <p className="text-xs text-neutral-500">{occupant.player.team_name} #{occupant.player.team_seed}</p>
-                    {roundIdx > 0 && (
+                    {viewRoundIdx > 0 && (
                       <p className="mt-1 flex flex-wrap gap-1.5 text-[10px]">
-                        {SCORING_ROUNDS.slice(0, roundIdx).map((r) => {
+                        {SCORING_ROUNDS.slice(0, viewRoundIdx).map((r) => {
                           const cell = getRoundCell(r.stage, occupant.countedPts, occupant.rawPts, {
                             is_bench: occupant.is_bench,
                             acquired_at_round_stage: stageForRoundIdx(occupant.acquiredIdx) ?? 'r64',

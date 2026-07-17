@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { LeagueForm } from '@/components/LeagueForm';
 import { LeagueInviteModal } from '@/components/LeagueInviteModal';
+import { supabase } from '@/lib/supabase/client';
+import { CURRENT_TOURNAMENT_SEASON } from '@/lib/constants/season';
 import type { CreateLeagueRequest, CreateLeagueResponse, League } from '@/lib/types';
 
 export default function CreateLeaguePage() {
@@ -12,6 +14,18 @@ export default function CreateLeaguePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdLeague, setCreatedLeague] = useState<League | null>(null);
+  const [allowedSeason, setAllowedSeason] = useState<number | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from('game_scores')
+      .select('id', { count: 'exact', head: true })
+      .eq('season', CURRENT_TOURNAMENT_SEASON)
+      .eq('game_status', 'in_progress')
+      .then(({ count }) => {
+        setAllowedSeason((count ?? 0) > 0 ? CURRENT_TOURNAMENT_SEASON : CURRENT_TOURNAMENT_SEASON + 1);
+      });
+  }, []);
 
   async function handleCreate(payload: CreateLeagueRequest) {
     setSubmitting(true);
@@ -59,7 +73,11 @@ export default function CreateLeaguePage() {
         )}
 
         <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-6 shadow-sm">
-          <LeagueForm onSubmit={handleCreate} submitting={submitting} />
+          {allowedSeason === null ? (
+            <div className="py-8 text-center text-sm text-neutral-500">Loading…</div>
+          ) : (
+            <LeagueForm onSubmit={handleCreate} submitting={submitting} season={allowedSeason} />
+          )}
         </div>
       </div>
 

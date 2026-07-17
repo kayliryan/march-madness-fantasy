@@ -36,10 +36,16 @@ export function DraftQueue({ sessionId, refreshTrigger, canDraft, availablePlaye
     }
   }, [sessionId]);
 
-  useEffect(() => { loadQueue(); }, [loadQueue]);
+  useEffect(() => {
+    const t = setTimeout(() => loadQueue(), 0);
+    return () => clearTimeout(t);
+  }, [loadQueue]);
 
   useEffect(() => {
-    if (refreshTrigger !== undefined && refreshTrigger > 0) loadQueue();
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      const t = setTimeout(() => loadQueue(), 0);
+      return () => clearTimeout(t);
+    }
   }, [refreshTrigger, loadQueue]);
 
   async function handleRemove(playerId: string) {

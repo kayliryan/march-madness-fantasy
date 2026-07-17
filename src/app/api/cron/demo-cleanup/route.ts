@@ -59,8 +59,10 @@ export async function GET(request: NextRequest) {
     (orphanedData as { league_id: string }[]).map((r) => r.league_id)
   )];
 
-  // Fetch commissioner_ids before the leagues row is gone — get_orphaned_demo_league_data
-  // already confirmed each commissioner's auth.users row no longer exists.
+  // Fetch commissioner_ids before the leagues row is gone.
+  // For TTL-expired leagues (condition B in get_orphaned_demo_league_data), the
+  // commissioner's auth.users row still exists and must be deleted. For orphaned
+  // leagues (condition A, commissioner already gone), deleteUser is a no-op.
   const { data: leagueRows } = await supabaseAdmin
     .from('leagues')
     .select('commissioner_id')
@@ -68,6 +70,9 @@ export async function GET(request: NextRequest) {
   const commissionerIds = [...new Set(
     (leagueRows ?? []).map((r) => r.commissioner_id as string)
   )];
+  for (const id of commissionerIds) {
+    await supabaseAdmin.auth.admin.deleteUser(id).catch(() => {});
+  }
 
   const { error: deleteError } = await supabaseAdmin
     .rpc('delete_orphaned_demo_leagues', { p_league_ids: leagueIds });

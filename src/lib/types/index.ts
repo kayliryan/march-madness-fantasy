@@ -85,6 +85,7 @@ export interface League {
   settings: LeagueSettings;
   invite_token?: string;
   is_demo: boolean;
+  demo_expires_at: string | null;
   stats_sync_status: 'ok' | 'degraded' | 'manual';
   created_at: string;
   updated_at: string;
@@ -263,6 +264,9 @@ export interface SendInviteRequest {
 
 export interface SendInviteResponse {
   invite: LeagueInvite;
+  // Demo leagues: email suppressed with disclosure; invite_url contains the real link.
+  email_stub?: boolean;
+  invite_url?: string;
 }
 
 export interface GetInviteByTokenResponse {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase/client';
+import { CURRENT_TOURNAMENT_SEASON } from '@/lib/constants/season';
 import type { CreateLeagueRequest, CreateLeagueResponse, League, LeagueMember, LeagueSettings } from '@/lib/types';
 
 // Default league settings from Section 4.3 of design doc
@@ -41,6 +42,43 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: name, season' },
         { status: 400 }
       );
+    }
+
+    // Determine the only season leagues can be created for:
+    // if the current season has in-progress games it's still active → use it;
+    // otherwise the upcoming season (current + 1) is the target.
+    const { count: activeCount } = await supabaseAdmin
+      .from('game_scores')
+      .select('id', { count: 'exact', head: true })
+      .eq('season', CURRENT_TOURNAMENT_SEASON)
+      .eq('game_status', 'in_progress');
+
+    const allowedSeason = (activeCount ?? 0) > 0
+      ? CURRENT_TOURNAMENT_SEASON
+      : CURRENT_TOURNAMENT_SEASON + 1;
+
+    if (body.season !== allowedSeason) {
+      return NextResponse.json(
+        { error: `Leagues can only be created for the ${allowedSeason === CURRENT_TOURNAMENT_SEASON ? 'active' : 'upcoming'} season (${allowedSeason}).` },
+        { status: 400 }
+      );
+    }
+
+    // Block creation if play-in games have already started for the active season
+    if (allowedSeason === CURRENT_TOURNAMENT_SEASON) {
+      const { count: playInCount } = await supabaseAdmin
+        .from('game_scores')
+        .select('id', { count: 'exact', head: true })
+        .eq('season', allowedSeason)
+        .eq('round_stage', 'play_in')
+        .neq('game_status', 'scheduled');
+
+      if ((playInCount ?? 0) > 0) {
+        return NextResponse.json(
+          { error: 'The season has already started. Leagues cannot be created after the first play-in game.' },
+          { status: 409 }
+        );
+      }
     }
 
     // Get authenticated user

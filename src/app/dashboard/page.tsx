@@ -8,7 +8,7 @@ import { formatCountdown } from '@/lib/utils/formatCountdown';
 import type { GetLeagueResponse, League } from '@/lib/types';
 
 function getStatusLine(detail: GetLeagueResponse): { text: string; href?: string } | null {
-  const { draft_status, scheduled_start, season_in_progress, draft_session_id, is_historical } = detail;
+  const { draft_status, scheduled_start, season_in_progress, draft_session_id, is_historical, has_roster_data } = detail;
 
   if (is_historical) {
     return { text: 'Season complete' };
@@ -23,6 +23,9 @@ function getStatusLine(detail: GetLeagueResponse): { text: string; href?: string
     return { text: 'Season in progress' };
   }
   if (draft_status === 'complete' && !season_in_progress) {
+    return { text: 'Season complete' };
+  }
+  if (draft_status === null && has_roster_data) {
     return { text: 'Season complete' };
   }
   if (draft_status === null) {
@@ -121,6 +124,9 @@ export default function Dashboard() {
                 const statusLine = detail ? getStatusLine(detail) : null;
                 const benchLockLine = detail ? getBenchLockLine(detail) : null;
 
+                const isCommissioner = detail &&
+                  (detail.current_member.role === 'commissioner' || detail.current_member.role === 'co_commissioner');
+
                 return (
                 <div key={league.id} className="rounded-lg border border-neutral-800 bg-neutral-900 p-5 shadow-sm hover:border-yellow-400/30 transition-colors">
                   <div className="flex items-start justify-between gap-3">
@@ -154,12 +160,14 @@ export default function Dashboard() {
                     >
                       Standings
                     </Link>
-                    <Link
-                      href={`/commissioner/${league.id}`}
-                      className="flex-1 rounded-md bg-yellow-400 py-1.5 text-center text-xs font-medium text-black hover:bg-yellow-300"
-                    >
-                      Manage
-                    </Link>
+                    {isCommissioner && (
+                      <Link
+                        href={`/commissioner/${league.id}`}
+                        className="flex-1 rounded-md bg-yellow-400 py-1.5 text-center text-xs font-medium text-black hover:bg-yellow-300"
+                      >
+                        Manage
+                      </Link>
+                    )}
                   </div>
                 </div>
                 );

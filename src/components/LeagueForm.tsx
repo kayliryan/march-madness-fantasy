@@ -2,18 +2,17 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { CURRENT_TOURNAMENT_SEASON } from '@/lib/constants/season';
 import type { CreateLeagueRequest, LeagueSettings } from '@/lib/types';
 
 interface LeagueFormProps {
   onSubmit: (payload: CreateLeagueRequest) => Promise<void>;
   submitting?: boolean;
+  season: number;
 }
 
-const CURRENT_SEASON = 2026;
-
-export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
+export function LeagueForm({ onSubmit, submitting = false, season }: LeagueFormProps) {
   const [name, setName] = useState('');
-  const [season, setSeason] = useState(CURRENT_SEASON);
   const [draftType, setDraftType] = useState<LeagueSettings['draft_type']>('snake');
   const [pickTimer, setPickTimer] = useState(90);
   const [starterG, setStarterG] = useState(2);
@@ -59,16 +58,13 @@ export function LeagueForm({ onSubmit, submitting = false }: LeagueFormProps) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="season" className="text-sm font-medium text-neutral-300">
-            Season
-          </label>
-          <input
-            id="season"
-            type="number"
-            value={season}
-            onChange={(e) => setSeason(Number(e.target.value))}
-            className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none"
-          />
+          <label className="text-sm font-medium text-neutral-300">Season</label>
+          <div className="flex items-center rounded-md border border-neutral-800 bg-neutral-800/50 px-3 py-2">
+            <span className="text-sm text-white">{season}</span>
+            <span className="ml-2 text-xs text-neutral-500">
+              {season === CURRENT_TOURNAMENT_SEASON ? '(Active)' : '(Upcoming)'}
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-col gap-1.5">

@@ -85,14 +85,23 @@ export async function PATCH(request: NextRequest) {
 
     const now = new Date().toISOString();
 
-    // Void the original pick
+    // Void the original pick with an atomic check: the UPDATE only matches if voided_at
+    // is still NULL, so two concurrent requests for the same pick produce exactly one
+    // success. If 0 rows are updated (PGRST116), a concurrent request won the race.
     const { data: voidedPick, error: voidErr } = await supabaseAdmin
       .from('draft_picks')
       .update({ voided_at: now, voided_by: user.id, void_reason: body.void_reason.trim() })
       .eq('id', body.pick_id)
+      .is('voided_at', null)
       .select()
       .single();
 
+    if (voidErr?.code === 'PGRST116' || !voidedPick) {
+      return NextResponse.json(
+        { error: 'PICK_ALREADY_VOIDED', message: 'This pick has already been voided.' },
+        { status: 409 }
+      );
+    }
     if (voidErr) {
       console.error('Error voiding pick:', voidErr);
       return NextResponse.json({ error: 'Failed to void pick' }, { status: 500 });
