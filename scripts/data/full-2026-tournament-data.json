@@ -4,331 +4,441 @@
       "espn_team_id": "47",
       "name": "Howard Bison",
       "region": "Midwest",
-      "seed": 16
+      "seed": 16,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "130",
       "name": "Michigan Wolverines",
       "seed": 1,
-      "region": "Midwest"
+      "region": "Midwest",
+      "is_eliminated": false,
+      "eliminated_in_round_stage": null
     },
     {
       "espn_team_id": "2561",
       "name": "Siena Saints",
       "region": "East",
-      "seed": 16
+      "seed": 16,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "150",
       "name": "Duke Blue Devils",
       "seed": 1,
-      "region": "East"
+      "region": "East",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "e8"
     },
     {
       "espn_team_id": "70",
       "name": "Idaho Vandals",
       "region": "South",
-      "seed": 15
+      "seed": 15,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "248",
       "name": "Houston Cougars",
       "seed": 2,
-      "region": "South"
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "s16"
     },
     {
       "espn_team_id": "2449",
       "name": "North Dakota State Bison",
       "region": "East",
-      "seed": 14
+      "seed": 14,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "127",
       "name": "Michigan State Spartans",
       "seed": 3,
-      "region": "East"
+      "region": "East",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "s16"
     },
     {
       "espn_team_id": "219",
       "name": "Pennsylvania Quakers",
       "region": "South",
-      "seed": 14
+      "seed": 14,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "356",
       "name": "Illinois Fighting Illini",
       "seed": 3,
-      "region": "South"
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "f4"
     },
     {
       "espn_team_id": "338",
       "name": "Kennesaw State Owls",
       "region": "West",
-      "seed": 14
+      "seed": 14,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "2250",
       "name": "Gonzaga Bulldogs",
       "seed": 3,
-      "region": "West"
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "2653",
       "name": "Troy Trojans",
       "region": "South",
-      "seed": 13
+      "seed": 13,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "158",
       "name": "Nebraska Cornhuskers",
       "seed": 4,
-      "region": "South"
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "s16"
     },
     {
       "espn_team_id": "62",
       "name": "Hawai'i Rainbow Warriors",
       "region": "West",
-      "seed": 13
+      "seed": 13,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "8",
       "name": "Arkansas Razorbacks",
       "seed": 4,
-      "region": "West"
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "s16"
     },
     {
       "espn_team_id": "2272",
       "name": "High Point Panthers",
       "region": "West",
-      "seed": 12
+      "seed": 12,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "275",
       "name": "Wisconsin Badgers",
       "seed": 5,
-      "region": "West"
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "2670",
       "name": "VCU Rams",
       "region": "South",
-      "seed": 11
+      "seed": 11,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "153",
       "name": "North Carolina Tar Heels",
       "seed": 6,
-      "region": "South"
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "251",
       "name": "Texas Longhorns",
       "region": "West",
-      "seed": 11
+      "seed": 11,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "s16"
     },
     {
       "espn_team_id": "252",
       "name": "BYU Cougars",
       "seed": 6,
-      "region": "West"
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "112358",
       "name": "Long Island University Sharks",
       "region": "West",
-      "seed": 16
+      "seed": 16,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "12",
       "name": "Arizona Wildcats",
       "seed": 1,
-      "region": "West"
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "f4"
     },
     {
       "espn_team_id": "2504",
       "name": "Prairie View A&M Panthers",
       "region": "South",
-      "seed": 16
+      "seed": 16,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "57",
       "name": "Florida Gators",
       "seed": 1,
-      "region": "South"
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "2634",
       "name": "Tennessee State Tigers",
       "region": "Midwest",
-      "seed": 15
+      "seed": 15,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "66",
       "name": "Iowa State Cyclones",
       "seed": 2,
-      "region": "Midwest"
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "s16"
     },
     {
       "espn_team_id": "2511",
       "name": "Queens University Royals",
       "region": "West",
-      "seed": 15
+      "seed": 15,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "2509",
       "name": "Purdue Boilermakers",
       "seed": 2,
-      "region": "West"
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "e8"
     },
     {
       "espn_team_id": "231",
       "name": "Furman Paladins",
       "region": "East",
-      "seed": 15
+      "seed": 15,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "41",
       "name": "UConn Huskies",
       "seed": 2,
-      "region": "East"
+      "region": "East",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "championship"
     },
     {
       "espn_team_id": "2750",
       "name": "Wright State Raiders",
       "region": "Midwest",
-      "seed": 14
+      "seed": 14,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "258",
       "name": "Virginia Cavaliers",
       "seed": 3,
-      "region": "Midwest"
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "2275",
       "name": "Hofstra Pride",
       "region": "Midwest",
-      "seed": 13
+      "seed": 13,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "333",
       "name": "Alabama Crimson Tide",
       "seed": 4,
-      "region": "Midwest"
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "s16"
     },
     {
       "espn_team_id": "2856",
       "name": "California Baptist Lancers",
       "region": "East",
-      "seed": 13
+      "seed": 13,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "2305",
       "name": "Kansas Jayhawks",
       "seed": 4,
-      "region": "East"
+      "region": "East",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "2006",
       "name": "Akron Zips",
       "region": "Midwest",
-      "seed": 12
+      "seed": 12,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "2641",
       "name": "Texas Tech Red Raiders",
       "seed": 5,
-      "region": "Midwest"
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "2460",
       "name": "Northern Iowa Panthers",
       "region": "East",
-      "seed": 12
+      "seed": 12,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "2599",
       "name": "St. John's Red Storm",
       "seed": 5,
-      "region": "East"
+      "region": "East",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "s16"
     },
     {
       "espn_team_id": "193",
       "name": "Miami (OH) RedHawks",
       "region": "Midwest",
-      "seed": 11
+      "seed": 11,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "2633",
       "name": "Tennessee Volunteers",
       "seed": 6,
-      "region": "Midwest"
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "e8"
     },
     {
       "espn_team_id": "142",
       "name": "Missouri Tigers",
       "region": "West",
-      "seed": 10
+      "seed": 10,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     },
     {
       "espn_team_id": "2390",
       "name": "Miami Hurricanes",
       "seed": 7,
-      "region": "West"
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "139",
       "name": "Saint Louis Billikens",
       "region": "Midwest",
-      "seed": 9
+      "seed": 9,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "2628",
       "name": "TCU Horned Frogs",
       "region": "East",
-      "seed": 9
+      "seed": 9,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "245",
       "name": "Texas A&M Aggies",
       "region": "South",
-      "seed": 10
+      "seed": 10,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "97",
       "name": "Louisville Cardinals",
       "region": "East",
-      "seed": 6
+      "seed": 6,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "238",
       "name": "Vanderbilt Commodores",
       "region": "South",
-      "seed": 5
+      "seed": 5,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "2294",
       "name": "Iowa Hawkeyes",
       "region": "South",
-      "seed": 9
+      "seed": 9,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "e8"
     },
     {
       "espn_team_id": "328",
       "name": "Utah State Aggies",
       "region": "West",
-      "seed": 9
+      "seed": 9,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "96",
       "name": "Kentucky Wildcats",
       "region": "Midwest",
-      "seed": 7
+      "seed": 7,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     },
     {
       "espn_team_id": "26",
       "name": "UCLA Bruins",
       "region": "East",
-      "seed": 7
+      "seed": 7,
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r32"
     }
   ],
   "players": [
@@ -336,3523 +446,4697 @@
       "espn_player_id": "5192142",
       "name": "Cedric Taylor III",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 19,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176075",
       "name": "Cam Gillus",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175065",
       "name": "Alex Cotton",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107986",
       "name": "Ose Okojie",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "4897768",
       "name": "Bryce Harris",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "5316220",
       "name": "Travelle Bryson",
       "espn_team_id": "47",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "5316216",
       "name": "Julian Johnson",
       "espn_team_id": "47",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5250600",
       "name": "Calvin Robins Jr.",
       "espn_team_id": "47",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5316219",
       "name": "Danas Kazakevicius",
       "espn_team_id": "47",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5316218",
       "name": "Jeremiah Johnson",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5316214",
       "name": "BJ Powell",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5243100",
       "name": "Isaiah Brown",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4898226",
       "name": "Ed Holland III",
       "espn_team_id": "47",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175737",
       "name": "Yaxel Lendeborg",
       "espn_team_id": "130",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 18,
+      "games_played": 6
     },
     {
       "espn_player_id": "4873153",
       "name": "Morez Johnson Jr.",
       "espn_team_id": "130",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12.83,
+      "games_played": 6
     },
     {
       "espn_player_id": "5174983",
       "name": "Aday Mara",
       "espn_team_id": "130",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 14.67,
+      "games_played": 6
     },
     {
       "espn_player_id": "4869764",
       "name": "Elliot Cadeau",
       "espn_team_id": "130",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12.33,
+      "games_played": 6
     },
     {
       "espn_player_id": "4433138",
       "name": "Nimari Burnett",
       "espn_team_id": "130",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 6
     },
     {
       "espn_player_id": "5244505",
       "name": "Oscar Goodman",
       "espn_team_id": "130",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 1.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "4684596",
       "name": "Will Tschetter",
       "espn_team_id": "130",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 1.67,
+      "games_played": 6
     },
     {
       "espn_player_id": "5311988",
       "name": "Malick Kordel",
       "espn_team_id": "130",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5239559",
       "name": "Howard Eisley Jr.",
       "espn_team_id": "130",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 4
     },
     {
       "espn_player_id": "5106648",
       "name": "Charlie May",
       "espn_team_id": "130",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5105836",
       "name": "Roddy Gayle Jr.",
       "espn_team_id": "130",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9,
+      "games_played": 6
     },
     {
       "espn_player_id": "5041954",
       "name": "Trey McKenney",
       "espn_team_id": "130",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 6
     },
     {
       "espn_player_id": "5314195",
       "name": "Francis Folefac",
       "espn_team_id": "2561",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 18,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107811",
       "name": "Brendan Coyle",
       "espn_team_id": "2561",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "4685004",
       "name": "Riley Mulvey",
       "espn_team_id": "2561",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242926",
       "name": "Gavin Doty",
       "espn_team_id": "2561",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242922",
       "name": "Justice Shoats",
       "espn_team_id": "2561",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314193",
       "name": "Christian Jones",
       "espn_team_id": "2561",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105337",
       "name": "Maliq Brown",
       "espn_team_id": "150",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6,
+      "games_played": 4
     },
     {
       "espn_player_id": "5041935",
       "name": "Cameron Boozer",
       "espn_team_id": "150",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 22.5,
+      "games_played": 4
     },
     {
       "espn_player_id": "5287474",
       "name": "Dame Sarr",
       "espn_team_id": "150",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5061585",
       "name": "Isaiah Evans",
       "espn_team_id": "150",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5041937",
       "name": "Cayden Boozer",
       "espn_team_id": "150",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12.5,
+      "games_played": 4
     },
     {
       "espn_player_id": "5144124",
       "name": "Nikolas Khamenia",
       "espn_team_id": "150",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 4
     },
     {
       "espn_player_id": "4873107",
       "name": "Darren Harris",
       "espn_team_id": "150",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 4
     },
     {
       "espn_player_id": "5237588",
       "name": "Jackson Rasmussen",
       "espn_team_id": "70",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108917",
       "name": "Brody Rowbury",
       "espn_team_id": "70",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5177021",
       "name": "Biko Johnson",
       "espn_team_id": "70",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176318",
       "name": "Kolton Mitchell",
       "espn_team_id": "70",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107768",
       "name": "Isaiah Brickner",
       "espn_team_id": "70",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241270",
       "name": "Ewan Steele",
       "espn_team_id": "70",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5174853",
       "name": "Seth Joba",
       "espn_team_id": "70",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176305",
       "name": "Miles Klapper",
       "espn_team_id": "70",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107563",
       "name": "Jack Payne",
       "espn_team_id": "70",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106590",
       "name": "Trevon Blassingame",
       "espn_team_id": "70",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "4902201",
       "name": "Aidan Sevilla",
       "espn_team_id": "70",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5313162",
       "name": "Will Jenson",
       "espn_team_id": "248",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105650",
       "name": "Tyler Linhardt",
       "espn_team_id": "248",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 13,
+      "games_played": 1
     },
     {
       "espn_player_id": "5313161",
       "name": "Talon Jenkins",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 18,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176303",
       "name": "Kristian Gonzalez",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107820",
       "name": "Titus Yearout",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16,
+      "games_played": 1
     },
     {
       "espn_player_id": "5142621",
       "name": "Chris Cenac Jr.",
       "espn_team_id": "248",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5060700",
       "name": "Joseph Tugler",
       "espn_team_id": "248",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5149077",
       "name": "Kingston Flemings",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5106272",
       "name": "Milos Uzan",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7,
+      "games_played": 3
     },
     {
       "espn_player_id": "5106058",
       "name": "Emanuel Sharp",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15,
+      "games_played": 3
     },
     {
       "espn_player_id": "5176274",
       "name": "Kalifa Sakho",
       "espn_team_id": "248",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 1.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5241642",
       "name": "Treyson Anderson",
       "espn_team_id": "2449",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 10,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314778",
       "name": "Trevian Carson",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241640",
       "name": "Andy Stefonowicz",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107273",
       "name": "Damari Wheeler-Thomas",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16,
+      "games_played": 1
     },
     {
       "espn_player_id": "4432494",
       "name": "Markhi Strickland",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314782",
       "name": "Caleb Schoenrock",
       "espn_team_id": "2449",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107278",
       "name": "Noah Feddersen",
       "espn_team_id": "2449",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314780",
       "name": "Riley Saunders",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314779",
       "name": "Riley Massey",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241641",
       "name": "Carson Smith",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108047",
       "name": "Max Majerle",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108046",
       "name": "Emil Skytta",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "4901166",
       "name": "Tay Smith",
       "espn_team_id": "2449",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5196931",
       "name": "Jordan Scott",
       "espn_team_id": "127",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105815",
       "name": "Jaxon Kohler",
       "espn_team_id": "127",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 11.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4872740",
       "name": "Coen Carr",
       "espn_team_id": "127",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 17,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105817",
       "name": "Carson Cooper",
       "espn_team_id": "127",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 14.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4711255",
       "name": "Jeremy Fears Jr.",
       "espn_team_id": "127",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 10.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5239564",
       "name": "Colin Walton",
       "espn_team_id": "127",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5239563",
       "name": "Brennan Walton",
       "espn_team_id": "127",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5239562",
       "name": "Jesse McCulloch",
       "espn_team_id": "127",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5101798",
       "name": "Cam Ward",
       "espn_team_id": "127",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105818",
       "name": "Nick Sanders",
       "espn_team_id": "127",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4873111",
       "name": "Kur Teng",
       "espn_team_id": "127",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4703411",
       "name": "Trey Fort",
       "espn_team_id": "127",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5182415",
       "name": "Augustus Gerhart",
       "espn_team_id": "219",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108877",
       "name": "Michael Zanoni",
       "espn_team_id": "219",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 20,
+      "games_played": 1
     },
     {
       "espn_player_id": "4684843",
       "name": "TJ Power",
       "espn_team_id": "219",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241732",
       "name": "AJ Levine",
       "espn_team_id": "219",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107164",
       "name": "Cam Thrower",
       "espn_team_id": "219",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314649",
       "name": "William Kruse",
       "espn_team_id": "219",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314648",
       "name": "Lucas Lueth",
       "espn_team_id": "219",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "5182416",
       "name": "Niklas Polonowski",
       "espn_team_id": "219",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108098",
       "name": "Johnnie Walter",
       "espn_team_id": "219",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314646",
       "name": "Dalton Scantlebury",
       "espn_team_id": "219",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241736",
       "name": "Michelangelo Oberti",
       "espn_team_id": "219",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314644",
       "name": "Jay Jones",
       "espn_team_id": "219",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241733",
       "name": "Alex Massung",
       "espn_team_id": "219",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314647",
       "name": "Payton Kamin",
       "espn_team_id": "356",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 29,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314645",
       "name": "Ryan Altman",
       "espn_team_id": "356",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241735",
       "name": "Bradyn Foster",
       "espn_team_id": "356",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108811",
       "name": "Ethan Roberts",
       "espn_team_id": "356",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 18,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107165",
       "name": "Chris Ubochi",
       "espn_team_id": "356",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 13,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241734",
       "name": "Dylan Williams",
       "espn_team_id": "356",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311832",
       "name": "David Mirkovic",
       "espn_team_id": "356",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8.4,
+      "games_played": 5
     },
     {
       "espn_player_id": "5176150",
       "name": "Jake Davis",
       "espn_team_id": "356",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2.2,
+      "games_played": 5
     },
     {
       "espn_player_id": "5214642",
       "name": "Tomislav Ivisic",
       "espn_team_id": "356",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 10.4,
+      "games_played": 5
     },
     {
       "espn_player_id": "5254165",
       "name": "Keaton Wagler",
       "espn_team_id": "356",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15.2,
+      "games_played": 5
     },
     {
       "espn_player_id": "4684269",
       "name": "Kylan Boswell",
       "espn_team_id": "356",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7,
+      "games_played": 5
     },
     {
       "espn_player_id": "5177736",
       "name": "Ben Humrichous",
       "espn_team_id": "356",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2.2,
+      "games_played": 5
     },
     {
       "espn_player_id": "5312350",
       "name": "Trey Simpson",
       "espn_team_id": "338",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5312348",
       "name": "Amir Taylor",
       "espn_team_id": "338",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 15,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242126",
       "name": "Braedan Lue",
       "espn_team_id": "338",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176187",
       "name": "Frankquon Sherman",
       "espn_team_id": "338",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 13,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176186",
       "name": "RJ Johnson",
       "espn_team_id": "338",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107296",
       "name": "Perry Smith Jr.",
       "espn_team_id": "338",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5312345",
       "name": "Kaden Rickard",
       "espn_team_id": "338",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176770",
       "name": "Jaden Harris",
       "espn_team_id": "338",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4703396",
       "name": "Graham Ike",
       "espn_team_id": "2250",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 16,
+      "games_played": 2
     },
     {
       "espn_player_id": "5313012",
       "name": "Mario Saint-Supery",
       "espn_team_id": "2250",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14,
+      "games_played": 2
     },
     {
       "espn_player_id": "4683147",
       "name": "Jalen Warley",
       "espn_team_id": "2250",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4432175",
       "name": "Adam Miller",
       "espn_team_id": "2250",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7,
+      "games_played": 2
     },
     {
       "espn_player_id": "5240587",
       "name": "Ismaila Diagne",
       "espn_team_id": "2250",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "5196913",
       "name": "Davis Fogle",
       "espn_team_id": "2250",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105672",
       "name": "Braeden Smith",
       "espn_team_id": "2250",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4700527",
       "name": "Tyon Grant-Foster",
       "espn_team_id": "2250",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5313013",
       "name": "Parker Jefferson",
       "espn_team_id": "2250",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176736",
       "name": "Victor Valdes",
       "espn_team_id": "2653",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 14,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176732",
       "name": "Thomas Dowd",
       "espn_team_id": "2653",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176735",
       "name": "Jerrell Bellamy",
       "espn_team_id": "2653",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5240746",
       "name": "Cobi Campbell",
       "espn_team_id": "2653",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5240745",
       "name": "Cooper Campbell",
       "espn_team_id": "2653",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5240748",
       "name": "Evan Griffin",
       "espn_team_id": "2653",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176731",
       "name": "Kerrington Kiel",
       "espn_team_id": "2653",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5113386",
       "name": "Corbin Green",
       "espn_team_id": "2653",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4897957",
       "name": "Theo Seng",
       "espn_team_id": "2653",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5313365",
       "name": "Javen Colbert",
       "espn_team_id": "2653",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5313364",
       "name": "Emmanuel Clarton",
       "espn_team_id": "2653",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5240749",
       "name": "Austin Cross",
       "espn_team_id": "2653",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176738",
       "name": "Kameryn Mitchell",
       "espn_team_id": "2653",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5313367",
       "name": "Hikaru Awata",
       "espn_team_id": "158",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5313366",
       "name": "Javier Gilgeous-Glasgow",
       "espn_team_id": "158",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 23,
+      "games_played": 1
     },
     {
       "espn_player_id": "5174982",
       "name": "Berke Buyuktuncel",
       "espn_team_id": "158",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4858604",
       "name": "Pryce Sandfort",
       "espn_team_id": "158",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 17.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "4592677",
       "name": "Rienk Mast",
       "espn_team_id": "158",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105825",
       "name": "Jamarques Lawrence",
       "espn_team_id": "158",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 3
     },
     {
       "espn_player_id": "4897432",
       "name": "Sam Hoiberg",
       "espn_team_id": "158",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5263670",
       "name": "Leo Curtis",
       "espn_team_id": "158",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5239573",
       "name": "Justin Bolis",
       "espn_team_id": "158",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5239571",
       "name": "Braden Frager",
       "espn_team_id": "158",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 10.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4702740",
       "name": "Jared Garcia",
       "espn_team_id": "158",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107204",
       "name": "Harry Rouhliadeff",
       "espn_team_id": "62",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105472",
       "name": "Isaac Finlinson",
       "espn_team_id": "62",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "4898118",
       "name": "Isaac Johnson",
       "espn_team_id": "62",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 15,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106877",
       "name": "Dre Bullock",
       "espn_team_id": "62",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "4701217",
       "name": "Hunter Erickson",
       "espn_team_id": "62",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175369",
       "name": "Gytis Nemeiksa",
       "espn_team_id": "62",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "4702598",
       "name": "Yacine Toumi",
       "espn_team_id": "62",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5254318",
       "name": "Hunter Carter",
       "espn_team_id": "62",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241895",
       "name": "AJ Economou",
       "espn_team_id": "62",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107841",
       "name": "Isaiah Kerr",
       "espn_team_id": "62",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105546",
       "name": "Malique Ewin",
       "espn_team_id": "8",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "4698719",
       "name": "Trevon Brazile",
       "espn_team_id": "8",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 11.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5142620",
       "name": "Darius Acuff Jr.",
       "espn_team_id": "8",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 29.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5060732",
       "name": "Billy Richmond III",
       "espn_team_id": "8",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5041951",
       "name": "Meleek Thomas",
       "espn_team_id": "8",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 19,
+      "games_played": 3
     },
     {
       "espn_player_id": "5101797",
       "name": "Isaiah Sealy",
       "espn_team_id": "8",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "4683777",
       "name": "D.J. Wagner",
       "espn_team_id": "8",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5242131",
       "name": "Owen Aquino",
       "espn_team_id": "2272",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5241592",
       "name": "Braden Hausen",
       "espn_team_id": "2272",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5108084",
       "name": "Terry Anderson",
       "espn_team_id": "2272",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 15,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107904",
       "name": "Rob Martin",
       "espn_team_id": "2272",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 26.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4896852",
       "name": "Scotty Washington",
       "espn_team_id": "2272",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5102797",
       "name": "Youssouf Singare",
       "espn_team_id": "2272",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "4432182",
       "name": "Cam'Ron Fletcher",
       "espn_team_id": "2272",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 19.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5174957",
       "name": "Conrad Martinez",
       "espn_team_id": "2272",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "4612709",
       "name": "Chase Johnston",
       "espn_team_id": "2272",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5312048",
       "name": "Aleksas Bieliauskas",
       "espn_team_id": "275",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5240971",
       "name": "Austin Rapp",
       "espn_team_id": "275",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5109019",
       "name": "Andrew Rohde",
       "espn_team_id": "275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5103630",
       "name": "John Blackwell",
       "espn_team_id": "275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 22,
+      "games_played": 1
     },
     {
       "espn_player_id": "4702654",
       "name": "Nick Boyd",
       "espn_team_id": "275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 27,
+      "games_played": 1
     },
     {
       "espn_player_id": "4895783",
       "name": "Nolan Winter",
       "espn_team_id": "275",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105820",
       "name": "Braeden Carrington",
       "espn_team_id": "275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175368",
       "name": "Lazar Djokovic",
       "espn_team_id": "2670",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105987",
       "name": "Barry Evans",
       "espn_team_id": "2670",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311890",
       "name": "Nyk Lewis",
       "espn_team_id": "2670",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 2
     },
     {
       "espn_player_id": "5239713",
       "name": "Brandon Jennings",
       "espn_team_id": "2670",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "4701030",
       "name": "Jadrian Tracey",
       "espn_team_id": "2670",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5174672",
       "name": "Michael Belle",
       "espn_team_id": "2670",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 2
     },
     {
       "espn_player_id": "5060712",
       "name": "Terrence Hill Jr.",
       "espn_team_id": "2670",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 25.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4684733",
       "name": "Tyrell Ward",
       "espn_team_id": "2670",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4873181",
       "name": "Jarin Stevenson",
       "espn_team_id": "153",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105571",
       "name": "Henri Veesaar",
       "espn_team_id": "153",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 26,
+      "games_played": 1
     },
     {
       "espn_player_id": "5312014",
       "name": "Luka Bogavac",
       "espn_team_id": "153",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5144097",
       "name": "Derek Dixon",
       "espn_team_id": "153",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "4712836",
       "name": "Seth Trimble",
       "espn_team_id": "153",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15,
+      "games_played": 1
     },
     {
       "espn_player_id": "4895793",
       "name": "Zayden High",
       "espn_team_id": "153",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5101669",
       "name": "Jonathan Powell",
       "espn_team_id": "153",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5093253",
       "name": "Kyan Evans",
       "espn_team_id": "153",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4711266",
       "name": "Jaydon Young",
       "espn_team_id": "153",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105855",
       "name": "Camden Heide",
       "espn_team_id": "251",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5239838",
       "name": "Matas Vokietaitis",
       "espn_team_id": "251",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 16.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105624",
       "name": "Jordan Pope",
       "espn_team_id": "251",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 13.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4848625",
       "name": "Dailyn Swain",
       "espn_team_id": "251",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 13.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4432243",
       "name": "Tramon Mark",
       "espn_team_id": "251",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 18,
+      "games_played": 3
     },
     {
       "espn_player_id": "5149083",
       "name": "Nic Codie",
       "espn_team_id": "251",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105486",
       "name": "Chendall Weaver",
       "espn_team_id": "251",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "4683785",
       "name": "Simeon Wilcher",
       "espn_team_id": "251",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5142718",
       "name": "AJ Dybantsa",
       "espn_team_id": "252",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 35,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105647",
       "name": "Keba Keita",
       "espn_team_id": "252",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "4685654",
       "name": "Kennard Davis Jr.",
       "espn_team_id": "252",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311908",
       "name": "Aleksej Kostic",
       "espn_team_id": "252",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5060709",
       "name": "Robert Wright III",
       "espn_team_id": "252",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14,
+      "games_played": 1
     },
     {
       "espn_player_id": "5262996",
       "name": "Dominique Diomande",
       "espn_team_id": "252",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5262601",
       "name": "Khadim Mboup",
       "espn_team_id": "252",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5243211",
-      "name": "Mihailo Bo\u0161kovic",
+      "name": "Mihailo Boškovic",
       "espn_team_id": "252",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5183975",
       "name": "Abdullah Ahmed",
       "espn_team_id": "252",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5243273",
       "name": "Shadrak Lasu",
       "espn_team_id": "112358",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314163",
       "name": "Jomo Goings",
       "espn_team_id": "112358",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5177096",
       "name": "Greg Gordon",
       "espn_team_id": "112358",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175029",
       "name": "Malachi Davis",
       "espn_team_id": "112358",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5122836",
       "name": "Jamal Fuller",
       "espn_team_id": "112358",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314165",
       "name": "Mason Porter-Brown",
       "espn_team_id": "112358",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 15,
+      "games_played": 1
     },
     {
       "espn_player_id": "5181768",
       "name": "Xinyi Li",
       "espn_team_id": "112358",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175939",
       "name": "Caleb Johnson",
       "espn_team_id": "112358",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "5121428",
       "name": "Isaiah Miranda",
       "espn_team_id": "112358",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314164",
       "name": "Max Ndlovu-Fraser",
       "espn_team_id": "112358",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5243274",
       "name": "Eddie Munyak",
       "espn_team_id": "112358",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5177262",
       "name": "Tre'shawn Sheppard",
       "espn_team_id": "112358",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4897671",
       "name": "A.J. Neal Jr.",
       "espn_team_id": "112358",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311896",
       "name": "Ivan Kharchenkov",
       "espn_team_id": "12",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12.4,
+      "games_played": 5
     },
     {
       "espn_player_id": "5041953",
       "name": "Koa Peat",
       "espn_team_id": "12",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 17.2,
+      "games_played": 5
     },
     {
       "espn_player_id": "5174954",
       "name": "Motiejus Krivas",
       "espn_team_id": "12",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 10.2,
+      "games_played": 5
     },
     {
       "espn_player_id": "5082206",
       "name": "Brayden Burries",
       "espn_team_id": "12",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16.8,
+      "games_played": 5
     },
     {
       "espn_player_id": "4432737",
       "name": "Jaden Bradley",
       "espn_team_id": "12",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 13.2,
+      "games_played": 5
     },
     {
       "espn_player_id": "5311897",
       "name": "Sidi Gueye",
       "espn_team_id": "12",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 2
     },
     {
       "espn_player_id": "5186456",
       "name": "Dwayne Aristode",
       "espn_team_id": "12",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 5
     },
     {
       "espn_player_id": "5105555",
       "name": "Tobe Awaka",
       "espn_team_id": "12",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8.2,
+      "games_played": 5
     },
     {
       "espn_player_id": "5239487",
       "name": "Sven Djopmo",
       "espn_team_id": "12",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5174956",
       "name": "Jackson Cook",
       "espn_team_id": "12",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5108141",
       "name": "Anthony Dell'Orso",
       "espn_team_id": "12",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 5
     },
     {
       "espn_player_id": "5105542",
       "name": "Jackson Francois",
       "espn_team_id": "12",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "4896359",
       "name": "Addison Arnold",
       "espn_team_id": "12",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "4702960",
       "name": "Evan Nelson",
       "espn_team_id": "12",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5190922",
       "name": "Hassane Diallo",
       "espn_team_id": "2504",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "4904928",
       "name": "Cory Wells",
       "espn_team_id": "2504",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "4904924",
       "name": "Corey Dunning",
       "espn_team_id": "2504",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176727",
       "name": "Dontae Horne",
       "espn_team_id": "2504",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "4904931",
       "name": "Lance Williams",
       "espn_team_id": "2504",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5247621",
       "name": "Keeshawn Mason",
       "espn_team_id": "2504",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314805",
       "name": "Elijah Mitchell",
       "espn_team_id": "2504",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314804",
       "name": "Jannoy Thomas",
       "espn_team_id": "2504",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4705371",
       "name": "Joey Madimba",
       "espn_team_id": "2504",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4703215",
       "name": "Tai'Reon Joseph",
       "espn_team_id": "2504",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16,
+      "games_played": 1
     },
     {
       "espn_player_id": "5174657",
       "name": "Alex Condon",
       "espn_team_id": "57",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 17,
+      "games_played": 2
     },
     {
       "espn_player_id": "5080489",
       "name": "Thomas Haugh",
       "espn_team_id": "57",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 16.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5174971",
       "name": "Rueben Chinyelu",
       "espn_team_id": "57",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 7,
+      "games_played": 2
     },
     {
       "espn_player_id": "5238195",
       "name": "Boogie Fland",
       "espn_team_id": "57",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107169",
       "name": "Xaivian Lee",
       "espn_team_id": "57",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 13.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5238201",
       "name": "Viktor Mikic",
       "espn_team_id": "57",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5184753",
       "name": "Olivier Rioux",
       "espn_team_id": "57",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108992",
       "name": "Micah Handlogten",
       "espn_team_id": "57",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5238200",
       "name": "Urban Klavzar",
       "espn_team_id": "57",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 2
     },
     {
       "espn_player_id": "5217184",
       "name": "CJ Ingram",
       "espn_team_id": "57",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175405",
       "name": "Alex Kovatchev",
       "espn_team_id": "57",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5174660",
       "name": "Cooper Josefsberg",
       "espn_team_id": "57",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5144372",
       "name": "Isaiah Brown",
       "espn_team_id": "57",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5041948",
       "name": "Alex Lloyd",
       "espn_team_id": "57",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242989",
       "name": "Antoine Lorick III",
       "espn_team_id": "2634",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 20,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105453",
       "name": "Jalen Pitre",
       "espn_team_id": "2634",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242985",
       "name": "Travis Harper II",
       "espn_team_id": "2634",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 13,
+      "games_played": 1
     },
     {
       "espn_player_id": "5182573",
       "name": "Aaron Nkrumah",
       "espn_team_id": "2634",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "4596531",
       "name": "Dante Harris",
       "espn_team_id": "2634",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242991",
       "name": "Kavien Jones",
       "espn_team_id": "2634",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242986",
       "name": "JC Brooks",
       "espn_team_id": "2634",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 1,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175727",
       "name": "Carlous Williams",
       "espn_team_id": "2634",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106807",
       "name": "Alex Garcia",
       "espn_team_id": "2634",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314353",
       "name": "Jabrion Spikes",
       "espn_team_id": "2634",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314352",
       "name": "Damon Howard Jr.",
       "espn_team_id": "2634",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5079838",
       "name": "Blake Buchanan",
       "espn_team_id": "66",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4870564",
       "name": "Joshua Jefferson",
       "espn_team_id": "66",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "4848637",
       "name": "Milan Momcilovic",
       "espn_team_id": "66",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 14.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5248302",
       "name": "Killyan Toure",
       "espn_team_id": "66",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5106254",
       "name": "Tamin Lipsey",
       "espn_team_id": "66",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5281369",
       "name": "Dominykas Pleta",
       "espn_team_id": "66",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5106790",
       "name": "Eric Mulder",
       "espn_team_id": "66",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311915",
       "name": "Anthony Rise",
       "espn_team_id": "66",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241380",
       "name": "Dominick Nelson",
       "espn_team_id": "66",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5217196",
       "name": "Jamarion Batemon",
       "espn_team_id": "66",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5175036",
       "name": "Cade Kelderman",
       "espn_team_id": "66",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4703912",
       "name": "Nate Heise",
       "espn_team_id": "66",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 17.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5177217",
       "name": "Carson Schwieger",
       "espn_team_id": "2511",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176801",
       "name": "Avantae Parker",
       "espn_team_id": "2511",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5240006",
       "name": "Yoav Berman",
       "espn_team_id": "2511",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176643",
       "name": "Nasir Mann",
       "espn_team_id": "2511",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 10,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107088",
       "name": "Chris Ashby",
       "espn_team_id": "2511",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314491",
       "name": "Kam Clark",
       "espn_team_id": "2511",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5240005",
       "name": "Maban Jabriel",
       "espn_team_id": "2511",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "4898223",
       "name": "Gus Larson",
       "espn_team_id": "2511",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314493",
       "name": "Tyler Crider",
       "espn_team_id": "2511",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314490",
       "name": "Reid Celestin",
       "espn_team_id": "2511",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5196932",
       "name": "Isaiah Henry",
       "espn_team_id": "2511",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5144110",
       "name": "Jordan Watford",
       "espn_team_id": "2511",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 10,
+      "games_played": 1
     },
     {
       "espn_player_id": "4897438",
       "name": "Trey Kaufman-Renn",
       "espn_team_id": "2509",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 18.5,
+      "games_played": 4
     },
     {
       "espn_player_id": "5174973",
       "name": "Oscar Cluff",
       "espn_team_id": "2509",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 10.5,
+      "games_played": 4
     },
     {
       "espn_player_id": "5175591",
       "name": "C.J. Cox",
       "espn_team_id": "2509",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5105854",
       "name": "Braden Smith",
       "espn_team_id": "2509",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5105853",
       "name": "Fletcher Loyer",
       "espn_team_id": "2509",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16,
+      "games_played": 4
     },
     {
       "espn_player_id": "4702975",
       "name": "Liam Murphy",
       "espn_team_id": "2509",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5144147",
       "name": "Daniel Jacobsen",
       "espn_team_id": "2509",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 1,
+      "games_played": 4
     },
     {
       "espn_player_id": "5312035",
       "name": "Omer Mayer",
       "espn_team_id": "2509",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5102618",
       "name": "Jack Benter",
       "espn_team_id": "2509",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5101658",
       "name": "Gicarri Harris",
       "espn_team_id": "2509",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5243230",
       "name": "Charles Johnston",
       "espn_team_id": "231",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 10,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176136",
       "name": "Cooper Bowser",
       "espn_team_id": "231",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314511",
       "name": "Alex Wilkins",
       "espn_team_id": "231",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176133",
       "name": "Eddrin Bronson",
       "espn_team_id": "231",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4896557",
       "name": "Tom House",
       "espn_team_id": "231",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107369",
       "name": "Ben Vander Wal",
       "espn_team_id": "231",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314509",
       "name": "Cole Bowser",
       "espn_team_id": "231",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314508",
       "name": "Abijah Franklin",
       "espn_team_id": "231",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4895755",
       "name": "Asa Thomas",
       "espn_team_id": "231",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4917149",
       "name": "Alex Karaban",
       "espn_team_id": "41",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 16.17,
+      "games_played": 6
     },
     {
       "espn_player_id": "5105809",
       "name": "Tarris Reed Jr.",
       "espn_team_id": "41",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 19.5,
+      "games_played": 6
     },
     {
       "espn_player_id": "5196916",
       "name": "Braylon Mullins",
       "espn_team_id": "41",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12.17,
+      "games_played": 6
     },
     {
       "espn_player_id": "4895737",
       "name": "Solo Ball",
       "espn_team_id": "41",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9.17,
+      "games_played": 6
     },
     {
       "espn_player_id": "4683861",
       "name": "Malachi Smith",
       "espn_team_id": "41",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 6
     },
     {
       "espn_player_id": "4895753",
       "name": "Jayden Ross",
       "espn_team_id": "41",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 6
     },
     {
       "espn_player_id": "5152763",
       "name": "Eric Reibe",
       "espn_team_id": "41",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 1,
+      "games_played": 6
     },
     {
       "espn_player_id": "5241657",
       "name": "Alec Millender",
       "espn_team_id": "41",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "5314627",
       "name": "Kellen Pickett",
       "espn_team_id": "2750",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "4707481",
       "name": "Michael Imariagbe",
       "espn_team_id": "2750",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 19,
+      "games_played": 1
     },
     {
       "espn_player_id": "5243109",
       "name": "Dominic Pangonis",
       "espn_team_id": "2750",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241483",
       "name": "TJ Burch",
       "espn_team_id": "2750",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15,
+      "games_played": 1
     },
     {
       "espn_player_id": "5177215",
       "name": "Solomon Callaghan",
       "espn_team_id": "2750",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 18,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241700",
       "name": "Andrea Holden",
       "espn_team_id": "2750",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 1,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314630",
       "name": "Michael Cooper",
       "espn_team_id": "2750",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 13,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106806",
       "name": "Logan Woods",
       "espn_team_id": "2750",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4898006",
       "name": "Sam Alamutu",
       "espn_team_id": "2750",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311846",
       "name": "Thijs De Ridder",
       "espn_team_id": "258",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 16,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311844",
       "name": "Johann Grunloh",
       "espn_team_id": "258",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5176232",
       "name": "Sam Lewis",
       "espn_team_id": "258",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105464",
       "name": "Dallin Hall",
       "espn_team_id": "258",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4683758",
       "name": "Malik Thomas",
       "espn_team_id": "258",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4703393",
       "name": "Devin Tillis",
       "espn_team_id": "258",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 1.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5037878",
       "name": "Ugonna Onyenso",
       "espn_team_id": "258",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 3,
+      "games_played": 2
     },
     {
       "espn_player_id": "5150404",
       "name": "Chance Mallory",
       "espn_team_id": "258",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107274",
       "name": "Jacari White",
       "espn_team_id": "258",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 18,
+      "games_played": 2
     },
     {
       "espn_player_id": "5239632",
       "name": "Joshua DeCady",
       "espn_team_id": "2275",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "4684984",
       "name": "Silas Sunday",
       "espn_team_id": "2275",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5236222",
       "name": "Preston Edmead",
       "espn_team_id": "2275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 24,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107198",
       "name": "Cruz Davis",
       "espn_team_id": "2275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105719",
       "name": "German Plotnikov",
       "espn_team_id": "2275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5312163",
       "name": "Victory Onuetu",
       "espn_team_id": "2275",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241495",
       "name": "Biggie Patterson",
       "espn_team_id": "2275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "4703169",
       "name": "Joshua Aaron Reaves",
       "espn_team_id": "2275",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5144139",
       "name": "London Jemison",
       "espn_team_id": "333",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5101833",
       "name": "Amari Allen",
       "espn_team_id": "333",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 3
     },
     {
       "espn_player_id": "4873184",
       "name": "Aiden Sherrell",
       "espn_team_id": "333",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 11.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "4873090",
       "name": "Labaron Philon Jr.",
       "espn_team_id": "333",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 24.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4702484",
       "name": "Latrell Wrightsell Jr.",
       "espn_team_id": "333",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5325011",
       "name": "Jacob Martin",
       "espn_team_id": "333",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "4685658",
       "name": "Taylor Bol Bowen",
       "espn_team_id": "333",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105668",
       "name": "Noah Williamson",
       "espn_team_id": "333",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 3.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5101656",
       "name": "Jalil Bethea",
       "espn_team_id": "333",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 3
     },
     {
       "espn_player_id": "4709141",
       "name": "Houston Mallette",
       "espn_team_id": "333",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 3
     },
     {
       "espn_player_id": "4433289",
       "name": "Preston Murphy Jr.",
       "espn_team_id": "333",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5241326",
       "name": "Bradey Henige",
       "espn_team_id": "2856",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5178211",
       "name": "Jonathan Griman",
       "espn_team_id": "2856",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5178207",
       "name": "Dominique Daniels Jr.",
       "espn_team_id": "2856",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 25,
+      "games_played": 1
     },
     {
       "espn_player_id": "4897936",
       "name": "Jayden Jackson",
       "espn_team_id": "2856",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "4702158",
       "name": "Martel Williams",
       "espn_team_id": "2856",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241323",
       "name": "Devon Malcolm",
       "espn_team_id": "2856",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175014",
       "name": "Thomas Ndong",
       "espn_team_id": "2856",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314832",
       "name": "Jordan Muller",
       "espn_team_id": "2856",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314830",
       "name": "Miles Daniels",
       "espn_team_id": "2856",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5044426",
       "name": "Flory Bidunga",
       "espn_team_id": "2305",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 2
     },
     {
       "espn_player_id": "5041958",
       "name": "Bryson Tiller",
       "espn_team_id": "2305",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 2
     },
     {
       "espn_player_id": "5177301",
       "name": "Melvin Council Jr.",
       "espn_team_id": "2305",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105643",
       "name": "Tre White",
       "espn_team_id": "2305",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 2
     },
     {
       "espn_player_id": "5041955",
       "name": "Darryn Peterson",
       "espn_team_id": "2305",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 24.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5281379",
       "name": "Paul Mbiya",
       "espn_team_id": "2305",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "5103571",
       "name": "Jamari McDowell",
       "espn_team_id": "2305",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "4872739",
       "name": "Elmarko Jackson",
       "espn_team_id": "2305",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 2
     },
     {
       "espn_player_id": "5108060",
       "name": "Amani Lyles",
       "espn_team_id": "2006",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 26,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176138",
       "name": "Zach Halligan",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108059",
       "name": "Tavari Johnson",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105847",
       "name": "Evan Mahaffey",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105840",
       "name": "Bowen Hardman",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241469",
       "name": "Rich Brisco",
       "espn_team_id": "2006",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105882",
       "name": "Chabi Barre",
       "espn_team_id": "2006",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5314282",
       "name": "Ognjen Stankovic",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241472",
       "name": "Conner Groce",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241471",
       "name": "Eric Mahaffey",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241470",
       "name": "Sharron Young",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176139",
       "name": "Marvin Musiime-Kamali",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106652",
       "name": "Shammah Scott",
       "espn_team_id": "2006",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 20,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107312",
       "name": "LeJuan Watts",
       "espn_team_id": "2641",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 15,
+      "games_played": 2
     },
     {
       "espn_player_id": "5061581",
       "name": "Luke Bamgboye",
       "espn_team_id": "2641",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 2
     },
     {
       "espn_player_id": "5221321",
       "name": "Jaylen Petty",
       "espn_team_id": "2641",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 16.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107355",
       "name": "Donovan Atwell",
       "espn_team_id": "2641",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 13.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5060701",
       "name": "Christian Anderson",
       "espn_team_id": "2641",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311930",
       "name": "Marial Akuentok",
       "espn_team_id": "2641",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5152656",
       "name": "Josiah Moseley",
       "espn_team_id": "2641",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 11,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311929",
       "name": "Nolan Groves",
       "espn_team_id": "2641",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5240271",
       "name": "Leon Horner",
       "espn_team_id": "2641",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "5240270",
       "name": "Jazz Henderson",
       "espn_team_id": "2641",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "5175077",
       "name": "Jack Francis",
       "espn_team_id": "2641",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5108120",
       "name": "Tyeree Bryan",
       "espn_team_id": "2641",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5315806",
       "name": "Tristan Smith",
       "espn_team_id": "2460",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241409",
       "name": "Will Hornseth",
       "espn_team_id": "2460",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 10,
+      "games_played": 1
     },
     {
       "espn_player_id": "4838704",
       "name": "Leon Bond III",
       "espn_team_id": "2460",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5241408",
       "name": "Max Weisbrod",
       "espn_team_id": "2460",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107887",
       "name": "Trey Campbell",
       "espn_team_id": "2460",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14,
+      "games_played": 1
     },
     {
       "espn_player_id": "5238171",
       "name": "Ismael Diouf",
       "espn_team_id": "2460",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176385",
       "name": "Kyle Pock",
       "espn_team_id": "2460",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4897480",
       "name": "Chase Courbat",
       "espn_team_id": "2460",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4897474",
       "name": "Ben Schwieger",
       "espn_team_id": "2460",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5315804",
       "name": "Geon Hutchins",
       "espn_team_id": "2460",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176384",
       "name": "RJ Taylor",
       "espn_team_id": "2460",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107889",
       "name": "Hunter Jacobson",
       "espn_team_id": "2460",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106283",
       "name": "Dillon Mitchell",
       "espn_team_id": "2599",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5106262",
       "name": "Zuby Ejiofor",
       "espn_team_id": "2599",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 16.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4565698",
       "name": "Bryce Hopkins",
       "espn_team_id": "2599",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 15.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105658",
       "name": "Dylan Darling",
       "espn_team_id": "2599",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105642",
       "name": "Oziyah Sellers",
       "espn_team_id": "2599",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5240539",
       "name": "Ruben Prey",
       "espn_team_id": "2599",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5145712",
       "name": "Lefteris Liotopoulos",
       "espn_team_id": "2599",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5142625",
       "name": "Joson Sanon",
       "espn_team_id": "2599",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 3
     },
     {
       "espn_player_id": "4869770",
       "name": "Ian Jackson",
       "espn_team_id": "2599",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 3
     },
     {
       "espn_player_id": "5105859",
       "name": "Antwone Woolfolk",
       "espn_team_id": "193",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5243053",
       "name": "Brant Byers",
       "espn_team_id": "193",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106674",
       "name": "Peter Suder",
       "espn_team_id": "193",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 27,
+      "games_played": 1
     },
     {
       "espn_player_id": "5101653",
       "name": "Luke Skaljac",
       "espn_team_id": "193",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5093252",
       "name": "Eian Elmer",
       "espn_team_id": "193",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176313",
       "name": "Almar Atlason",
       "espn_team_id": "193",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5313370",
       "name": "Justin Kirby",
       "espn_team_id": "193",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5313368",
       "name": "Trey Perry",
       "espn_team_id": "193",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5164559",
       "name": "Nate Ament",
       "espn_team_id": "2633",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 10.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5105841",
       "name": "Felix Okpara",
       "espn_team_id": "2633",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 10.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5093142",
       "name": "J.P. Estrella",
       "espn_team_id": "2633",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5107968",
       "name": "Ja'Kobi Gillespie",
       "espn_team_id": "2633",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5101648",
       "name": "Bishop Boswell",
       "espn_team_id": "2633",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5142710",
       "name": "DeWayne Brown II",
       "espn_team_id": "2633",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "4685687",
       "name": "Jaylen Carey",
       "espn_team_id": "2633",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5311527",
       "name": "Ethan Burg",
       "espn_team_id": "2633",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5311526",
       "name": "Troy Henderson",
       "espn_team_id": "2633",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 3
     },
     {
       "espn_player_id": "5196942",
       "name": "Clarence Massamba",
       "espn_team_id": "2633",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5196914",
       "name": "Amari Evans",
       "espn_team_id": "2633",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5105544",
       "name": "Amaree Abram",
       "espn_team_id": "2633",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105537",
       "name": "Shawn Phillips Jr.",
       "espn_team_id": "142",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5144166",
       "name": "T.O. Barrett",
       "espn_team_id": "142",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5037881",
       "name": "Trent Pierce",
       "espn_team_id": "142",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "4433285",
       "name": "Mark Mitchell Jr.",
       "espn_team_id": "142",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 19,
+      "games_played": 1
     },
     {
       "espn_player_id": "4432196",
       "name": "Jayden Stone",
       "espn_team_id": "142",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106269",
       "name": "Luke Northweather",
       "espn_team_id": "142",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5169569",
       "name": "Trent Burns",
       "espn_team_id": "142",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5144151",
       "name": "Nicholas Randall",
       "espn_team_id": "142",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5054085",
       "name": "Anthony Robinson II",
       "espn_team_id": "142",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "4432515",
       "name": "Jacob Crews",
       "espn_team_id": "142",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105798",
       "name": "Malik Reneau",
       "espn_team_id": "2390",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 20,
+      "games_played": 2
     },
     {
       "espn_player_id": "5101809",
       "name": "Shelton Henderson",
       "espn_team_id": "2390",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 16.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5106261",
       "name": "Ernest Udeh Jr.",
       "espn_team_id": "2390",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 3,
+      "games_played": 2
     },
     {
       "espn_player_id": "5142709",
       "name": "Dante Allen",
       "espn_team_id": "2390",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4837356",
       "name": "Tre Donaldson",
       "espn_team_id": "2390",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15,
+      "games_played": 2
     },
     {
       "espn_player_id": "5281366",
       "name": "Timotej Malovec",
       "espn_team_id": "2390",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311986",
       "name": "Noam Dovrat",
       "espn_team_id": "2390",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "4845368",
       "name": "Tru Washington",
       "espn_team_id": "2390",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 10,
+      "games_played": 2
     },
     {
       "espn_player_id": "4917097",
       "name": "Robbie Avila",
       "espn_team_id": "139",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5239707",
       "name": "Amari McCottry",
       "espn_team_id": "139",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 14,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175171",
       "name": "Quentin Jones",
       "espn_team_id": "139",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107242",
       "name": "Dion Brown",
       "espn_team_id": "139",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 13,
+      "games_played": 1
     },
     {
       "espn_player_id": "4711258",
       "name": "Trey Green",
       "espn_team_id": "139",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5183809",
       "name": "Ishan Sharma",
       "espn_team_id": "139",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107797",
       "name": "Paul Otieno",
       "espn_team_id": "139",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "4685659",
       "name": "Brady Dunlap",
       "espn_team_id": "139",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105980",
       "name": "Kellen Thames",
       "espn_team_id": "139",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311928",
       "name": "Xavier Edmonds",
       "espn_team_id": "2628",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5164368",
       "name": "David Punch",
       "espn_team_id": "2628",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5037876",
       "name": "Micah Robinson",
       "espn_team_id": "2628",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 18,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105619",
       "name": "Jayden Pierre",
       "espn_team_id": "2628",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5103589",
       "name": "Brock Harding",
       "espn_team_id": "2628",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242117",
       "name": "Vianney Salatchoum",
       "espn_team_id": "2628",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5245624",
       "name": "Liutauras Lelevicius",
       "espn_team_id": "2628",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1,
+      "games_played": 1
     },
     {
       "espn_player_id": "5179086",
       "name": "Ashton Simmons",
       "espn_team_id": "2628",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175042",
       "name": "RJ Jones",
       "espn_team_id": "2628",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105461",
       "name": "Tanner Toolson",
       "espn_team_id": "2628",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5101787",
       "name": "Kayden Edwards",
       "espn_team_id": "2628",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5101654",
       "name": "Jace Posey",
       "espn_team_id": "2628",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "4873209",
       "name": "Patrick Ngongba II",
       "espn_team_id": "150",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 4.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4888720",
       "name": "Jack Scott",
       "espn_team_id": "150",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4432321",
       "name": "Cameron Sheffield",
       "espn_team_id": "150",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4593815",
       "name": "Rashaun Agee",
       "espn_team_id": "245",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311530",
-      "name": "Rub\u00e9n Dominguez",
+      "name": "Rubén Dominguez",
       "espn_team_id": "245",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176153",
       "name": "Marcus Hill",
       "espn_team_id": "245",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106285",
       "name": "Pop Isaacs",
       "espn_team_id": "245",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "4683682",
       "name": "Rylan Griffen",
       "espn_team_id": "245",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5101692",
       "name": "Jamie Vinson",
       "espn_team_id": "245",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5061578",
       "name": "Chris McDermott",
       "espn_team_id": "245",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "4683146",
       "name": "Zach Clemence",
       "espn_team_id": "245",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176160",
       "name": "Josh Holloway",
       "espn_team_id": "245",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107078",
       "name": "Jacari Lane",
       "espn_team_id": "245",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1,
+      "games_played": 1
     },
     {
       "espn_player_id": "4896862",
       "name": "Ali Dibba",
       "espn_team_id": "245",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5101660",
       "name": "Chase McCarty",
       "espn_team_id": "248",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 7.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5117524",
       "name": "Cedric Lath",
       "espn_team_id": "248",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5095062",
       "name": "Jacob McFarland",
       "espn_team_id": "248",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5041942",
       "name": "Isiah Harwell",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4873086",
       "name": "Mercy Miller",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "4708176",
       "name": "Ramon Walker Jr.",
       "espn_team_id": "248",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 1,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311969",
       "name": "Vangelis Zougris",
       "espn_team_id": "97",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5242127",
       "name": "Adrian Wooley",
       "espn_team_id": "97",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 17,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107157",
       "name": "Ryan Conwell",
       "espn_team_id": "97",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 21,
+      "games_played": 1
     },
     {
       "espn_player_id": "4712845",
       "name": "Isaac McKneely",
       "espn_team_id": "97",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "4702784",
       "name": "J'Vonne Hadley",
       "espn_team_id": "97",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311967",
       "name": "Sananda Fru",
       "espn_team_id": "97",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "4873187",
       "name": "Khani Rooths",
       "espn_team_id": "97",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4589481",
       "name": "Kasean Pryor",
       "espn_team_id": "97",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4702739",
       "name": "Aly Khalifa",
       "espn_team_id": "97",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5174946",
       "name": "Kobe Rodgers",
       "espn_team_id": "97",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "4610138",
       "name": "Denham Wojcik",
       "espn_team_id": "127",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 2
     },
     {
       "espn_player_id": "5176787",
       "name": "Emmanuel Innocenti",
       "espn_team_id": "2250",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "5174851",
       "name": "Keyshawn Mitchell",
       "espn_team_id": "2670",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5117584",
       "name": "Jordann Dumont",
       "espn_team_id": "2670",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311892",
       "name": "Jordan Tillery",
       "espn_team_id": "2670",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "4869778",
       "name": "Ahmad Nowell",
       "espn_team_id": "2670",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5174665",
       "name": "Zvonimir Ivisic",
       "espn_team_id": "356",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 2,
+      "games_played": 4
     },
     {
       "espn_player_id": "5311835",
       "name": "Mihailo Petrovic",
       "espn_team_id": "356",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311834",
       "name": "Blake Fagbemi",
       "espn_team_id": "356",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311833",
       "name": "Brandon Lee",
       "espn_team_id": "356",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5175007",
       "name": "Andrej Stojakovic",
       "espn_team_id": "356",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 15,
+      "games_played": 4
     },
     {
       "espn_player_id": "5121952",
       "name": "AJ Redd",
       "espn_team_id": "356",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5114350",
       "name": "AK Okereke",
       "espn_team_id": "238",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "4838721",
       "name": "Tyler Nickel",
       "espn_team_id": "238",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 16,
+      "games_played": 1
     },
     {
       "espn_player_id": "4791227",
       "name": "Devin McGlockton",
       "espn_team_id": "238",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5187600",
       "name": "Tyler Tanner",
       "espn_team_id": "238",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 27,
+      "games_played": 1
     },
     {
       "espn_player_id": "4702049",
       "name": "Duke Miles",
       "espn_team_id": "238",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9,
+      "games_played": 1
     },
     {
       "espn_player_id": "4433625",
       "name": "Jalen Washington",
       "espn_team_id": "238",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311759",
       "name": "Chandler Bing",
       "espn_team_id": "238",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105827",
       "name": "Cale Jacobsen",
       "espn_team_id": "158",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 2
     },
     {
       "espn_player_id": "5106755",
       "name": "Vincent Brady II",
       "espn_team_id": "2272",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176283",
       "name": "Cam Manyawu",
       "espn_team_id": "2294",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 3.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "4873203",
       "name": "Cooper Koch",
       "espn_team_id": "2294",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 9.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5241364",
       "name": "Bennett Stirtz",
       "espn_team_id": "2294",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 19,
+      "games_played": 3
     },
     {
       "espn_player_id": "5241363",
       "name": "Tavion Banks",
       "espn_team_id": "2294",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 9,
+      "games_played": 3
     },
     {
       "espn_player_id": "5176280",
       "name": "Kael Combs",
       "espn_team_id": "2294",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5177211",
       "name": "Alvaro Folgueiras",
       "espn_team_id": "2294",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 10,
+      "games_played": 3
     },
     {
       "espn_player_id": "5311843",
       "name": "Trevin Jirak",
       "espn_team_id": "2294",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5311842",
       "name": "Tate Sage",
       "espn_team_id": "2294",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 10.33,
+      "games_played": 3
     },
     {
       "espn_player_id": "5241366",
       "name": "Isaia Howard",
       "espn_team_id": "2294",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 2.67,
+      "games_played": 3
     },
     {
       "espn_player_id": "5195079",
       "name": "Adlan Elamin",
       "espn_team_id": "328",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "4896363",
       "name": "Zach Keller",
       "espn_team_id": "328",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107864",
       "name": "Mason Falslev",
       "espn_team_id": "328",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 8,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105494",
       "name": "Drake Allen",
       "espn_team_id": "328",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105401",
       "name": "MJ Collins Jr.",
       "espn_team_id": "328",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5176273",
       "name": "Karson Templin",
       "espn_team_id": "328",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5108973",
       "name": "Garry Clark",
       "espn_team_id": "328",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 13,
+      "games_played": 1
     },
     {
       "espn_player_id": "5255260",
       "name": "Elijah Perryman",
       "espn_team_id": "328",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105604",
       "name": "Kolby King",
       "espn_team_id": "328",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "5281347",
       "name": "Andrija Jelavic",
       "espn_team_id": "96",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5101849",
       "name": "Malachi Moreno",
       "espn_team_id": "96",
-      "position": "C"
+      "position": "C",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "5238207",
       "name": "Collin Chandler",
       "espn_team_id": "96",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "5106270",
       "name": "Otega Oweh",
       "espn_team_id": "96",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 18,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105527",
       "name": "Denzel Aberdeen",
       "espn_team_id": "96",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 20,
+      "games_played": 1
     },
     {
       "espn_player_id": "4895780",
       "name": "Mouhamed Dioubate",
       "espn_team_id": "96",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 4,
+      "games_played": 1
     },
     {
       "espn_player_id": "4711306",
       "name": "Brandon Garrison",
       "espn_team_id": "96",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 1,
+      "games_played": 1
     },
     {
       "espn_player_id": "5095153",
       "name": "Jasper Johnson",
       "espn_team_id": "96",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "4873183",
       "name": "Kam Williams",
       "espn_team_id": "96",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "4711304",
       "name": "Xavier Booker",
       "espn_team_id": "26",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 13,
+      "games_played": 1
     },
     {
       "espn_player_id": "5107782",
       "name": "Donovan Dent",
       "espn_team_id": "26",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105794",
       "name": "Skyy Clark",
       "espn_team_id": "26",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 11,
+      "games_played": 1
     },
     {
       "espn_player_id": "5060706",
       "name": "Trent Perry",
       "espn_team_id": "26",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "4610012",
       "name": "Eric Dailey Jr.",
       "espn_team_id": "26",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 12,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105417",
       "name": "Steven Jamerson II",
       "espn_team_id": "26",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 2,
+      "games_played": 1
     },
     {
       "espn_player_id": "5177743",
       "name": "Jamar Brown",
       "espn_team_id": "26",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5174981",
       "name": "Brandon Williams",
       "espn_team_id": "26",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 3,
+      "games_played": 1
     },
     {
       "espn_player_id": "5149633",
       "name": "Eric Freeny",
       "espn_team_id": "26",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5105640",
       "name": "Jack Seidler",
       "espn_team_id": "26",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "4703011",
       "name": "Dwayne Koroma",
       "espn_team_id": "41",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5307570",
-      "name": "Uro\u0161 Paunovic",
+      "name": "Uroš Paunovic",
       "espn_team_id": "41",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5248294",
       "name": "Jacob Furphy",
       "espn_team_id": "41",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5054083",
       "name": "Silas Demary Jr.",
       "espn_team_id": "41",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 4.8,
+      "games_played": 5
     },
     {
       "espn_player_id": "5107197",
       "name": "Sadiku Ibine Ayo",
       "espn_team_id": "2599",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 0,
+      "games_played": 1
     },
     {
       "espn_player_id": "5291864",
       "name": "Kohl Rosario",
       "espn_team_id": "2305",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5,
+      "games_played": 1
     },
     {
       "espn_player_id": "4703887",
       "name": "Nick Pringle",
       "espn_team_id": "8",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 6,
+      "games_played": 1
     },
     {
       "espn_player_id": "4711256",
       "name": "Caleb Foster",
       "espn_team_id": "150",
-      "position": "G"
+      "position": "G",
+      "avg_ppg": 5.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4685647",
       "name": "Jaylin Stewart",
       "espn_team_id": "41",
-      "position": "F"
+      "position": "F",
+      "avg_ppg": 1.75,
+      "games_played": 4
     }
   ],
   "game_stats": [
