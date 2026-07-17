@@ -108,12 +108,18 @@ async function purgeFictionalPool() {
   if (selError) throw new Error(`select fictional players: ${selError.message}`);
 
   const fictionalPlayerIds = (fictionalPlayers ?? []).map((p) => p.id);
-  if (fictionalPlayerIds.length > 0) {
-    const { error } = await db.from('game_scores').delete().in('player_id', fictionalPlayerIds);
-    if (error) throw new Error(`delete fictional game_scores: ${error.message}`);
-
-    const { error: playersDeleteError } = await db.from('players').delete().in('id', fictionalPlayerIds);
-    if (playersDeleteError) throw new Error(`delete fictional players: ${playersDeleteError.message}`);
+  // Batched: a single .in() with 300+ UUIDs serializes into the request URL
+  // and can exceed the server's max URI length ("URI too long").
+  const BATCH = 100;
+  for (let i = 0; i < fictionalPlayerIds.length; i += BATCH) {
+    const batch = fictionalPlayerIds.slice(i, i + BATCH);
+    const { error } = await db.from('game_scores').delete().in('player_id', batch);
+    if (error) throw new Error(`delete fictional game_scores (batch ${i}): ${error.message}`);
+  }
+  for (let i = 0; i < fictionalPlayerIds.length; i += BATCH) {
+    const batch = fictionalPlayerIds.slice(i, i + BATCH);
+    const { error } = await db.from('players').delete().in('id', batch);
+    if (error) throw new Error(`delete fictional players (batch ${i}): ${error.message}`);
   }
   console.log(`  removed ${fictionalPlayerIds.length} fictional players (+ their game_scores)`);
 
