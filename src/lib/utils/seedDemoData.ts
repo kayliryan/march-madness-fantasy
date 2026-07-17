@@ -16,37 +16,6 @@ const SLOT_POSITIONS: Record<SlotKey, 'G' | 'F' | 'C'> = {
 const SEED_BRACKET_ORDER = [1, 16, 8, 9, 5, 12, 4, 13, 6, 11, 3, 14, 7, 10, 2, 15];
 const BRACKET_ROUNDS: RoundStage[] = ['r64', 'r32', 's16', 'e8', 'f4', 'championship'];
 
-const PLAYABLE_ROUND_STAGES = ROUND_STAGE_ORDER.filter(
-  (s) => s !== 'draft' && s !== 'play_in'
-);
-
-function roundsPlayed(eliminatedIn: RoundStage | null): RoundStage[] {
-  if (eliminatedIn === 'play_in') return ['play_in'];
-  if (!eliminatedIn) return PLAYABLE_ROUND_STAGES;
-  const idx = ROUND_STAGE_ORDER.indexOf(eliminatedIn);
-  return PLAYABLE_ROUND_STAGES.filter((r) => ROUND_STAGE_ORDER.indexOf(r) <= idx);
-}
-
-// Deterministic points: avg_ppg * round_multiplier with minor seed-based variance.
-// These multipliers are the "fixture" calibrated in Section 14.10 — do not adjust at runtime.
-const ROUND_POINT_MULTIPLIERS: Record<string, number> = {
-  play_in: 0.9, r64: 1.0, r32: 1.05, s16: 1.1, e8: 1.15, f4: 1.2, championship: 1.25,
-};
-function gamePoints(avgPpg: number, seed: number, round: RoundStage): number {
-  const variance = 1 - (seed - 1) * 0.005;
-  return Math.round(avgPpg * (ROUND_POINT_MULTIPLIERS[round] ?? 1.0) * variance);
-}
-
-const GAME_DATES: Record<string, string> = {
-  play_in: '2026-03-19',
-  r64: '2026-03-21',
-  r32: '2026-03-23',
-  s16: '2026-03-27',
-  e8: '2026-03-29',
-  f4: '2026-04-05',
-  championship: '2026-04-07',
-};
-
 type PlayerRow = {
   id: string;
   name: string;
@@ -55,11 +24,6 @@ type PlayerRow = {
   team_id: string;
   teams: { seed: number; region: string } | { seed: number; region: string }[] | null;
 };
-
-function getTeamMeta(p: PlayerRow): { seed: number; region: string } | null {
-  if (!p.teams) return null;
-  return Array.isArray(p.teams) ? (p.teams[0] ?? null) : p.teams;
-}
 
 type SlotEntry = {
   league_id: string;
@@ -458,41 +422,29 @@ export async function seedDemoLeagueData(
     }).eq('id', activeDraftedPlayer.id);
   }
 
-  // ── 8. game_scores for full tournament play_in through championship (player-scoped) ──
-  // Returns IDs needed to link scoring_events below — avoids a second SELECT round-trip.
+  // ── 8. game_scores for drafted players ──
+  // These are NOT generated here. For the real-2026 player pool, every real
+  // player's actual per-round tournament results are already sitting in
+  // game_scores (seeded once, season-wide, by seed-full-2026-tournament.ts —
+  // see that script's header for why: game_scores has no league_id column,
+  // it's global per season, so any league drafting from this pool reads the
+  // same rows real production would have written via the live ESPN sync).
+  // We just read back whichever rows belong to the players this simulated
+  // draft actually picked, so scoring_events below reflects what really
+  // happened in the tournament rather than a synthetic formula.
   const t8 = Date.now();
-  const gameScoresInput: Record<string, unknown>[] = [];
-  for (const playerId of usedPlayerIds) {
-    const player = players.find((p) => p.id === playerId);
-    if (!player) continue;
-    const elim = teamElimMap.get(player.team_id) ?? null;
-    const seed = getTeamMeta(player)?.seed ?? 8;
-
-    for (const round of roundsPlayed(elim)) {
-      gameScoresInput.push({
-        player_id: playerId,
-        season,
-        round_stage: round,
-        round_number: 1,
-        game_date: GAME_DATES[round],
-        game_status: 'final',
-        points: gamePoints(player.avg_ppg, seed, round),
-        source: 'manual',
-        synced_at: new Date().toISOString(),
-      });
-    }
-  }
-
   const allInsertedGameScores: InsertedGameScore[] = [];
-  for (let i = 0; i < gameScoresInput.length; i += 100) {
+  const usedPlayerIdList = [...usedPlayerIds];
+  for (let i = 0; i < usedPlayerIdList.length; i += 100) {
     const { data, error } = await supabaseAdmin
       .from('game_scores')
-      .upsert(gameScoresInput.slice(i, i + 100), { onConflict: 'player_id,round_stage,round_number,game_date' })
-      .select('id, player_id, round_stage, points');
-    if (error) throw new Error(`seedDemoLeagueData: failed to upsert game_scores: ${error.message}`);
+      .select('id, player_id, round_stage, points')
+      .eq('season', season)
+      .in('player_id', usedPlayerIdList.slice(i, i + 100));
+    if (error) throw new Error(`seedDemoLeagueData: failed to read game_scores: ${error.message}`);
     if (data) allInsertedGameScores.push(...(data as InsertedGameScore[]));
   }
-  console.log(`[seedDemo] 8. game_scores: ${Date.now() - t8}ms (${allInsertedGameScores.length} rows)`);
+  console.log(`[seedDemo] 8. game_scores (read real results): ${Date.now() - t8}ms (${allInsertedGameScores.length} rows)`);
 
   // ── 9. Compute scoring_events in memory, then bulk insert ──
   // Replicates ScoreAccumulator._runForGamesInternal logic: a slot credits a game score
