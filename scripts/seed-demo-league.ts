@@ -43,12 +43,12 @@ async function run() {
   console.log('👤 Creating demo users...');
   for (const u of DEMO_USERS) {
     // user_id is a valid API param but not in TS types — cast to bypass
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await db.auth.admin.createUser({
       user_id: u.id,
       email: u.email,
       email_confirm: true,
       user_metadata: { display_name: u.display_name },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     if (error && !error.message.includes('already been registered') && !error.message.includes('already exists')) {
       console.warn(`  ⚠ User ${u.email}: ${error.message}`);
