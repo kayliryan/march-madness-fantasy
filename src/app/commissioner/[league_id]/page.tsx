@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase/client';
 import AppHeader from '@/components/AppHeader';
@@ -20,6 +21,7 @@ import type {
   League,
   LeagueMember,
   Player,
+  SendInviteResponse,
   UpdateMemberRoleResponse,
 } from '@/lib/types';
 
@@ -39,6 +41,41 @@ const ROLE_LABELS: Record<LeagueMember['role'], string> = {
   co_commissioner: 'Co-Commissioner',
   member: 'Member',
 };
+
+// Category C (demo experience spec, Section 3): demo leagues suppress the real
+// email dispatch but still generate a real, working invite link. This row
+// discloses that plainly and lets the commissioner copy the link to hand to a
+// second (anonymous) member. Matches the pattern already used in
+// LeagueInviteModal's CopyLinkRow.
+function CopyLinkRow({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(url).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="mt-2">
+      <p className="mb-1.5 text-sm text-neutral-400">
+        Invite link generated — email delivery is simulated in demo mode. Copy the link below to
+        test joining as a second member.
+      </p>
+      <div className="flex items-center gap-2 rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5">
+        <span className="flex-1 truncate text-xs text-neutral-400">{url}</span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="shrink-0 text-neutral-400 hover:text-yellow-400"
+          aria-label="Copy invite link"
+        >
+          {copied ? <Check className="size-4 text-green-400" /> : <Copy className="size-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function CommissionerPage() {
   const params = useParams<{ league_id: string }>();
@@ -107,8 +144,12 @@ export default function CommissionerPage() {
   const [inviteSending, setInviteSending] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+  // Set only when the just-created invite came back with email_stub (demo leagues) —
+  // the real, working invite link to disclose and let the commissioner copy.
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [resendingToken, setResendingToken] = useState<string | null>(null);
   const [cancelingToken, setCancelingToken] = useState<string | null>(null);
+  const [copiedInviteToken, setCopiedInviteToken] = useState<string | null>(null);
 
   // Member role management state
   const [roleChangingUserId, setRoleChangingUserId] = useState<string | null>(null);
@@ -465,6 +506,7 @@ export default function CommissionerPage() {
     setInviteSending(true);
     setInviteError(null);
     setInviteSuccess(null);
+    setInviteUrl(null);
     try {
       const res = await fetch('/api/league/invite', {
         method: 'POST',
@@ -475,7 +517,14 @@ export default function CommissionerPage() {
         const err = await res.json();
         setInviteError(err.error ?? 'Failed to send invite.');
       } else {
-        setInviteSuccess(`Invite sent to ${email}.`);
+        const data: SendInviteResponse = await res.json();
+        if (data.email_stub && data.invite_url) {
+          // Demo league: no email was actually sent — disclose the stub and
+          // surface the real invite link instead of a false "Invite sent" claim.
+          setInviteUrl(data.invite_url);
+        } else {
+          setInviteSuccess(`Invite sent to ${email}.`);
+        }
         setInviteEmail('');
         await loadInvites();
       }
@@ -484,6 +533,14 @@ export default function CommissionerPage() {
     } finally {
       setInviteSending(false);
     }
+  }
+
+  async function handleCopyInviteLink(invite: InviteListItem) {
+    await navigator.clipboard.writeText(invite.invite_url).catch(() => {});
+    setCopiedInviteToken(invite.token);
+    setTimeout(() => {
+      setCopiedInviteToken((prev) => (prev === invite.token ? null : prev));
+    }, 2000);
   }
 
   async function handleResendInvite(invite: InviteListItem) {
@@ -822,6 +879,13 @@ export default function CommissionerPage() {
                           <span className="rounded bg-yellow-400/10 px-2 py-0.5 text-xs text-yellow-400">Pending</span>
                           <button
                             type="button"
+                            onClick={() => handleCopyInviteLink(invite)}
+                            className="rounded-md border border-neutral-700 px-2 py-1 text-xs font-medium text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400"
+                          >
+                            {copiedInviteToken === invite.token ? 'Copied!' : 'Copy link'}
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleResendInvite(invite)}
                             disabled={resendingToken === invite.token}
                             className="rounded-md border border-neutral-700 px-2 py-1 text-xs font-medium text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400 disabled:opacity-50"
@@ -898,6 +962,7 @@ export default function CommissionerPage() {
                   </button>
                 </form>
                 {inviteSuccess && <p className="mt-2 text-sm text-green-400">{inviteSuccess}</p>}
+                {inviteUrl && <CopyLinkRow url={inviteUrl} />}
                 {inviteError && <p className="mt-2 text-sm text-red-400">{inviteError}</p>}
               </>
             )}

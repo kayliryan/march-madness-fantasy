@@ -14,18 +14,18 @@ const STACK = [
 const HOW_IT_WORKS = [
   {
     step: '1',
-    title: 'Draft against 4 bots',
-    body: 'Click "Explore as Commissioner" and you\'re instantly in a live 5-team snake draft — no signup, no waiting on other players.',
+    title: 'Land as commissioner, instantly',
+    body: 'Click "Explore as Commissioner" and you\'re dropped into a fully-seeded 8-team league — a complete season already drafted and scored through the Elite 8 — no signup.',
   },
   {
     step: '2',
-    title: 'Set your lineup, simulate the bracket',
-    body: 'Arrange starters vs. bench, then step round-by-round through a real single-elimination tournament simulation.',
+    title: 'Run your own live snake draft',
+    body: 'Start a real snake draft against 7 auto-drafting opponents in one click, with the Claude-powered draft advisor in your corner the whole way.',
   },
   {
     step: '3',
-    title: 'Watch scoring and standings react',
-    body: 'Eliminations, bench promotions, and an AI-generated recap update live — the same engine that runs real leagues.',
+    title: 'Explore the commissioner toolkit',
+    body: 'Round-by-round scoring, bench overrides, injury subs, and an AI-generated standings recap — the exact same commissioner tools a real logged-in league uses, not a stripped-down demo version.',
   },
 ];
 
@@ -38,7 +38,7 @@ const FEATURES = [
   {
     icon: <TrendingUp className="w-6 h-6 text-yellow-400" />,
     title: 'Real Bracket Simulation',
-    body: 'Scoring is driven by an actual single-elimination bracket sim — not independent coin flips — so eliminations and fantasy points stay consistent with each other.',
+    body: 'Demo and mock-draft seasons are simulated as a true single-elimination bracket — not independent coin flips — so every elimination and fantasy point traces back to one consistent simulated game.',
   },
   {
     icon: <Bot className="w-6 h-6 text-yellow-400" />,
@@ -156,6 +156,12 @@ export default function Home() {
             Create an account
           </Link>{' '}
           and invite your friends.
+        </p>
+        <p className="mt-3 text-xs text-neutral-600">
+          Just want to poke at the draft room by itself?{' '}
+          <Link href="/demo/draft" className="underline hover:text-neutral-400">
+            Try the standalone mock draft
+          </Link>
         </p>
       </div>
     </div>

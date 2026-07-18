@@ -56,8 +56,9 @@ export async function POST(request: NextRequest) {
         draft_session_id,
         access_token: session.access_token,
         // Not part of the Section 14.2 DemoSession shape — included so the browser's
-        // Supabase client (localStorage-based, separate from the cookie session set
-        // above) can call setSession() and act as the provisioned commissioner.
+        // Supabase client (cookie-based via createBrowserClient, separate from the
+        // server cookie session set above) can call setSession() and act as the
+        // provisioned commissioner.
         refresh_token: session.refresh_token,
         expires_at,
       },
