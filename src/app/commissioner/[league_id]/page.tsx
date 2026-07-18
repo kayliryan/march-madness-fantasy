@@ -36,6 +36,19 @@ const ROUND_STAGE_LABELS: Record<string, string> = {
   championship: 'Championship',
 };
 
+// "4m ago" / "3h ago" / "2d ago" for the score-sync heartbeat line.
+function formatAgo(iso: string): string {
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 48) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+// The sync cron currently runs daily (Vercel Hobby); anything past ~26h means
+// a run was missed and the heartbeat should read as a warning, not a status.
+const SYNC_STALE_AFTER_MS = 26 * 60 * 60 * 1000;
+
 const ROLE_LABELS: Record<LeagueMember['role'], string> = {
   commissioner: 'Commissioner',
   co_commissioner: 'Co-Commissioner',
@@ -92,6 +105,9 @@ export default function CommissionerPage() {
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
   const [demoBannerDismissed, setDemoBannerDismissed] = useState(false);
+  const [scoreSyncStatus, setScoreSyncStatus] = useState<
+    { agoLabel: string; stale: boolean } | null | undefined
+  >(undefined);
   const [savingOrder, setSavingOrder] = useState(false);
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [startingDraft, setStartingDraft] = useState(false);
@@ -156,6 +172,34 @@ export default function CommissionerPage() {
   const [memberActionError, setMemberActionError] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<LeagueMember | null>(null);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+
+  // Score-sync heartbeat (sync_heartbeats is readable by any authenticated
+  // session; written only by the sync-scores cron). undefined = still loading,
+  // null = no successful run recorded yet. Staleness/label are computed here,
+  // at fetch time, so render stays pure (react-hooks/purity).
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('sync_heartbeats')
+      .select('last_success_at')
+      .eq('job_name', 'sync-scores')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (!data?.last_success_at) {
+          setScoreSyncStatus(null);
+          return;
+        }
+        const elapsed = Date.now() - new Date(data.last_success_at).getTime();
+        setScoreSyncStatus({
+          agoLabel: formatAgo(data.last_success_at),
+          stale: elapsed > SYNC_STALE_AFTER_MS,
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -680,7 +724,32 @@ export default function CommissionerPage() {
       <div className="px-4 py-8">
       <div className="mx-auto max-w-3xl">
         <h1 className="mb-1 text-2xl font-bold text-white sm:text-3xl">Commissioner Tools</h1>
-        <p className="mb-6 text-neutral-500">{league?.name} · Season {league?.season}</p>
+        <p className="mb-2 text-neutral-500">{league?.name} · Season {league?.season}</p>
+
+        {/* Score-sync heartbeat — a silently-dead cron should be visible here in
+            minutes, not discovered days later when standings stop moving. */}
+        {scoreSyncStatus !== undefined && (
+          <p className="mb-6 flex items-center gap-1.5 text-xs text-neutral-500">
+            {scoreSyncStatus === null ? (
+              <>
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />
+                Score sync: no runs recorded yet
+              </>
+            ) : scoreSyncStatus.stale ? (
+              <>
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" />
+                <span className="text-yellow-400">
+                  Scores last synced {scoreSyncStatus.agoLabel} — sync may be stalled
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Scores last synced {scoreSyncStatus.agoLabel}
+              </>
+            )}
+          </p>
+        )}
 
         {/* Demo league banner */}
         {league?.is_demo && !demoBannerDismissed && (

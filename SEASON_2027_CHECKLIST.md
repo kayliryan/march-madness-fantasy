@@ -111,9 +111,11 @@ Also in the same work package:
 - `export const maxDuration = 300` (Pro) on the sync route, and batch the per-game upserts
   (currently one awaited upsert per player-game — an r64 Thursday is ~16 games × ~15 scorers,
   and the current N+1 pattern risks a mid-run timeout leaving a **partially updated leaderboard**).
-- A visible heartbeat: write `last_successful_sync_at` somewhere queryable and surface it on the
-  commissioner page ("Scores last synced 3m ago"), so a dead cron is noticed by a human in
-  minutes, not days.
+- ~~A visible heartbeat~~ — **DONE (2026-07-18)**: `sync_heartbeats` table (migration
+  `20260718000002`), written by the sync-scores cron on every successful run, surfaced on the
+  commissioner page as "Scores last synced Xm ago" with an amber "sync may be stalled" state
+  past 26h. When the cron cadence changes to 5 minutes for the live tournament, drop
+  `SYNC_STALE_AFTER_MS` in `src/app/commissioner/[league_id]/page.tsx` to ~15 minutes.
 
 ### 1.2 Scheduler (pick one, set it up in advance)
 

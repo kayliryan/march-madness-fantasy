@@ -30,6 +30,8 @@ When any tradeoff comes up, decide against these two goals.
 | `83af4bc` | **Demo UX:** disclosed invite-email stub + copyable invite links (was a false "Invite sent"); localStorage session persistence ("Return to your demo league" instead of silently re-provisioning); spec-exact CTA copy; truthful HOW_IT_WORKS/FEATURES |
 | `9571c92` | **Authz hardening:** explicit role checks on 3 commissioner routes; bench-order ownership check; co-commissioner RLS for bench_orders incl. the SELECT-policy-for-RETURNING fix |
 | (docs commit) | CLAUDE.md refresh, README rewrite (portfolio front door), `SEASON_2027_CHECKLIST.md`, CHALLENGES.md entries 13–15, this file |
+| `86b20c0` | **Dataset completed:** the 13 missing games (all 4 First Four + 9 r64) discovered via ESPN scoreboard sweep and merged — 68 teams / 718 players / 67 games with completeness assertions; ESPN API confirmed directly reachable locally |
+| (heartbeat commit) | `sync_heartbeats` table + cron write + commissioner-page "Scores last synced Xm ago" indicator (checklist Part 1.1 monitoring item) |
 
 Four new migrations: `20260717000001` (RPC lockdown), `20260717000002` (AI caps),
 `20260718000001` (bench_orders co-commissioner RLS) — plus everything earlier. All applied

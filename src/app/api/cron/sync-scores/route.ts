@@ -270,5 +270,24 @@ export async function GET(request: NextRequest) {
     .eq('job_name', JOB_NAME)
     .eq('locked_by', instanceId);
 
+  // Heartbeat: record the successful run so the commissioner page can show
+  // "Scores last synced Xm ago" — a silently-dead cron (bad secret, scheduler
+  // misconfig, provider returning nothing) is otherwise invisible until
+  // someone wonders why standings stopped moving. Best-effort: a heartbeat
+  // write failure must not fail the sync itself.
+  try {
+    await supabaseAdmin.from('sync_heartbeats').upsert(
+      {
+        job_name: JOB_NAME,
+        last_success_at: new Date().toISOString(),
+        last_result: { in_progress: anyInProgress },
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'job_name' }
+    );
+  } catch (err) {
+    console.error('[sync-scores] heartbeat write failed:', err);
+  }
+
   return NextResponse.json({ ok: true, in_progress: anyInProgress });
 }
