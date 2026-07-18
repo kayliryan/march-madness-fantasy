@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 const JOB_NAME = 'demo_cleanup';
 
@@ -14,6 +14,10 @@ async function releaseCronLock(jobName: string): Promise<void> {
 // leagues whose anonymous commissioner session has been auto-deleted by Supabase's
 // 24-hour anonymous user expiry (or abandoned), and which aren't mid-draft.
 export async function GET(request: NextRequest) {
+  if (!process.env.CRON_SECRET) {
+    console.error('[demo-cleanup] CRON_SECRET not configured');
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  }
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

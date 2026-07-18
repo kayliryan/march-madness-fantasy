@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { ESPNStatsProvider } from '@/lib/providers/stats/ESPNStatsProvider';
 import { ScoreAccumulator } from '@/lib/services/ScoreAccumulator';
 import { RosterActivationService } from '@/lib/services/RosterActivationService';
@@ -17,6 +17,10 @@ const PLAYABLE_STAGES = ROUND_STAGE_ORDER.filter((s) => s !== 'draft') as RoundS
 
 export async function GET(request: NextRequest) {
   // Auth: Vercel calls with Authorization: Bearer {CRON_SECRET}
+  if (!process.env.CRON_SECRET) {
+    console.error('[sync-scores] CRON_SECRET not configured');
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  }
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

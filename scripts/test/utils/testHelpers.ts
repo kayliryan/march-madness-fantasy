@@ -597,6 +597,90 @@ export async function getAuthCookieHeader(email: string, password: string): Prom
   return [...jar.entries()].map(([name, value]) => `${name}=${value}`).join('; ');
 }
 
+// ── getTeamIdsForPlayers ─────────────────────────────────────────────────
+
+/** Looks up the distinct team_ids for a set of player_ids — used with withTeamsRestored. */
+export async function getTeamIdsForPlayers(playerIds: string[]): Promise<string[]> {
+  if (playerIds.length === 0) return [];
+  const { data, error } = await db.from('players').select('team_id').in('id', playerIds);
+  if (error) throw new Error(`getTeamIdsForPlayers: query failed: ${error.message}`);
+  return [...new Set((data ?? []).map((p) => p.team_id as string))];
+}
+
+// ── withTeamsRestored ────────────────────────────────────────────────────
+
+interface TeamEliminationSnapshot {
+  id: string;
+  is_eliminated: boolean;
+  eliminated_in_round_stage: string | null;
+  eliminated_in_round_number: number | null;
+}
+
+/**
+ * Temporarily un-eliminates the given teams (is_eliminated=false,
+ * eliminated_in_round_stage=null, eliminated_in_round_number=null) for the
+ * duration of `fn`, then restores each team's exact prior state — even if `fn`
+ * throws.
+ *
+ * Why this exists: `teams` is a season-scoped table shared across every league
+ * and test run (see the `advanceRound` doc comment above — it deliberately
+ * mutates shared `teams`/`game_scores` rows and is never cleaned up). By the
+ * time most tests run, nearly every season-2026 team is already marked
+ * eliminated, either by real tournament progress or by prior advanceRound()
+ * calls. BenchOrderService.resolveNext excludes bench players whose team
+ * `is_eliminated = true` (see src/lib/services/BenchOrderService.ts), so tests
+ * that draft arbitrary seeded players and then expect a bench substitution to
+ * succeed need their specific players' teams to be genuinely alive for the
+ * duration of that check — without permanently altering shared elimination
+ * state that other tests / the local demo league's display depend on.
+ *
+ * Scope this narrowly: only pass the team_ids of the specific test league's
+ * drafted roster, and only wrap the exact section that calls the sub/resolve
+ * logic — never leave teams un-eliminated outside the wrapper.
+ */
+export async function withTeamsRestored<T>(teamIds: string[], fn: () => Promise<T>): Promise<T> {
+  if (teamIds.length === 0) return fn();
+
+  const { data: snapshot, error: snapshotErr } = await db
+    .from('teams')
+    .select('id, is_eliminated, eliminated_in_round_stage, eliminated_in_round_number')
+    .in('id', teamIds);
+  if (snapshotErr) {
+    throw new Error(`withTeamsRestored: failed to snapshot teams: ${snapshotErr.message}`);
+  }
+  const rows = (snapshot ?? []) as TeamEliminationSnapshot[];
+
+  const { error: clearErr } = await db
+    .from('teams')
+    .update({ is_eliminated: false, eliminated_in_round_stage: null, eliminated_in_round_number: null })
+    .in('id', teamIds);
+  if (clearErr) {
+    throw new Error(`withTeamsRestored: failed to clear elimination state: ${clearErr.message}`);
+  }
+
+  try {
+    return await fn();
+  } finally {
+    for (const row of rows) {
+      const { error: restoreErr } = await db
+        .from('teams')
+        .update({
+          is_eliminated: row.is_eliminated,
+          eliminated_in_round_stage: row.eliminated_in_round_stage,
+          eliminated_in_round_number: row.eliminated_in_round_number,
+        })
+        .eq('id', row.id);
+      if (restoreErr) {
+        // Best effort — throwing here would mask fn()'s own error/result and leave
+        // remaining teams unrestored. Log loudly instead.
+        console.error(
+          `withTeamsRestored: failed to restore team ${row.id} to its prior elimination state: ${restoreErr.message}`
+        );
+      }
+    }
+  }
+}
+
 // ── setSubmittedBenchOrder ───────────────────────────────────────────────
 
 export interface SetSubmittedBenchOrderOptions {
@@ -755,16 +839,94 @@ export async function assertLeaderboard(options: AssertLeaderboardOptions): Prom
 // ── cleanupTestLeague ────────────────────────────────────────────────────
 
 /**
- * Deletes all league-scoped rows for `league_id` via the delete_orphaned_demo_leagues
- * RPC (migration 20260608000017) — despite the "demo" name, it accepts any league_ids
- * array and performs the full FK-safe deletion: scoring_events, timer_extensions,
- * draft_picks, draft_queues, roster_slots, bench_orders, leaderboard_snapshots,
+ * Deletes all league-scoped rows for `league_id` directly via the service-role
+ * client, in the same FK-safe order as the delete_orphaned_demo_leagues RPC
+ * (migration 20260608000017): scoring_events, timer_extensions, draft_picks,
+ * draft_queues, roster_slots, bench_orders, leaderboard_snapshots,
  * league_notifications, league_invites, league_members, draft_sessions, leagues.
+ *
+ * Does NOT go through the delete_orphaned_demo_leagues RPC itself: as of migration
+ * 20260717000001 that RPC filters its input down to is_demo = true leagues (defense
+ * in depth against ever mass-deleting real leagues), and createTestLeague() never
+ * sets is_demo — test leagues are ordinary (non-demo) leagues, so routing cleanup
+ * through the RPC would now silently no-op. Deleting directly via `db` (service
+ * role, bypasses RLS) sidesteps that guard for test-only data.
+ *
+ * Does NOT delete: game_scores, players, teams (season-scoped shared fixtures used
+ * by other leagues/tests), or the auth/public.users rows created by createTestLeague.
+ */
+function isForeignKeyViolation(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === '23503' || /violates foreign key constraint/i.test(error.message ?? '');
+}
+
+/** One FK-safe pass over every league-scoped table. Safe to call more than once
+ *  for the same league_id — deleting rows that no longer exist is a no-op. */
+async function deleteLeagueRowsOnce(league_id: string): Promise<void> {
+  function fail(table: string, error: { message: string } | null): void {
+    if (error) throw new Error(`cleanupTestLeague: delete from ${table} failed: ${error.message}`);
+  }
+
+  const { data: sessions } = await db.from('draft_sessions').select('id').eq('league_id', league_id);
+  const sessionIds = (sessions ?? []).map((s) => s.id as string);
+  if (sessionIds.length > 0) {
+    fail('timer_extensions', (await db.from('timer_extensions').delete().in('draft_session_id', sessionIds)).error);
+  }
+
+  fail('draft_picks', (await db.from('draft_picks').delete().eq('league_id', league_id)).error);
+  fail('draft_queues', (await db.from('draft_queues').delete().eq('league_id', league_id)).error);
+  fail('scoring_events', (await db.from('scoring_events').delete().eq('league_id', league_id)).error);
+  fail('roster_slots', (await db.from('roster_slots').delete().eq('league_id', league_id)).error);
+  fail('bench_orders', (await db.from('bench_orders').delete().eq('league_id', league_id)).error);
+  fail('leaderboard_snapshots', (await db.from('leaderboard_snapshots').delete().eq('league_id', league_id)).error);
+  fail('league_notifications', (await db.from('league_notifications').delete().eq('league_id', league_id)).error);
+  fail('league_invites', (await db.from('league_invites').delete().eq('league_id', league_id)).error);
+  fail('league_members', (await db.from('league_members').delete().eq('league_id', league_id)).error);
+  fail('draft_sessions', (await db.from('draft_sessions').delete().eq('league_id', league_id)).error);
+  fail('leagues', (await db.from('leagues').delete().eq('id', league_id)).error);
+}
+
+/**
+ * Deletes all league-scoped rows for `league_id`, in the same FK-safe order as
+ * the delete_orphaned_demo_leagues RPC (migration 20260608000017): scoring_events,
+ * timer_extensions, draft_picks, draft_queues, roster_slots, bench_orders,
+ * leaderboard_snapshots, league_notifications, league_invites, league_members,
+ * draft_sessions, leagues.
+ *
+ * Does NOT go through the delete_orphaned_demo_leagues RPC itself: as of migration
+ * 20260717000001 that RPC filters its input down to is_demo = true leagues (defense
+ * in depth against ever mass-deleting real leagues), and createTestLeague() never
+ * sets is_demo — test leagues are ordinary (non-demo) leagues, so routing cleanup
+ * through the RPC would now silently no-op. Deleting directly via `db` (service
+ * role, bypasses RLS) sidesteps that guard for test-only data.
+ *
+ * Retries the whole pass on a foreign-key-violation error: several API routes kick
+ * off a fire-and-forget recompute AFTER their HTTP response returns (e.g. POST
+ * /api/commissioner/injury-sub -> ScoreAccumulator.runForPlayer, POST
+ * /api/commissioner/pick/void -> ScoreAccumulator.runForLeague, POST
+ * /api/league/[league_id]/scores/manual -> runForGames) — that background work has
+ * no bound on when it finishes inserting new scoring_events / leaderboard_snapshots
+ * rows relative to when the calling test proceeds to cleanupTestLeague, so a fresh
+ * row can appear after an earlier delete in this same pass has already run. A single
+ * fixed statement order can't fully close that window, so on an FK violation we
+ * simply re-run the whole (idempotent) pass — deletes for tables already emptied by
+ * the prior pass are no-ops — until it succeeds or we give up.
  *
  * Does NOT delete: game_scores, players, teams (season-scoped shared fixtures used
  * by other leagues/tests), or the auth/public.users rows created by createTestLeague.
  */
 export async function cleanupTestLeague(league_id: string): Promise<void> {
-  const { error } = await db.rpc('delete_orphaned_demo_leagues', { p_league_ids: [league_id] });
-  if (error) throw new Error(`cleanupTestLeague: delete_orphaned_demo_leagues failed: ${error.message}`);
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      await deleteLeagueRowsOnce(league_id);
+      return;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!isForeignKeyViolation({ message }) || attempt === MAX_ATTEMPTS) {
+        throw err;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+    }
+  }
 }
