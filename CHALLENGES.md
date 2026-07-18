@@ -162,3 +162,45 @@ Each entry: what broke, how it was found, root cause, the fix, and the takeaway.
 **Fix:** Search the response's content array for an actual text block instead of assuming its position; if none exists, log the response's shape (stop reason + content block types) and return an honest error instead of a silent empty success.
 
 **Takeaway:** The worst failure mode isn't an error — it's a "successful" response with nothing useful in it and nothing logged to explain why. Any code that assumes a specific shape from an external API's response should verify that shape, especially when the fallback path (an empty/default value) looks superficially fine and won't visibly break anything downstream.
+
+---
+
+## 13. Every SECURITY DEFINER function was publicly callable — including "delete any league"
+
+**What broke:** Six Postgres functions (`delete_orphaned_demo_leagues`, `provision_demo_league`, `acquire_cron_lock`, and three others) were directly callable by anyone holding the public anon key, via PostgREST's `POST /rest/v1/rpc/<name>`. The worst one accepted an array of league ids and deleted every league-scoped row for them — picks, rosters, scores, members — with no `is_demo` check, so a single unauthenticated request could permanently destroy any real league.
+
+**How it was found:** A structured security audit that enumerated every `SECURITY DEFINER` function against a simple question: "who can execute this, and what does it trust its caller about?" — followed by `grep -rni revoke supabase/migrations/` returning nothing.
+
+**Root cause:** Postgres grants EXECUTE on newly created functions to `PUBLIC` by default. Every function had been written assuming its only caller was the service-role cron/API code — and that assumption was true of the app code, but nothing enforced it at the database layer. `SECURITY DEFINER` made it worse: the functions run as their owner, bypassing RLS entirely regardless of who calls them.
+
+**Fix:** A migration revoking EXECUTE from `PUBLIC`/`anon`/`authenticated` on all six (service-role callers unaffected), plus defense in depth: the delete function now filters its input to `is_demo = true` rows itself, so even a trusted caller can't mass-delete real leagues through it. A regression test asserts the anon client gets `42501` on every one of them and that a non-demo league survives the RPC even when called with service role.
+
+**Takeaway:** RLS policies are not the whole database attack surface — functions have their own grant model with a permissive default. Any `SECURITY DEFINER` function should either derive identity from `auth.uid()` internally (like `get_my_league_ids` correctly does) or have its EXECUTE revoked from every PostgREST-reachable role. "Only our server calls this" is an assumption until a REVOKE makes it a fact.
+
+---
+
+## 14. The demo's primary CTA was one data-reseed away from crashing — because an ESPN fetch silently stopped at 55 of 68 teams
+
+**What broke:** `POST /api/demo/provision` — the endpoint behind the homepage's main "Explore as Commissioner" button — 500'd on every call against the real-2026 dataset: `Cannot read properties of undefined (reading 'seed')` inside the bracket simulator.
+
+**How it was found:** Not by testing provisioning directly — by running an unrelated concurrency test that happened to provision a league as setup. Production wasn't affected *yet* (verified live: 200 in 9.4s) purely because prod still ran the older complete fictional dataset; seeding the real data to prod — the explicit plan — would have taken the primary CTA down.
+
+**Root cause:** Two compounding issues. (1) The resumable, rate-limit-tolerant ESPN fetch for the real 2026 tournament stopped early and nothing ever asserted the team count — the dataset shipped with 55 of 68 teams and gaps in every region's seed list. (2) The demo seeder builds its bracket field by *filtering out* missing seeds, and the round simulator paired adjacent teams with no handling for an odd-length field, so `alive[i+1]` was `undefined`.
+
+**Fix:** Byes in `simulateBracketRound` (an unpaired team advances), unit-tested against the exact 55-team shape, so provisioning works on any field. The data gap itself is tracked separately — and the 2027 seed script now has an explicit requirement to assert 68 teams and print a region×seed table, because "the fetch completed" and "the fetch fetched everything" are different claims.
+
+**Takeaway:** Resumable ingestion needs a completeness assertion at the end, or partial data becomes permanent silently. And downstream code that consumes "should always be complete" data is exactly where a defensive invariant (handle the odd case, don't index blindly) pays for itself — the crash surfaced months after the data bug that caused it, in a different part of the codebase.
+
+---
+
+## 15. Co-commissioner writes passed INSERT RLS but failed anyway — because RETURNING needs the SELECT policy too
+
+**What broke:** After extending the `bench_orders` INSERT/UPDATE policies so co-commissioners could manage other members' bench orders, the route still failed for co-commissioners with an RLS violation — despite the write policies clearly allowing the row.
+
+**How it was found:** Reproduced in psql: the identical `INSERT` succeeded *without* `RETURNING` and failed *with* it. The route uses supabase-js's `.insert(...).select().single()`, which compiles to `INSERT ... RETURNING`.
+
+**Root cause:** Postgres evaluates the `SELECT` policy on rows returned by `RETURNING`. The pre-existing SELECT policy only granted non-owners read access via `leagues.commissioner_id` (or after lock) — so a co-commissioner could *write* the row but not *see it back*, and the whole statement failed. The original task only called for updating the two write policies; the failure was in a policy nobody was "changing."
+
+**Fix:** The same co-commissioner branch added to the SELECT policy, plus a regression test that exercises the full route path (insert-with-returning as a co-commissioner) rather than just the policy in isolation.
+
+**Takeaway:** RLS policies interact per-statement, not per-verb: any write that returns rows needs SELECT to pass too. Testing a policy change means driving the real query shape the app uses (supabase-js's `.select()` chaining changes the SQL), not a hand-written approximation of it.
