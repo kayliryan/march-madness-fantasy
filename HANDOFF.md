@@ -32,6 +32,8 @@ When any tradeoff comes up, decide against these two goals.
 | (docs commit) | CLAUDE.md refresh, README rewrite (portfolio front door), `SEASON_2027_CHECKLIST.md`, CHALLENGES.md entries 13–15, this file |
 | `86b20c0` | **Dataset completed:** the 13 missing games (all 4 First Four + 9 r64) discovered via ESPN scoreboard sweep and merged — 68 teams / 718 players / 67 games with completeness assertions; ESPN API confirmed directly reachable locally |
 | (heartbeat commit) | `sync_heartbeats` table + cron write + commissioner-page "Scores last synced Xm ago" indicator (checklist Part 1.1 monitoring item) |
+| `b3072d9` | **ESPN client library** (`src/lib/providers/stats/espnClient.ts`) — discovery/box-score/status parsing for the future live provider, validated by replaying all 67 real 2026 games (`scripts/test/validate-espn-client-2026.ts`, network test). The replay found and fixed 6 games of WRONG box-score data in the dataset (57 bad lines). NOT wired into the live sync path — in_progress/scheduled mapping still needs the Nov-2026 shadow sync. |
+| `49653a4` | **Dash-policy fix in `getRoundCell`** (user-reported screenshot bug): within an owned window cells are never "—" — score / strikethrough / 0 / Elim; bench post-release now renders Elim like starters (promotions masked by per-player merge preference). New suite `unit-round-cell-semantics.ts`. |
 
 Four new migrations: `20260717000001` (RPC lockdown), `20260717000002` (AI caps),
 `20260718000001` (bench_orders co-commissioner RLS) — plus everything earlier. All applied
