@@ -1,10 +1,18 @@
 import { v5 as uuidv5 } from 'uuid';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { fisherYatesShuffle } from '@/lib/utils/shuffle';
 import { seedDemoLeagueData } from '@/lib/utils/seedDemoData';
 
 const DEMO_MEMBER_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 const DEMO_SEASON = 2026;
+
+// Step-timing logs are noisy in normal operation; gate them behind an env flag.
+// The total-elapsed log stays unconditional — it's genuinely useful in prod logs
+// even without the per-step breakdown.
+const DEBUG = process.env.DEMO_PROVISION_DEBUG === 'true';
+function debugLog(...args: unknown[]): void {
+  if (DEBUG) console.log(...args);
+}
 
 const AI_MEMBER_NAMES = [
   'Coach Bot', 'Draft King', 'Bracket Buster', 'Rim Protector',
@@ -38,7 +46,7 @@ export const DemoProvisioningService = {
         })
       )
     );
-    console.log(`[demo/provision] Step 0 createUsers (parallel): ${Date.now() - tCreateUsers}ms`);
+    debugLog(`[demo/provision] Step 0 createUsers (parallel): ${Date.now() - tCreateUsers}ms`);
 
     const firstCreateError = createResults.find((r) => r.error)?.error;
     if (firstCreateError) {
@@ -48,7 +56,12 @@ export const DemoProvisioningService = {
       throw firstCreateError;
     }
 
-    // Steps 1, 2, 4: Atomic Postgres transaction via RPC
+    // Steps 1, 2, 4: Atomic Postgres transaction via RPC. This cannot overlap with
+    // step 0 above — the RPC's p_ai_member_ids FK-references the users rows that
+    // step 0 creates (via the auth trigger mirroring auth.users into public.users),
+    // so it must run after step 0 resolves, not concurrently with it. Nothing else
+    // in this function is independent of the RPC either: seedDemoLeagueData below
+    // needs the league_id/draft_session_id the RPC returns.
     const tRpc = Date.now();
     let league_id: string;
     let draft_session_id: string;
@@ -69,7 +82,7 @@ export const DemoProvisioningService = {
       );
       throw error;
     }
-    console.log(`[demo/provision] Step 1-2 provision_demo_league RPC: ${Date.now() - tRpc}ms`);
+    debugLog(`[demo/provision] Step 1-2 provision_demo_league RPC: ${Date.now() - tRpc}ms`);
 
     // Step 3: Seed in-season tournament state (idempotent upserts, outside transaction)
     const tSeed = Date.now();
@@ -86,7 +99,7 @@ export const DemoProvisioningService = {
       );
       throw error;
     }
-    console.log(`[demo/provision] Step 3 seedDemoLeagueData: ${Date.now() - tSeed}ms`);
+    debugLog(`[demo/provision] Step 3 seedDemoLeagueData: ${Date.now() - tSeed}ms`);
     console.log(`[demo/provision] Total provision(): ${Date.now() - t0}ms`);
 
     return { league_id, draft_session_id };
