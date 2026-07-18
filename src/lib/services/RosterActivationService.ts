@@ -1,9 +1,13 @@
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { BenchOrderService } from './BenchOrderService';
 import { ScoreAccumulator } from './ScoreAccumulator';
 import type { LeagueSettings } from '@/lib/types';
 
 const RETRY_DELAYS_MS = [1000, 4000, 16000];
+
+// PostgREST/Kong enforce a request-line length limit, so .in() filters with large
+// ID arrays must be chunked (same convention as ScoreAccumulator).
+const IN_FILTER_CHUNK_SIZE = 100;
 
 async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T | null> {
   for (let attempt = 0; attempt < RETRY_DELAYS_MS.length + 1; attempt++) {
@@ -161,12 +165,72 @@ export const RosterActivationService = {
     for (const league_id of league_ids) {
       const { data: leagueRow } = await supabaseAdmin
         .from('leagues')
-        .select('settings')
+        .select('settings, season')
         .eq('id', league_id)
         .single();
 
       if (!leagueRow) continue;
       const settings = leagueRow.settings as LeagueSettings;
+
+      // For end_of_round leagues nothing releases eliminated starters mid-round
+      // (activateImmediate only runs for 'immediate' leagues), so perform the
+      // release here first: find active, unreleased starter slots whose player's
+      // team is eliminated and release them exactly the way activateImmediate
+      // does — released_at_round_stage is the team's actual elimination round
+      // (not the batch's next_round_stage), so the elimination round itself
+      // stops scoring per the strict `game < release` boundary.
+      const { data: eliminatedTeams } = await supabaseAdmin
+        .from('teams')
+        .select('id, eliminated_in_round_stage')
+        .eq('season', leagueRow.season)
+        .eq('is_eliminated', true);
+
+      const elimStageByTeamId = new Map<string, string | null>(
+        (eliminatedTeams ?? []).map((t: { id: string; eliminated_in_round_stage: string | null }) => [
+          t.id,
+          t.eliminated_in_round_stage,
+        ])
+      );
+
+      if (elimStageByTeamId.size > 0) {
+        const { data: elimPlayers } = await supabaseAdmin
+          .from('players')
+          .select('id, team_id')
+          .in('team_id', [...elimStageByTeamId.keys()]);
+
+        const teamIdByPlayerId = new Map<string, string>(
+          (elimPlayers ?? []).map((p: { id: string; team_id: string }) => [p.id, p.team_id])
+        );
+        const elimPlayerIds = [...teamIdByPlayerId.keys()];
+
+        for (let i = 0; i < elimPlayerIds.length; i += IN_FILTER_CHUNK_SIZE) {
+          const { data: unreleasedSlots } = await supabaseAdmin
+            .from('roster_slots')
+            .select('id, player_id')
+            .eq('league_id', league_id)
+            .eq('is_active', true)
+            .eq('is_bench', false)
+            .is('released_at_round_stage', null)
+            .in('player_id', elimPlayerIds.slice(i, i + IN_FILTER_CHUNK_SIZE));
+
+          for (const slot of (unreleasedSlots ?? [])) {
+            const teamId = teamIdByPlayerId.get(slot.player_id);
+            // Same fallback as activateImmediate's `?? 'r64'` when the
+            // elimination round was never recorded.
+            const released_at_round_stage =
+              (teamId ? elimStageByTeamId.get(teamId) : null) ?? 'r64';
+
+            await supabaseAdmin
+              .from('roster_slots')
+              .update({
+                is_active: false,
+                released_at_round_stage,
+                release_reason: 'eliminated',
+              })
+              .eq('id', slot.id);
+          }
+        }
+      }
 
       // Find all inactive starter slots (eliminated but not yet replaced) in this league
       const { data: releasedSlots } = await supabaseAdmin

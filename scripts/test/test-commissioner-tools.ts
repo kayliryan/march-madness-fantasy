@@ -440,7 +440,9 @@ async function main(): Promise<void> {
         assert(dupRes.status === 409, `expected 409 for already-drafted replacement, got ${dupRes.status}: ${JSON.stringify(dupBody)}`);
         assert(dupBody.error === 'Replacement player is already drafted', `unexpected error message: ${JSON.stringify(dupBody)}`);
 
-        // 6b — voiding an already-voided pick -> 409
+        // 6b — voiding an already-voided pick -> 422 PICK_ALREADY_VOIDED (sequential
+        // pre-check; 409 is reserved for the concurrent race-loser path, which
+        // concurrency-demo-void.ts covers)
         const originalPlayerId = league.player_assignments.get(league.commissioner_id)![0]; // G1
         const { data: pick, error: pickErr } = await db
           .from('draft_picks')
@@ -477,8 +479,8 @@ async function main(): Promise<void> {
           body: JSON.stringify({ pick_id: pick.id, void_reason: 'Second void attempt', replacement_player_id: replacement2 }),
         });
         const secondBody = await secondVoid.json();
-        assert(secondVoid.status === 409, `expected 409 for already-voided pick, got ${secondVoid.status}: ${JSON.stringify(secondBody)}`);
-        assert(secondBody.error === 'Pick is already voided', `unexpected error message: ${JSON.stringify(secondBody)}`);
+        assert(secondVoid.status === 422, `expected 422 for already-voided pick, got ${secondVoid.status}: ${JSON.stringify(secondBody)}`);
+        assert(secondBody.error === 'PICK_ALREADY_VOIDED', `unexpected error code: ${JSON.stringify(secondBody)}`);
       } finally {
         await cleanupTestLeague(league.league_id);
       }

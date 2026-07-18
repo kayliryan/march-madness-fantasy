@@ -10,6 +10,8 @@ import {
   TEST_USER_PASSWORD,
   getUserEmail,
   getAuthCookieHeader,
+  getTeamIdsForPlayers,
+  withTeamsRestored,
 } from './utils/testHelpers';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -49,12 +51,18 @@ async function main(): Promise<void> {
         const commissionerEmail = await getUserEmail(league.commissioner_id);
         const cookie = await getAuthCookieHeader(commissionerEmail, TEST_USER_PASSWORD);
 
-        const res = await fetch(`${APP_URL}/api/commissioner/injury-sub`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Cookie: cookie },
-          body: JSON.stringify({ league_id: league.league_id, injured_player_id: injuredPlayerId, sub_player_id: subPlayerId }),
+        // The shared season-2026 `teams` table has most teams marked eliminated by now
+        // (real tournament progress + prior test runs) — un-eliminate just this test's
+        // two players' teams for the duration of the sub call, then restore exactly.
+        const teamIds = await getTeamIdsForPlayers([injuredPlayerId, subPlayerId]);
+        const { res, body } = await withTeamsRestored(teamIds, async () => {
+          const res = await fetch(`${APP_URL}/api/commissioner/injury-sub`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Cookie: cookie },
+            body: JSON.stringify({ league_id: league.league_id, injured_player_id: injuredPlayerId, sub_player_id: subPlayerId }),
+          });
+          return { res, body: await res.json() };
         });
-        const body = await res.json();
         assert(res.ok, `POST /api/commissioner/injury-sub returned ${res.status}: ${JSON.stringify(body)}`);
         assert(body.sub_player_id === subPlayerId, `expected sub_player_id ${subPlayerId}, got ${body.sub_player_id}`);
 
@@ -127,12 +135,17 @@ async function main(): Promise<void> {
         const commissionerEmail = await getUserEmail(league.commissioner_id);
         const cookie = await getAuthCookieHeader(commissionerEmail, TEST_USER_PASSWORD);
 
-        const res = await fetch(`${APP_URL}/api/commissioner/injury-sub`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Cookie: cookie },
-          body: JSON.stringify({ league_id: league.league_id, injured_player_id: injuredPlayerId }),
+        // BenchOrderService.resolveNext excludes bench candidates on an eliminated team —
+        // un-eliminate this target user's whole roster's teams for the sub call only.
+        const teamIds = await getTeamIdsForPlayers(league.player_assignments.get(target)!);
+        const { res, body } = await withTeamsRestored(teamIds, async () => {
+          const res = await fetch(`${APP_URL}/api/commissioner/injury-sub`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Cookie: cookie },
+            body: JSON.stringify({ league_id: league.league_id, injured_player_id: injuredPlayerId }),
+          });
+          return { res, body: await res.json() };
         });
-        const body = await res.json();
         assert(res.ok, `POST /api/commissioner/injury-sub returned ${res.status}: ${JSON.stringify(body)}`);
         assert(
           body.sub_player_id === expectedSubId,

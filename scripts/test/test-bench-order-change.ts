@@ -9,6 +9,8 @@ import {
   TEST_USER_PASSWORD,
   getUserEmail,
   getAuthCookieHeader,
+  getTeamIdsForPlayers,
+  withTeamsRestored,
 } from './utils/testHelpers';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -125,12 +127,17 @@ async function main(): Promise<void> {
         const commissionerEmail = await getUserEmail(league.commissioner_id);
         const cookie = await getAuthCookieHeader(commissionerEmail, TEST_USER_PASSWORD);
 
-        const res = await fetch(`${APP_URL}/api/commissioner/injury-sub`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Cookie: cookie },
-          body: JSON.stringify({ league_id: league.league_id, injured_player_id: injuredPlayerId }),
+        // BenchOrderService.resolveNext excludes bench candidates on an eliminated team —
+        // un-eliminate this target user's whole roster's teams for the sub call only.
+        const teamIds = await getTeamIdsForPlayers(assignments);
+        const { res, body } = await withTeamsRestored(teamIds, async () => {
+          const res = await fetch(`${APP_URL}/api/commissioner/injury-sub`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Cookie: cookie },
+            body: JSON.stringify({ league_id: league.league_id, injured_player_id: injuredPlayerId }),
+          });
+          return { res, body: await res.json() };
         });
-        const body = await res.json();
         assert(res.ok, `POST /api/commissioner/injury-sub returned ${res.status}: ${JSON.stringify(body)}`);
         assert(
           body.sub_player_id === preferredSubId,

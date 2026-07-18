@@ -397,6 +397,19 @@ async function main(): Promise<void> {
 
       await ScoreAccumulator.runForGames(gameScoreIds);
 
+      // Bench slots never score (roundBreakdown.ts rule) — only the starter slots
+      // among the 101 sliced players get scoring_events. The chunking under test is
+      // the >100-id .in() game_scores lookup, which all 101 ids still exercise.
+      const { data: starterSlots, error: starterErr } = await db
+        .from('roster_slots')
+        .select('player_id')
+        .eq('league_id', league.league_id)
+        .eq('is_bench', false);
+      if (starterErr) throw new Error(`roster_slots query failed: ${starterErr.message}`);
+      const starterIds = new Set((starterSlots ?? []).map((s) => s.player_id as string));
+      const expectedCredited = playerIds.filter((id) => starterIds.has(id)).length;
+      assert(expectedCredited > 0, 'expected at least one starter among the 101 players');
+
       const { count, error } = await db
         .from('scoring_events')
         .select('*', { count: 'exact', head: true })
@@ -404,7 +417,10 @@ async function main(): Promise<void> {
         .eq('round_stage', 'r64')
         .eq('is_stale', false);
       if (error) throw new Error(`scoring_events count query failed: ${error.message}`);
-      assert(count === 101, `expected 101 scoring_events at r64, got ${count}`);
+      assert(
+        count === expectedCredited,
+        `expected ${expectedCredited} scoring_events at r64 (starters only, bench excluded), got ${count}`
+      );
     } finally {
       await cleanupTestLeague(league.league_id);
     }

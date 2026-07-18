@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
 import type { GameScore, LeagueSettings } from '@/lib/types';
@@ -41,10 +41,15 @@ export const ScoreAccumulator = {
       // Find all roster_slots for this player across all leagues
       const { data: slots } = await supabaseAdmin
         .from('roster_slots')
-        .select('id, league_id, user_id, acquired_at_round_stage, released_at_round_stage')
+        .select('id, league_id, user_id, is_bench, acquired_at_round_stage, released_at_round_stage')
         .eq('player_id', game.player_id);
 
       for (const slot of (slots ?? [])) {
+        // Bench slots never score — only starter slots credit points toward the
+        // user's total (see src/lib/utils/roundBreakdown.ts). A bench player only
+        // starts scoring once promoted, which creates a NEW is_bench=false slot row.
+        if (slot.is_bench) continue;
+
         const acqIdx = ROUND_STAGE_ORDER.indexOf(slot.acquired_at_round_stage as RoundStage);
         if (acqIdx === -1) continue;
 
@@ -119,7 +124,7 @@ export const ScoreAccumulator = {
     // Get all unique player_ids that have ever been in this league
     const { data: slots } = await supabaseAdmin
       .from('roster_slots')
-      .select('player_id')
+      .select('player_id, user_id')
       .eq('league_id', league_id);
 
     const playerIds = [...new Set((slots ?? []).map((s: { player_id: string }) => s.player_id))];
@@ -140,6 +145,16 @@ export const ScoreAccumulator = {
     const ids = (gameScores ?? []).map((g: { id: string }) => g.id);
     // runForLeague is a full recompute — allow round_stage to advance in the snapshot
     await this._runForGamesInternal(ids, true);
+
+    // The delete above already removed any invalid rows (e.g. historically
+    // bench-credited scoring_events from before the is_bench guard), but
+    // _runForGamesInternal only refreshes snapshots for users who received at
+    // least one new credit. Refresh every roster-holding user so a snapshot
+    // whose total came only from removed rows is corrected (zeroed) too.
+    const userIds = [...new Set((slots ?? []).map((s: { user_id: string }) => s.user_id))];
+    for (const user_id of userIds) {
+      await this._upsertSnapshot(league_id, user_id, true);
+    }
   },
 
   /**
