@@ -88,7 +88,16 @@ async function purgeDemoLeagues() {
 
   for (const table of leagueScopedTables) {
     const { error } = await db.from(table).delete().in('league_id', leagueIds);
-    if (error) throw new Error(`delete ${table}: ${error.message}`);
+    if (error) {
+      // A target DB that lags the local migration set (e.g. prod before a
+      // `supabase db push`) may not have newer tables yet — nothing to purge
+      // there, so skip rather than abort the whole reseed.
+      if (/Could not find the table/i.test(error.message)) {
+        console.warn(`  skipping ${table}: table does not exist on this database yet`);
+        continue;
+      }
+      throw new Error(`delete ${table}: ${error.message}`);
+    }
   }
 
   const { error: deleteLeaguesError } = await db.from('leagues').delete().in('id', leagueIds);
