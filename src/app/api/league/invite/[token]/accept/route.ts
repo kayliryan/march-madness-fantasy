@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { AcceptInviteResponse, LeagueMember, User } from '@/lib/types';
 
 export async function POST(

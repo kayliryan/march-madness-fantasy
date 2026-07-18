@@ -12,7 +12,7 @@
 import '@/lib/utils/wsPolyfill';
 import fs from 'fs';
 import path from 'path';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { ScoreAccumulator } from '@/lib/services/ScoreAccumulator';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';

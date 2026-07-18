@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getActiveUserId, computeMaxPicks } from '@/lib/utils/draft';
 import { getLeaguePositionOverrides, resolvePosition } from '@/lib/services/PlayerPositionOverrides';
 import type { DraftPick, DraftSession, LeagueSettings } from '@/lib/types';

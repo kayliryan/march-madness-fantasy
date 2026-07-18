@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 // Attaches the demo_viewer JWT claim to an anonymous user.
 // Flow: client calls supabase.auth.signInAnonymously() → gets user_id

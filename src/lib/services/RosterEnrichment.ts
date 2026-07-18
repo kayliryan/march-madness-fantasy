@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getLeaguePositionOverrides, applyLeaguePositionOverride } from '@/lib/services/PlayerPositionOverrides';
 import type { RosterSlotEnriched } from '@/components/RosterSlotList';
 

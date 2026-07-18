@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getLeaguePositionOverrides, resolvePosition } from '@/lib/services/PlayerPositionOverrides';
 import type { LeagueSettings, Player } from '@/lib/types';
 

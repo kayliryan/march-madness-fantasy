@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { BenchOrderService } from '@/lib/services/BenchOrderService';
 import { ScoreAccumulator } from '@/lib/services/ScoreAccumulator';
 import type { LeagueSettings } from '@/lib/types';

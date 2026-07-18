@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { ScoreAccumulator } from '@/lib/services/ScoreAccumulator';
 import { getLeaguePositionOverrides, resolvePosition } from '@/lib/services/PlayerPositionOverrides';
 import type { DraftPick } from '@/lib/types';

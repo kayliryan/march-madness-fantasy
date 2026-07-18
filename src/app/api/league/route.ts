@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { CURRENT_TOURNAMENT_SEASON } from '@/lib/constants/season';
 import type { CreateLeagueRequest, CreateLeagueResponse, League, LeagueMember, LeagueSettings } from '@/lib/types';
 
