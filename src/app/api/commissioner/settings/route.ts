@@ -46,6 +46,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'League not found' }, { status: 404 });
     }
 
+    // Defense-in-depth: explicit role check ahead of the RLS backstop, matching every
+    // other commissioner route (e.g. /api/commissioner/pick/void).
+    const { data: membership } = await supabase
+      .from('league_members')
+      .select('role')
+      .eq('league_id', body.league_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (membership?.role !== 'commissioner' && membership?.role !== 'co_commissioner') {
+      return NextResponse.json({ error: 'Only a commissioner can update league settings' }, { status: 403 });
+    }
+
     const mergedSettings: LeagueSettings = {
       ...(league.settings as LeagueSettings),
       ...body.settings,

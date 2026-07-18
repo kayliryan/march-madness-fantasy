@@ -43,6 +43,17 @@ export async function PATCH(request: NextRequest) {
 
     const isCommissioner = membership?.role === 'commissioner' || membership?.role === 'co_commissioner';
 
+    // Authz: a caller may only submit their own bench order, unless they're a
+    // commissioner/co-commissioner of this league. Without this check `body.user_id`
+    // is fully caller-controlled and this route would rely solely on RLS to reject
+    // writes for other users' bench orders.
+    if (user.id !== body.user_id && !isCommissioner) {
+      return NextResponse.json(
+        { error: 'You can only update your own bench order' },
+        { status: 403 }
+      );
+    }
+
     const { data: existing } = await supabase
       .from('bench_orders')
       .select('id')

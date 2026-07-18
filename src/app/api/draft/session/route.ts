@@ -48,6 +48,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Defense-in-depth: explicit role check ahead of the RLS backstop, matching every
+    // other commissioner route (e.g. /api/commissioner/pick/void).
+    const { data: membership } = await supabase
+      .from('league_members')
+      .select('role')
+      .eq('league_id', body.league_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (membership?.role !== 'commissioner' && membership?.role !== 'co_commissioner') {
+      return NextResponse.json({ error: 'Only a commissioner can manage the draft session' }, { status: 403 });
+    }
+
     // Build the set of fields to write, omitting undefined ones
     const fields: Partial<DraftSession> = {};
     if (body.scheduled_start !== undefined) fields.scheduled_start = body.scheduled_start;

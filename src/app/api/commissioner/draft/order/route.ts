@@ -40,6 +40,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Defense-in-depth: explicit role check ahead of the RLS backstop, matching every
+    // other commissioner route (e.g. /api/commissioner/pick/void).
+    const { data: membership } = await supabase
+      .from('league_members')
+      .select('role')
+      .eq('league_id', body.league_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (membership?.role !== 'commissioner' && membership?.role !== 'co_commissioner') {
+      return NextResponse.json({ error: 'Only a commissioner can set the draft order' }, { status: 403 });
+    }
+
     // Resolve the snake_order: use provided order or generate random from members
     let snakeOrder: string[];
     if (body.order && body.order.length > 0) {
