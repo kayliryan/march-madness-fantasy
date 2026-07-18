@@ -6,7 +6,8 @@ import AppHeader from '@/components/AppHeader';
 import { supabase } from '@/lib/supabase/client';
 import { ROUND_STAGE_ORDER, ROUND_LABELS } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
-import { getRoundCell, toRoundPointsMap } from '@/lib/utils/roundBreakdown';
+import { toRoundPointsMap } from '@/lib/utils/roundBreakdown';
+import { groupAndMergeSlots } from '@/lib/utils/mergePlayerRounds';
 import { RoundCellBadge } from '@/components/RoundCellBadge';
 
 interface StandingEntry {
@@ -169,6 +170,25 @@ export default function LeaderboardPage() {
   function asOfTotal(per_round: { round_stage: string; points: number }[]): number {
     const pts = roundPointsMap(per_round);
     return visibleColumns.reduce((sum, stage) => sum + (pts.get(stage) ?? 0), 0);
+  }
+
+  // One merged row per player: a bench-promoted player has two historical
+  // roster_slots rows (released bench stint + promoted starter stint) — the
+  // roster API returns both, so a flat render would duplicate the name.
+  // groupAndMergeSlots collapses them, picking each round's cell by preference
+  // counted > raw > elim > null and summing counted cells only (over the
+  // currently visible columns, so the round scrubber stays consistent).
+  function mergedRosterRows(user_id: string) {
+    const slots = rosterCache.get(user_id) ?? [];
+    const rawByPlayer = rawScoresCache.get(user_id);
+    return groupAndMergeSlots(
+      slots.map((slot) => ({
+        ...slot,
+        counted_pts: roundPointsMap(slot.per_round),
+        raw_pts: rawByPlayer?.get(slot.player_id) ?? new Map<string, number>(),
+      })),
+      visibleColumns,
+    );
   }
 
   return (
@@ -367,42 +387,40 @@ export default function LeaderboardPage() {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {slots.map((slot) => {
-                                      const countedPts = roundPointsMap(slot.per_round);
-                                      const rawPts = rawScoresCache.get(entry.user_id)?.get(slot.player_id) ?? new Map<string, number>();
-                                      return (
-                                        <tr key={slot.id} className="border-b border-neutral-900 last:border-0">
-                                          <td className="py-2 pl-10 pr-3">
-                                            <span className={slot.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
-                                              {slot.player?.name ?? '—'}
-                                              {slot.player?.teams && (
-                                                <span className="ml-1 font-normal text-neutral-500">
-                                                  - {slot.player.teams.name}
-                                                </span>
-                                              )}
-                                            </span>
-                                            <span className="ml-1.5 text-neutral-600">{slot.player?.position}</span>
-                                            {slot.is_bench && (
-                                              <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
+                                    {mergedRosterRows(entry.user_id).map((row) => (
+                                      <tr key={row.player_id} className="border-b border-neutral-900 last:border-0">
+                                        <td className="py-2 pl-10 pr-3">
+                                          <span className={row.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
+                                            {row.latest.player?.name ?? '—'}
+                                            {row.latest.player?.teams && (
+                                              <span className="ml-1 font-normal text-neutral-500">
+                                                - {row.latest.player.teams.name}
+                                              </span>
                                             )}
+                                          </span>
+                                          <span className="ml-1.5 text-neutral-600">{row.latest.player?.position}</span>
+                                          {row.is_bench && (
+                                            <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
+                                          )}
+                                          {row.promoted_at_round_stage && (
+                                            <span
+                                              className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500/90"
+                                              title="Promoted from the bench when a starter's team was eliminated"
+                                            >
+                                              ↑ {ROUND_LABELS[row.promoted_at_round_stage] ?? row.promoted_at_round_stage}
+                                            </span>
+                                          )}
+                                        </td>
+                                        {visibleColumns.map((stage) => (
+                                          <td key={stage} className="px-2 py-2 text-right tabular-nums">
+                                            <RoundCellBadge cell={row.cells[stage] ?? null} />
                                           </td>
-                                          {visibleColumns.map((stage) => {
-                                            const cell = getRoundCell(stage, countedPts, rawPts, slot);
-                                            return (
-                                              <td key={stage} className="px-2 py-2 text-right tabular-nums">
-                                                <RoundCellBadge cell={cell} />
-                                              </td>
-                                            );
-                                          })}
-                                          <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
-                                            {(() => {
-                                              const t = visibleColumns.reduce((sum, s) => sum + (countedPts.get(s) ?? 0), 0);
-                                              return t ? Math.round(t) : '—';
-                                            })()}
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
+                                        ))}
+                                        <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
+                                          {row.total ? Math.round(row.total) : '—'}
+                                        </td>
+                                      </tr>
+                                    ))}
                                   </tbody>
                                 </table>
                               </td>
@@ -436,7 +454,6 @@ export default function LeaderboardPage() {
                       const points = roundPointsMap(entry.per_round);
                       const isExpanded = expandedUsers.has(entry.user_id);
                       const isLoadingRoster = rosterLoading.has(entry.user_id);
-                      const slots = rosterCache.get(entry.user_id) ?? [];
                       return (
                         <Fragment key={entry.user_id}>
                           <tr className={rank === 1 ? 'bg-yellow-400/10' : ''}>
@@ -466,40 +483,40 @@ export default function LeaderboardPage() {
                               </td>
                             </tr>
                           )}
-                          {isExpanded && !isLoadingRoster && slots.map((slot) => {
-                            const countedPts = roundPointsMap(slot.per_round);
-                            const rawPts = rawScoresCache.get(entry.user_id)?.get(slot.player_id) ?? new Map<string, number>();
-                            const slotTotal = visibleColumns.reduce((sum, s) => sum + (countedPts.get(s) ?? 0), 0);
-                            return (
-                              <tr key={slot.id} className="bg-neutral-950 border-b border-neutral-900">
-                                <td className="py-2 pl-10 pr-4 text-xs">
-                                  <span className={slot.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
-                                    {slot.player?.name ?? '—'}
-                                    {slot.player?.teams && (
-                                      <span className="ml-1 font-normal text-neutral-500">
-                                        - {slot.player.teams.name}
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span className="ml-1.5 text-neutral-600">{slot.player?.position}</span>
-                                  {slot.is_bench && (
-                                    <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
+                          {isExpanded && !isLoadingRoster && mergedRosterRows(entry.user_id).map((row) => (
+                            <tr key={row.player_id} className="bg-neutral-950 border-b border-neutral-900">
+                              <td className="py-2 pl-10 pr-4 text-xs">
+                                <span className={row.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
+                                  {row.latest.player?.name ?? '—'}
+                                  {row.latest.player?.teams && (
+                                    <span className="ml-1 font-normal text-neutral-500">
+                                      - {row.latest.player.teams.name}
+                                    </span>
                                   )}
+                                </span>
+                                <span className="ml-1.5 text-neutral-600">{row.latest.player?.position}</span>
+                                {row.is_bench && (
+                                  <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
+                                )}
+                                {row.promoted_at_round_stage && (
+                                  <span
+                                    className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500/90"
+                                    title="Promoted from the bench when a starter's team was eliminated"
+                                  >
+                                    ↑ {ROUND_LABELS[row.promoted_at_round_stage] ?? row.promoted_at_round_stage}
+                                  </span>
+                                )}
+                              </td>
+                              {visibleColumns.map((stage) => (
+                                <td key={stage} className="px-3 py-2 text-right text-xs tabular-nums">
+                                  <RoundCellBadge cell={row.cells[stage] ?? null} />
                                 </td>
-                                {visibleColumns.map((stage) => {
-                                  const cell = getRoundCell(stage, countedPts, rawPts, slot);
-                                  return (
-                                    <td key={stage} className="px-3 py-2 text-right text-xs tabular-nums">
-                                      <RoundCellBadge cell={cell} />
-                                    </td>
-                                  );
-                                })}
-                                <td className="px-4 py-2 text-right text-xs font-medium text-neutral-400 tabular-nums">
-                                  {slotTotal ? Math.round(slotTotal) : '—'}
-                                </td>
-                              </tr>
-                            );
-                          })}
+                              ))}
+                              <td className="px-4 py-2 text-right text-xs font-medium text-neutral-400 tabular-nums">
+                                {row.total ? Math.round(row.total) : '—'}
+                              </td>
+                            </tr>
+                          ))}
                         </Fragment>
                       );
                     })}

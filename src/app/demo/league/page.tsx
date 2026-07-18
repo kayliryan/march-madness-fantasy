@@ -4,16 +4,14 @@ import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useDemoSession } from '@/lib/context/DemoSessionContext';
-import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
+import { ROUND_STAGE_ORDER, ROUND_LABELS } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
-import { getRoundCell } from '@/lib/utils/roundBreakdown';
+import { groupAndMergeSlots } from '@/lib/utils/mergePlayerRounds';
 import { RoundCellBadge } from '@/components/RoundCellBadge';
+import { InjuryBadge } from '@/components/InjuryBadge';
 
 const DEMO_LEAGUE_ID = process.env.NEXT_PUBLIC_DEMO_LEAGUE_ID ?? '00000000-0000-0000-0000-000000000001';
 
-const ROUND_LABELS: Record<string, string> = {
-  play_in: 'Play-In', r64: 'R64', r32: 'R32', s16: 'S16', e8: 'E8', f4: 'F4', championship: 'Champ',
-};
 const DISPLAY_ROUNDS = ROUND_STAGE_ORDER.filter((s) => s !== 'draft') as RoundStage[];
 
 interface Standing {
@@ -33,6 +31,9 @@ interface SlotDetail {
   player_name: string;
   team_name: string;
   team_seed: number;
+  injury_status: 'active' | 'day_to_day' | 'out' | null;
+  injury_note: string | null;
+  injury_updated_at: string | null;
   acquired_at_round_stage: string;
   released_at_round_stage: string | null;
   // Credited points (from scoring_events — count toward user total)
@@ -55,6 +56,9 @@ export default function DemoLeaguePage() {
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [slotCache, setSlotCache] = useState<Map<string, SlotDetail[]>>(new Map());
   const [slotLoading, setSlotLoading] = useState<Set<string>>(new Set());
+  const [leagueSeason, setLeagueSeason] = useState<number | null>(null);
+  const [archivedSeasonCount, setArchivedSeasonCount] = useState(0);
+  const [leagueMissing, setLeagueMissing] = useState(false);
   const { setDemoSession } = useDemoSession();
 
   useEffect(() => {
@@ -74,6 +78,36 @@ export default function DemoLeaguePage() {
             : new Date(Date.now() + session.expires_in * 1000).toISOString();
           setDemoSession({ access_token: session.access_token, expires_at });
         }
+      }
+
+      // Gate on the league row itself existing before doing anything else — if
+      // NEXT_PUBLIC_DEMO_LEAGUE_ID is unset (falls back to a dummy UUID above),
+      // misconfigured, or the row was cleaned up, there's nothing to show. This
+      // is distinct from "league exists but has no scores yet" (handled below).
+      const { data: league, error: leagueError } = await supabase
+        .from('leagues')
+        .select('season')
+        .eq('id', DEMO_LEAGUE_ID)
+        .maybeSingle();
+
+      if (leagueError || !league) {
+        setLeagueMissing(true);
+        setLoading(false);
+        return;
+      }
+
+      // Season indicator: the demo seeder creates a prior-season completed
+      // draft_sessions stub (seedDemoData.ts step 11) specifically to prove
+      // multi-season support — surface it as an "archived seasons" count.
+      // Both tables are readable anonymously for demo leagues (is_demo RLS).
+      if (league.season) {
+        setLeagueSeason(league.season);
+        const { count } = await supabase
+          .from('draft_sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('league_id', DEMO_LEAGUE_ID)
+          .lt('season', league.season);
+        setArchivedSeasonCount(count ?? 0);
       }
 
       const { data: snapshots } = await supabase
@@ -123,11 +157,17 @@ export default function DemoLeaguePage() {
       type SlotRaw = {
         id: string; slot_key: string; slot_position: string; is_bench: boolean; is_active: boolean;
         player_id: string; acquired_at_round_stage: string; released_at_round_stage: string | null;
-        players: { name: string; teams: { name: string; seed: number } | { name: string; seed: number }[] | null } | null;
+        players: {
+          name: string;
+          injury_status: 'active' | 'day_to_day' | 'out' | null;
+          injury_note: string | null;
+          injury_updated_at: string | null;
+          teams: { name: string; seed: number } | { name: string; seed: number }[] | null;
+        } | null;
       };
       const { data: slots } = await supabase
         .from('roster_slots')
-        .select('id, slot_key, slot_position, is_bench, is_active, player_id, acquired_at_round_stage, released_at_round_stage, players(name, teams(name, seed))')
+        .select('id, slot_key, slot_position, is_bench, is_active, player_id, acquired_at_round_stage, released_at_round_stage, players(name, injury_status, injury_note, injury_updated_at, teams(name, seed))')
         .eq('league_id', DEMO_LEAGUE_ID)
         .eq('user_id', user_id)
         .order('is_bench')
@@ -192,6 +232,9 @@ export default function DemoLeaguePage() {
           player_name: p?.name ?? '—',
           team_name: team?.name ?? '—',
           team_seed: team?.seed ?? 0,
+          injury_status: p?.injury_status ?? null,
+          injury_note: p?.injury_note ?? null,
+          injury_updated_at: p?.injury_updated_at ?? null,
           acquired_at_round_stage: s.acquired_at_round_stage,
           released_at_round_stage: s.released_at_round_stage,
           counted_pts,
@@ -239,7 +282,14 @@ export default function DemoLeaguePage() {
               Demo League · Read-only
             </span>
             <h1 className="text-2xl font-bold text-white">March Madness Fantasy 2026</h1>
-            <p className="mt-1 text-sm text-neutral-500">Full tournament season snapshot</p>
+            <p className="mt-1 text-sm text-neutral-500">
+              Full tournament season snapshot
+              {leagueSeason !== null && archivedSeasonCount > 0 && (
+                <span className="text-neutral-600">
+                  {' '}· Season {leagueSeason} · {archivedSeasonCount} archived season{archivedSeasonCount === 1 ? '' : 's'}
+                </span>
+              )}
+            </p>
           </div>
           <Link
             href="/demo/draft"
@@ -251,6 +301,24 @@ export default function DemoLeaguePage() {
 
         {loading ? (
           <div className="py-20 text-center text-neutral-500">Loading standings…</div>
+        ) : leagueMissing ? (
+          <div className="mx-auto max-w-sm rounded-lg border border-neutral-800 bg-neutral-900 p-10 text-center">
+            <p className="font-medium text-neutral-300">The demo season isn&apos;t available right now.</p>
+            <div className="mt-5 flex justify-center gap-3">
+              <Link
+                href="/"
+                className="rounded border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400"
+              >
+                Back home
+              </Link>
+              <Link
+                href="/demo/draft"
+                className="rounded bg-yellow-400 px-4 py-2 text-sm font-black uppercase tracking-wide text-black hover:bg-yellow-300"
+              >
+                Try Mock Draft
+              </Link>
+            </div>
+          </div>
         ) : standings.length === 0 ? (
           <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-10 text-center">
             <p className="font-medium text-neutral-300">Demo data not loaded yet.</p>
@@ -378,34 +446,49 @@ export default function DemoLeaguePage() {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {slots.map((slot) => {
-                                      const slotTotal = Object.values(slot.counted_pts).reduce((a, b) => a + b, 0);
-                                      return (
-                                        <tr key={`${slot.slot_key}-${slot.acquired_at_round_stage}`} className="border-b border-neutral-900 last:border-0">
-                                          <td className="py-2 pl-10 pr-3">
-                                            <span className={slot.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
-                                              {slot.player_name}
+                                    {/* One merged row per player — a bench-promoted player has two
+                                        historical roster_slots rows (released bench stint + starter
+                                        stint); groupAndMergeSlots collapses them, preferring
+                                        counted > raw > elim > null per round. */}
+                                    {groupAndMergeSlots(slots, visibleRounds).map((row) => (
+                                      <tr key={row.player_id} className="border-b border-neutral-900 last:border-0">
+                                        <td className="py-2 pl-10 pr-3">
+                                          <span className={row.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
+                                            {row.latest.player_name}
+                                          </span>
+                                          <span className="ml-1 text-neutral-500">- {row.latest.team_name}</span>
+                                          <span className="ml-1.5 text-neutral-600">{row.latest.slot_position}</span>
+                                          {row.is_bench && (
+                                            <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
+                                          )}
+                                          {row.promoted_at_round_stage && (
+                                            <span
+                                              className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500/90"
+                                              title="Promoted from the bench when a starter's team was eliminated"
+                                            >
+                                              ↑ {ROUND_LABELS[row.promoted_at_round_stage] ?? row.promoted_at_round_stage}
                                             </span>
-                                            <span className="ml-1 text-neutral-500">- {slot.team_name}</span>
-                                            <span className="ml-1.5 text-neutral-600">{slot.slot_position}</span>
-                                            {slot.is_bench && (
-                                              <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
-                                            )}
+                                          )}
+                                          {row.is_active && (
+                                            <span className="ml-1.5 inline-block align-middle">
+                                              <InjuryBadge
+                                                status={row.latest.injury_status}
+                                                note={row.latest.injury_note}
+                                                updatedAt={row.latest.injury_updated_at}
+                                              />
+                                            </span>
+                                          )}
+                                        </td>
+                                        {visibleRounds.map((stage) => (
+                                          <td key={stage} className="px-2 py-2 text-right tabular-nums">
+                                            <RoundCellBadge cell={row.cells[stage] ?? null} />
                                           </td>
-                                          {visibleRounds.map((stage) => {
-                                            const cell = getRoundCell(stage, slot.counted_pts, slot.raw_pts, slot);
-                                            return (
-                                              <td key={stage} className="px-2 py-2 text-right tabular-nums">
-                                                <RoundCellBadge cell={cell} />
-                                              </td>
-                                            );
-                                          })}
-                                          <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
-                                            {slotTotal > 0 ? Math.round(slotTotal) : '—'}
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
+                                        ))}
+                                        <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
+                                          {row.total > 0 ? Math.round(row.total) : '—'}
+                                        </td>
+                                      </tr>
+                                    ))}
                                   </tbody>
                                 </table>
                               </td>

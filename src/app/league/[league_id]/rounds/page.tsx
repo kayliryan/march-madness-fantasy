@@ -6,6 +6,8 @@ import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { TeamBadge } from '@/components/TeamBadge';
 import { ROUND_LABELS } from '@/lib/constants/rounds';
+import type { RoundCell } from '@/lib/utils/roundBreakdown';
+import { RoundCellBadge } from '@/components/RoundCellBadge';
 
 interface RoundEntry {
   user_id: string;
@@ -15,8 +17,8 @@ interface RoundEntry {
   team_name: string | null;
   team_seed: number | null;
   position: string;
-  points: number;
   is_bench: boolean;
+  cell: RoundCell;
 }
 
 interface RoundsResponse {
@@ -167,8 +169,8 @@ export default function RoundsPage() {
                             <span className="ml-2 rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-400">bench</span>
                           )}
                         </td>
-                        <td className="px-4 py-2 text-right font-semibold text-yellow-400 tabular-nums">
-                          {entry.points}
+                        <td className="px-4 py-2 text-right font-semibold tabular-nums">
+                          <RoundCellBadge cell={entry.cell} />
                         </td>
                       </tr>
                     ))}
