@@ -80,13 +80,24 @@ export interface BracketMatchup {
   loser: BracketTeam;
 }
 
-/** Plays every adjacent pair in `alive` once and returns the winners (half the length). */
+/**
+ * Plays every adjacent pair in `alive` once and returns the winners (half the
+ * length, rounded up). An odd-length field gives the last unpaired team a bye —
+ * it advances without a matchup. Callers can't guarantee a full power-of-two
+ * field: the seeded tournament data may be missing teams (e.g. an incomplete
+ * ESPN fetch), and crashing the demo-league provisioner over a partial field is
+ * far worse than simulating a bye.
+ */
 export function simulateBracketRound(alive: BracketTeam[]): { winners: BracketTeam[]; matchups: BracketMatchup[] } {
   const winners: BracketTeam[] = [];
   const matchups: BracketMatchup[] = [];
   for (let i = 0; i < alive.length; i += 2) {
     const a = alive[i];
     const b = alive[i + 1];
+    if (!b) {
+      winners.push(a);
+      continue;
+    }
     const aWins = Math.random() < winProbability(a.seed, b.seed);
     const winner = aWins ? a : b;
     const loser = aWins ? b : a;
