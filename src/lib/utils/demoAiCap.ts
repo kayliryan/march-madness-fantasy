@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 // Lets a known tester's real IP bypass the per-caller (not the global/per-league)
 // caps below — set via DEMO_AI_CAP_BYPASS_IPS="1.2.3.4,5.6.7.8" in env vars, comma-
@@ -69,6 +69,17 @@ export const DEMO_AI_GLOBAL_CAP_MESSAGE =
 export const DEMO_AI_LEAGUE_CAP_MESSAGE =
   "This demo league has reached its AI advisor limit. This is an intentional per-league cap to control demo costs, not a bug — everything else in the league still works.";
 
+// Real (non-demo) league cap:
+//   Sonnet call ≈ $0.04 avg (see pricing comment above). Ceiling: $4.00/league/day.
+//   $4.00 / $0.04 avg = 100 calls/day/league. A real family league (~8 members)
+//   asking ~10 AI advisor questions each on draft night is ~80 calls — comfortably
+//   under the cap. Unlike the demo caps above, this is the ONLY backstop for real
+//   leagues, since they aren't covered by the demo global daily cap or IP limits.
+export const REAL_LEAGUE_AI_DAILY_CAP = 100;
+
+export const REAL_LEAGUE_AI_CAP_MESSAGE =
+  "This league has reached its AI advisor limit for today. This is an intentional daily cap to control costs, not a bug — it resets tomorrow, and everything else in the league still works.";
+
 export type DemoAiCapResult =
   | { allowed: true }
   | { allowed: false; reason: 'per_league' | 'daily_global' | 'ip_rate_limit'; message: string };
@@ -85,29 +96,35 @@ export async function checkAndIncrementDemoAiCap(
 ): Promise<DemoAiCapResult> {
   const today = new Date().toISOString().slice(0, 10);
 
-  // Layer 1 check (per-league, only for demo leagues)
-  let isDemo = false;
-  let currentLeagueCalls = 0;
-
+  // Layer 1 check (per-league, only for demo leagues) — atomic increment-first via
+  // the increment_demo_league_ai_usage() Postgres function, then deny if the
+  // returned total exceeds the cap. No more read-then-absolute-update: that pattern
+  // let parallel requests all read the same "current" value and lose updates. The
+  // function only touches (and returns non-null for) rows where is_demo = true, so
+  // this is a no-op for non-demo leagues — pass league_id=null entirely to skip it
+  // for stateless routes (mock-draft-advisor).
   if (league_id !== null) {
-    const { data: leagueRow } = await supabaseAdmin
-      .from('leagues')
-      .select('is_demo, demo_ai_calls_used')
-      .eq('id', league_id)
-      .single();
-
-    if (leagueRow?.is_demo) {
-      isDemo = true;
-      currentLeagueCalls = leagueRow.demo_ai_calls_used ?? 0;
-      if (currentLeagueCalls >= DEMO_AI_CAP_PER_LEAGUE) {
-        return { allowed: false, reason: 'per_league', message: DEMO_AI_LEAGUE_CAP_MESSAGE };
-      }
+    const { data: leagueCalls } = await supabaseAdmin.rpc('increment_demo_league_ai_usage', {
+      p_league_id: league_id,
+    });
+    if (leagueCalls !== null && leagueCalls !== undefined && leagueCalls > DEMO_AI_CAP_PER_LEAGUE) {
+      return { allowed: false, reason: 'per_league', message: DEMO_AI_LEAGUE_CAP_MESSAGE };
     }
   }
 
-  // Layer 4 check (per-IP advisor call rate). Localhost and allowlisted tester IPs skip this.
+  // Layer 4 check (per-IP advisor call rate) — insert the log row first, then count
+  // (including this row) and deny if over. This is bounded and race-safe: two
+  // parallel requests each insert their own row, and each sees a count that
+  // includes at least its own insert, so neither can under-count past the cap the
+  // way a count-then-insert pattern could. A call denied by this check still
+  // consumes a log slot — that's by design (fail-closed), not a bug: the cost of
+  // slightly over-counting a rate limiter is negligible next to the cost of a
+  // race letting unlimited calls through. Localhost and allowlisted tester IPs
+  // skip this entirely.
   const isTrusted = isTrustedTestIp(ip);
   if (ip !== null && ip !== 'unknown' && !isTrusted) {
+    await supabaseAdmin.from('demo_ai_call_log').insert({ ip });
+
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { count: ipCallCount } = await supabaseAdmin
       .from('demo_ai_call_log')
@@ -115,7 +132,7 @@ export async function checkAndIncrementDemoAiCap(
       .eq('ip', ip)
       .gte('called_at', since24h);
 
-    if ((ipCallCount ?? 0) >= DEMO_AI_ADVISOR_CALLS_PER_IP_PER_DAY) {
+    if ((ipCallCount ?? 0) > DEMO_AI_ADVISOR_CALLS_PER_IP_PER_DAY) {
       return { allowed: false, reason: 'ip_rate_limit', message: DEMO_AI_CAP_MESSAGE };
     }
   }
@@ -131,22 +148,30 @@ export async function checkAndIncrementDemoAiCap(
     return { allowed: false, reason: 'daily_global', message: DEMO_AI_GLOBAL_CAP_MESSAGE };
   }
 
-  // All checks passed — increment counters after the AI call succeeds
-  // (increments fire after this function returns; the caller is responsible)
-  if (league_id !== null && isDemo) {
-    await supabaseAdmin
-      .from('leagues')
-      .update({ demo_ai_calls_used: currentLeagueCalls + 1 })
-      .eq('id', league_id)
-      .eq('is_demo', true);
-  }
-
-  if (ip !== null && ip !== 'unknown' && !isTrusted) {
-    await supabaseAdmin.from('demo_ai_call_log').insert({ ip });
-  }
-
   // Atomic global daily increment via Postgres function
   await supabaseAdmin.rpc('increment_demo_daily_ai_usage', { p_date: today });
+
+  return { allowed: true };
+}
+
+/**
+ * Checks and increments the per-real-league daily AI advisor cap. Real (non-demo)
+ * leagues aren't covered by any of the demo layers above (no global daily pool, no
+ * IP rate limit) — this is their only cost backstop. Atomic increment-first via
+ * increment_league_ai_usage(), then deny if the returned total exceeds the cap —
+ * same race-free pattern as the demo Layer 1 fix above.
+ */
+export async function checkAndIncrementRealLeagueAiCap(league_id: string): Promise<DemoAiCapResult> {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { data: callsUsed } = await supabaseAdmin.rpc('increment_league_ai_usage', {
+    p_league_id: league_id,
+    p_date: today,
+  });
+
+  if (callsUsed !== null && callsUsed !== undefined && callsUsed > REAL_LEAGUE_AI_DAILY_CAP) {
+    return { allowed: false, reason: 'per_league', message: REAL_LEAGUE_AI_CAP_MESSAGE };
+  }
 
   return { allowed: true };
 }

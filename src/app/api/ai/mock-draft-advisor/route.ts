@@ -50,6 +50,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Server-side bounds on client-controlled input — without these, a crafted
+    // body (e.g. a huge my_roster or available_players array) turns one "call"
+    // into a massive-token prompt, defeating the per-call cost assumptions the
+    // caps above are based on. Reject outright rather than silently truncating,
+    // so a misbehaving client gets a clear signal instead of quietly-wrong advice.
+    if (my_roster.length > 15) {
+      return NextResponse.json({ error: 'my_roster exceeds maximum length (15)' }, { status: 400 });
+    }
+    if (available_players.length > 500) {
+      return NextResponse.json({ error: 'available_players exceeds maximum length (500)' }, { status: 400 });
+    }
+    if ((unfilled_starters?.length ?? 0) > 10) {
+      return NextResponse.json({ error: 'unfilled_starters exceeds maximum length (10)' }, { status: 400 });
+    }
+    if (typeof unfilled_bench === 'number' && (unfilled_bench < 0 || unfilled_bench > 10)) {
+      return NextResponse.json({ error: 'unfilled_bench out of range (0-10)' }, { status: 400 });
+    }
+    if (typeof question === 'string' && question.length > 500) {
+      return NextResponse.json({ error: 'question exceeds maximum length (500)' }, { status: 400 });
+    }
+
     // Layer 3 (global daily) and Layer 4 (per-IP) caps apply to all demo AI routes
     // (no league_id = Layer 1 skipped).
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -63,19 +84,23 @@ export async function POST(request: NextRequest) {
     const n = total_teams ?? 5;
     const roundNumber = Math.ceil(pick_number / n);
 
+    // Client-supplied name/team strings are otherwise unbounded — cap them before
+    // they land in the prompt, same rationale as the array-length checks above.
+    const cap = (s: string | undefined | null) => (s ?? '').slice(0, 60);
+
     // Group available players by position, top 10 each
     const byPosition: Record<string, PlayerSummary[]> = { G: [], F: [], C: [] };
     for (const p of available_players) {
       if (byPosition[p.position]) byPosition[p.position].push(p);
     }
-    const formatP = (p: PlayerSummary) => `  ${p.name} ${p.team_name} seed-${p.team_seed} ${p.avg_ppg} PPG`;
+    const formatP = (p: PlayerSummary) => `  ${cap(p.name)} ${cap(p.team_name)} seed-${p.team_seed} ${p.avg_ppg} PPG`;
     const availableSections = (['G', 'F', 'C'] as const).map((pos) => {
       const top = byPosition[pos].slice(0, 10);
       return top.length > 0 ? `${pos} (${top.length} available):\n${top.map(formatP).join('\n')}` : '';
     }).filter(Boolean);
 
     const rosterLines = my_roster.map((s) =>
-      `${s.slot_key} (${s.is_bench ? 'bench' : 'starter'}): ${s.player_name} ${s.slot_position} ${s.team_name} seed-${s.team_seed} ${s.avg_ppg} PPG`
+      `${s.slot_key} (${s.is_bench ? 'bench' : 'starter'}): ${cap(s.player_name)} ${s.slot_position} ${cap(s.team_name)} seed-${s.team_seed} ${s.avg_ppg} PPG`
     );
 
     const systemPrompt = `You are an expert March Madness fantasy basketball advisor helping with a mock draft.

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import Anthropic from '@anthropic-ai/sdk';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
-import { checkAndIncrementDemoAiCap } from '@/lib/utils/demoAiCap';
+import { checkAndIncrementDemoAiCap, checkAndIncrementRealLeagueAiCap } from '@/lib/utils/demoAiCap';
 
 const anthropic = new Anthropic();
 
@@ -62,12 +62,18 @@ export async function POST(request: NextRequest) {
       .eq('id', league_id)
       .single();
 
-    // Demo AI cap check (Layers 1, 3 + 4). Real leagues are uncapped.
+    // AI cap check: demo leagues use the three-layer demo cap (Layers 1, 3 + 4);
+    // real leagues use a per-league daily cap (their only cost backstop).
     if (league?.is_demo) {
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
         ?? request.headers.get('x-real-ip')
         ?? 'unknown';
       const capResult = await checkAndIncrementDemoAiCap(league_id, ip);
+      if (!capResult.allowed) {
+        return NextResponse.json({ error: capResult.message }, { status: 429 });
+      }
+    } else {
+      const capResult = await checkAndIncrementRealLeagueAiCap(league_id);
       if (!capResult.allowed) {
         return NextResponse.json({ error: capResult.message }, { status: 429 });
       }
