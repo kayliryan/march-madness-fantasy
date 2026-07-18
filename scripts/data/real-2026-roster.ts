@@ -9,7 +9,7 @@
  * round_stage numbering: r64=1, r32=2, s16=3, e8=4, f4=5, championship=6.
  */
 
-export type RoundStage = 'r64' | 'r32' | 's16' | 'e8' | 'f4' | 'championship';
+export type RoundStage = 'play_in' | 'r64' | 'r32' | 's16' | 'e8' | 'f4' | 'championship';
 
 export interface TeamInfo {
   key: string;
@@ -203,4 +203,30 @@ export const GAMES: GameInfo[] = [
 
   // championship
   { event_id: '401856600', round_stage: 'championship', date: '2026-04-07', teams: ['michigan', 'uconn'] },
+
+  // ── 13 games discovered missing on 2026-07-18 ─────────────────────────────
+  // The original list stopped at 54 games, but a 68-team bracket has 67. A
+  // scoreboard sweep across every tournament date (First Four → championship,
+  // filtered to "Men's Basketball Championship" notes) found exactly 67 events;
+  // these 13 (all 4 First Four games + 9 first-round games) were absent, which
+  // is why 13 teams were missing from the dataset. `teams: []` — none of these
+  // games involve the family league's drafted teams (this field only matters to
+  // the family-scoped fetch pipeline).
+
+  // play_in (First Four)
+  { event_id: '401856435', round_stage: 'play_in', date: '2026-03-17', teams: [] }, // UMBC at Howard (Midwest)
+  { event_id: '401856434', round_stage: 'play_in', date: '2026-03-18', teams: [] }, // Texas at NC State (West)
+  { event_id: '401856437', round_stage: 'play_in', date: '2026-03-18', teams: [] }, // Prairie View A&M at Lehigh (South)
+  { event_id: '401856436', round_stage: 'play_in', date: '2026-03-19', teams: [] }, // Miami (OH) at SMU (Midwest)
+
+  // r64 (missing 1st-round games)
+  { event_id: '401856488', round_stage: 'r64', date: '2026-03-19', teams: [] }, // McNeese at Vanderbilt (South)
+  { event_id: '401856482', round_stage: 'r64', date: '2026-03-19', teams: [] }, // South Florida at Louisville (East)
+  { event_id: '401856492', round_stage: 'r64', date: '2026-03-19', teams: [] }, // Texas A&M at Saint Mary's (South)
+  { event_id: '401856479', round_stage: 'r64', date: '2026-03-19', teams: [] }, // TCU at Ohio State (East)
+  { event_id: '401856487', round_stage: 'r64', date: '2026-03-20', teams: [] }, // Saint Louis at Georgia (Midwest)
+  { event_id: '401856525', round_stage: 'r64', date: '2026-03-20', teams: [] }, // Santa Clara at Kentucky (Midwest)
+  { event_id: '401856496', round_stage: 'r64', date: '2026-03-20', teams: [] }, // UCF at UCLA (East)
+  { event_id: '401856528', round_stage: 'r64', date: '2026-03-20', teams: [] }, // Utah State at Villanova (West)
+  { event_id: '401856522', round_stage: 'r64', date: '2026-03-20', teams: [] }, // Iowa at Clemson (South)
 ];

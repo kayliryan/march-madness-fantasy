@@ -39,10 +39,15 @@ rehearsal.
 2. The sync cron runs **once a day** (`vercel.json`, Vercel Hobby limit). Live scoring needs
    5-minute polling (30s during games per the design doc §16) — requires Vercel Pro or an
    external scheduler (see Part 1.2).
-3. The 2026 dataset is **incomplete**: the "full 2026" ESPN fetch stopped at 55 of 68 teams
-   (rate limits; see `scripts/data/full-2026-tournament-data.json`). Provisioning no longer
-   crashes on partial fields (bracket byes, `src/lib/utils/bracketSim.ts`), but 13 teams and
-   their players are simply missing.
+3. ~~The 2026 dataset is incomplete~~ — **DONE (2026-07-18)**: the 13 missing games (all 4
+   First Four + 9 first-round) were discovered via an ESPN scoreboard sweep and merged; the
+   dataset now holds all 68 teams / 718 players / 67 games, with completeness assertions
+   (region×seed table, one champion, 4 play_in losers, 32 r64 losers). Two important facts
+   learned in the process: **ESPN's API is directly reachable from the local environment**
+   (the old "sandbox can't reach ESPN" constraint was specific to a different tool), and the
+   original gap happened because the hand-curated event list was trusted without a
+   games-count assertion — the exact failure mode Part 1.7's "assert 68 teams" step exists
+   to prevent.
 4. `bench_lock_deadline` is **never set for real leagues** — the draft-session route doesn't
    set it and no commissioner UI exists. Bench-order lock at tip-off silently never engages.
 5. `teams.is_eliminated` is one-way — no un-eliminate tool if a data glitch marks a team

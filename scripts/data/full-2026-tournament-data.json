@@ -439,6 +439,110 @@
       "seed": 7,
       "is_eliminated": true,
       "eliminated_in_round_stage": "r32"
+    },
+    {
+      "espn_team_id": "2378",
+      "name": "UMBC Retrievers",
+      "seed": 16,
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "play_in"
+    },
+    {
+      "espn_team_id": "152",
+      "name": "NC State Wolfpack",
+      "seed": 11,
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "play_in"
+    },
+    {
+      "espn_team_id": "2329",
+      "name": "Lehigh Mountain Hawks",
+      "seed": 16,
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "play_in"
+    },
+    {
+      "espn_team_id": "2567",
+      "name": "SMU Mustangs",
+      "seed": 11,
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "play_in"
+    },
+    {
+      "espn_team_id": "2377",
+      "name": "McNeese Cowboys",
+      "seed": 12,
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
+    },
+    {
+      "espn_team_id": "58",
+      "name": "South Florida Bulls",
+      "seed": 11,
+      "region": "East",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
+    },
+    {
+      "espn_team_id": "2608",
+      "name": "Saint Mary's Gaels",
+      "seed": 7,
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
+    },
+    {
+      "espn_team_id": "194",
+      "name": "Ohio State Buckeyes",
+      "seed": 8,
+      "region": "East",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
+    },
+    {
+      "espn_team_id": "61",
+      "name": "Georgia Bulldogs",
+      "seed": 8,
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
+    },
+    {
+      "espn_team_id": "2541",
+      "name": "Santa Clara Broncos",
+      "seed": 10,
+      "region": "Midwest",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
+    },
+    {
+      "espn_team_id": "2116",
+      "name": "UCF Knights",
+      "seed": 10,
+      "region": "East",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
+    },
+    {
+      "espn_team_id": "222",
+      "name": "Villanova Wildcats",
+      "seed": 8,
+      "region": "West",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
+    },
+    {
+      "espn_team_id": "228",
+      "name": "Clemson Tigers",
+      "seed": 8,
+      "region": "South",
+      "is_eliminated": true,
+      "eliminated_in_round_stage": "r64"
     }
   ],
   "players": [
@@ -447,48 +551,48 @@
       "name": "Cedric Taylor III",
       "espn_team_id": "47",
       "position": "G",
-      "avg_ppg": 19,
-      "games_played": 1
+      "avg_ppg": 17.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5176075",
       "name": "Cam Gillus",
       "espn_team_id": "47",
       "position": "G",
-      "avg_ppg": 21,
-      "games_played": 1
+      "avg_ppg": 14.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5175065",
       "name": "Alex Cotton",
       "espn_team_id": "47",
       "position": "G",
-      "avg_ppg": 3,
-      "games_played": 1
+      "avg_ppg": 5.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107986",
       "name": "Ose Okojie",
       "espn_team_id": "47",
       "position": "G",
-      "avg_ppg": 7,
-      "games_played": 1
+      "avg_ppg": 15,
+      "games_played": 2
     },
     {
       "espn_player_id": "4897768",
       "name": "Bryce Harris",
       "espn_team_id": "47",
       "position": "G",
-      "avg_ppg": 21,
-      "games_played": 1
+      "avg_ppg": 20,
+      "games_played": 2
     },
     {
       "espn_player_id": "5316220",
       "name": "Travelle Bryson",
       "espn_team_id": "47",
       "position": "F",
-      "avg_ppg": 7,
-      "games_played": 1
+      "avg_ppg": 9,
+      "games_played": 2
     },
     {
       "espn_player_id": "5316216",
@@ -504,7 +608,7 @@
       "espn_team_id": "47",
       "position": "F",
       "avg_ppg": 0,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5316219",
@@ -512,7 +616,7 @@
       "espn_team_id": "47",
       "position": "C",
       "avg_ppg": 0,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5316218",
@@ -535,8 +639,8 @@
       "name": "Isaiah Brown",
       "espn_team_id": "47",
       "position": "G",
-      "avg_ppg": 0,
-      "games_played": 1
+      "avg_ppg": 0.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4898226",
@@ -2055,64 +2159,64 @@
       "name": "Camden Heide",
       "espn_team_id": "251",
       "position": "F",
-      "avg_ppg": 3.67,
-      "games_played": 3
+      "avg_ppg": 3.5,
+      "games_played": 4
     },
     {
       "espn_player_id": "5239838",
       "name": "Matas Vokietaitis",
       "espn_team_id": "251",
       "position": "C",
-      "avg_ppg": 16.33,
-      "games_played": 3
+      "avg_ppg": 16,
+      "games_played": 4
     },
     {
       "espn_player_id": "5105624",
       "name": "Jordan Pope",
       "espn_team_id": "251",
       "position": "G",
-      "avg_ppg": 13.33,
-      "games_played": 3
+      "avg_ppg": 11.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "4848625",
       "name": "Dailyn Swain",
       "espn_team_id": "251",
       "position": "G",
-      "avg_ppg": 13.33,
-      "games_played": 3
+      "avg_ppg": 13.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "4432243",
       "name": "Tramon Mark",
       "espn_team_id": "251",
       "position": "G",
-      "avg_ppg": 18,
-      "games_played": 3
+      "avg_ppg": 17.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5149083",
       "name": "Nic Codie",
       "espn_team_id": "251",
       "position": "F",
-      "avg_ppg": 5.67,
-      "games_played": 3
+      "avg_ppg": 4.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "5105486",
       "name": "Chendall Weaver",
       "espn_team_id": "251",
       "position": "G",
-      "avg_ppg": 5.67,
-      "games_played": 3
+      "avg_ppg": 7,
+      "games_played": 4
     },
     {
       "espn_player_id": "4683785",
       "name": "Simeon Wilcher",
       "espn_team_id": "251",
       "position": "G",
-      "avg_ppg": 0.67,
-      "games_played": 3
+      "avg_ppg": 1,
+      "games_played": 4
     },
     {
       "espn_player_id": "5142718",
@@ -2172,7 +2276,7 @@
     },
     {
       "espn_player_id": "5243211",
-      "name": "Mihailo Boškovic",
+      "name": "Mihailo Bo\u0161kovic",
       "espn_team_id": "252",
       "position": "F",
       "avg_ppg": 0,
@@ -2407,40 +2511,40 @@
       "name": "Hassane Diallo",
       "espn_team_id": "2504",
       "position": "F",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "4904928",
       "name": "Cory Wells",
       "espn_team_id": "2504",
       "position": "F",
-      "avg_ppg": 9,
-      "games_played": 1
+      "avg_ppg": 14,
+      "games_played": 2
     },
     {
       "espn_player_id": "4904924",
       "name": "Corey Dunning",
       "espn_team_id": "2504",
       "position": "F",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 2,
+      "games_played": 2
     },
     {
       "espn_player_id": "5176727",
       "name": "Dontae Horne",
       "espn_team_id": "2504",
       "position": "G",
-      "avg_ppg": 12,
-      "games_played": 1
+      "avg_ppg": 18.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4904931",
       "name": "Lance Williams",
       "espn_team_id": "2504",
       "position": "G",
-      "avg_ppg": 8,
-      "games_played": 1
+      "avg_ppg": 9,
+      "games_played": 2
     },
     {
       "espn_player_id": "5247621",
@@ -2448,15 +2552,15 @@
       "espn_team_id": "2504",
       "position": "F",
       "avg_ppg": 0,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5314805",
       "name": "Elijah Mitchell",
       "espn_team_id": "2504",
       "position": "G",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "5314804",
@@ -2464,7 +2568,7 @@
       "espn_team_id": "2504",
       "position": "G",
       "avg_ppg": 0,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "4705371",
@@ -2472,15 +2576,15 @@
       "espn_team_id": "2504",
       "position": "G",
       "avg_ppg": 0,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "4703215",
       "name": "Tai'Reon Joseph",
       "espn_team_id": "2504",
       "position": "G",
-      "avg_ppg": 16,
-      "games_played": 1
+      "avg_ppg": 10.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5174657",
@@ -3896,63 +4000,63 @@
       "espn_team_id": "193",
       "position": "F",
       "avg_ppg": 3,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5243053",
       "name": "Brant Byers",
       "espn_team_id": "193",
       "position": "G",
-      "avg_ppg": 9,
-      "games_played": 1
+      "avg_ppg": 14,
+      "games_played": 2
     },
     {
       "espn_player_id": "5106674",
       "name": "Peter Suder",
       "espn_team_id": "193",
       "position": "G",
-      "avg_ppg": 27,
-      "games_played": 1
+      "avg_ppg": 17,
+      "games_played": 2
     },
     {
       "espn_player_id": "5101653",
       "name": "Luke Skaljac",
       "espn_team_id": "193",
       "position": "G",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 10.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5093252",
       "name": "Eian Elmer",
       "espn_team_id": "193",
       "position": "G",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 13.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5176313",
       "name": "Almar Atlason",
       "espn_team_id": "193",
       "position": "F",
-      "avg_ppg": 3,
-      "games_played": 1
+      "avg_ppg": 7.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5313370",
       "name": "Justin Kirby",
       "espn_team_id": "193",
       "position": "G",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5313368",
       "name": "Trey Perry",
       "espn_team_id": "193",
       "position": "G",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 2,
+      "games_played": 2
     },
     {
       "espn_player_id": "5164559",
@@ -4199,88 +4303,88 @@
       "name": "Robbie Avila",
       "espn_team_id": "139",
       "position": "C",
-      "avg_ppg": 9,
-      "games_played": 1
+      "avg_ppg": 10.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5239707",
       "name": "Amari McCottry",
       "espn_team_id": "139",
       "position": "G",
-      "avg_ppg": 14,
-      "games_played": 1
+      "avg_ppg": 13.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5175171",
       "name": "Quentin Jones",
       "espn_team_id": "139",
       "position": "G",
-      "avg_ppg": 7,
-      "games_played": 1
+      "avg_ppg": 8,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107242",
       "name": "Dion Brown",
       "espn_team_id": "139",
       "position": "G",
-      "avg_ppg": 13,
-      "games_played": 1
+      "avg_ppg": 15.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4711258",
       "name": "Trey Green",
       "espn_team_id": "139",
       "position": "G",
-      "avg_ppg": 3,
-      "games_played": 1
+      "avg_ppg": 5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5183809",
       "name": "Ishan Sharma",
       "espn_team_id": "139",
       "position": "F",
-      "avg_ppg": 8,
-      "games_played": 1
+      "avg_ppg": 10,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107797",
       "name": "Paul Otieno",
       "espn_team_id": "139",
       "position": "F",
-      "avg_ppg": 5,
-      "games_played": 1
+      "avg_ppg": 7,
+      "games_played": 2
     },
     {
       "espn_player_id": "4685659",
       "name": "Brady Dunlap",
       "espn_team_id": "139",
       "position": "F",
-      "avg_ppg": 9,
-      "games_played": 1
+      "avg_ppg": 10,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105980",
       "name": "Kellen Thames",
       "espn_team_id": "139",
       "position": "G",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 7.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311928",
       "name": "Xavier Edmonds",
       "espn_team_id": "2628",
       "position": "F",
-      "avg_ppg": 12,
-      "games_played": 1
+      "avg_ppg": 14,
+      "games_played": 2
     },
     {
       "espn_player_id": "5164368",
       "name": "David Punch",
       "espn_team_id": "2628",
       "position": "F",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 10,
+      "games_played": 2
     },
     {
       "espn_player_id": "5037876",
@@ -4288,7 +4392,7 @@
       "espn_team_id": "2628",
       "position": "F",
       "avg_ppg": 18,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5105619",
@@ -4296,7 +4400,7 @@
       "espn_team_id": "2628",
       "position": "G",
       "avg_ppg": 4,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5103589",
@@ -4304,23 +4408,23 @@
       "espn_team_id": "2628",
       "position": "G",
       "avg_ppg": 8,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5242117",
       "name": "Vianney Salatchoum",
       "espn_team_id": "2628",
       "position": "C",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "5245624",
       "name": "Liutauras Lelevicius",
       "espn_team_id": "2628",
       "position": "G",
-      "avg_ppg": 1,
-      "games_played": 1
+      "avg_ppg": 2.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5179086",
@@ -4343,8 +4447,8 @@
       "name": "Tanner Toolson",
       "espn_team_id": "2628",
       "position": "G",
-      "avg_ppg": 5,
-      "games_played": 1
+      "avg_ppg": 2.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5101787",
@@ -4391,88 +4495,88 @@
       "name": "Rashaun Agee",
       "espn_team_id": "245",
       "position": "F",
-      "avg_ppg": 7,
-      "games_played": 1
+      "avg_ppg": 14.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311530",
-      "name": "Rubén Dominguez",
+      "name": "Rub\u00e9n Dominguez",
       "espn_team_id": "245",
       "position": "G",
-      "avg_ppg": 5,
-      "games_played": 1
+      "avg_ppg": 8,
+      "games_played": 2
     },
     {
       "espn_player_id": "5176153",
       "name": "Marcus Hill",
       "espn_team_id": "245",
       "position": "G",
-      "avg_ppg": 0,
-      "games_played": 1
+      "avg_ppg": 2,
+      "games_played": 2
     },
     {
       "espn_player_id": "5106285",
       "name": "Pop Isaacs",
       "espn_team_id": "245",
       "position": "G",
-      "avg_ppg": 8,
-      "games_played": 1
+      "avg_ppg": 5.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4683682",
       "name": "Rylan Griffen",
       "espn_team_id": "245",
       "position": "G",
-      "avg_ppg": 6,
-      "games_played": 1
+      "avg_ppg": 5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5101692",
       "name": "Jamie Vinson",
       "espn_team_id": "245",
       "position": "F",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 4.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5061578",
       "name": "Chris McDermott",
       "espn_team_id": "245",
       "position": "F",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "4683146",
       "name": "Zach Clemence",
       "espn_team_id": "245",
       "position": "F",
-      "avg_ppg": 6,
-      "games_played": 1
+      "avg_ppg": 4.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5176160",
       "name": "Josh Holloway",
       "espn_team_id": "245",
       "position": "G",
-      "avg_ppg": 12,
-      "games_played": 1
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107078",
       "name": "Jacari Lane",
       "espn_team_id": "245",
       "position": "G",
-      "avg_ppg": 1,
-      "games_played": 1
+      "avg_ppg": 1.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4896862",
       "name": "Ali Dibba",
       "espn_team_id": "245",
       "position": "G",
-      "avg_ppg": 6,
-      "games_played": 1
+      "avg_ppg": 7.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5101660",
@@ -4527,56 +4631,56 @@
       "name": "Vangelis Zougris",
       "espn_team_id": "97",
       "position": "F",
-      "avg_ppg": 8,
-      "games_played": 1
+      "avg_ppg": 7,
+      "games_played": 2
     },
     {
       "espn_player_id": "5242127",
       "name": "Adrian Wooley",
       "espn_team_id": "97",
       "position": "G",
-      "avg_ppg": 17,
-      "games_played": 1
+      "avg_ppg": 10.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107157",
       "name": "Ryan Conwell",
       "espn_team_id": "97",
       "position": "G",
-      "avg_ppg": 21,
-      "games_played": 1
+      "avg_ppg": 19.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4712845",
       "name": "Isaac McKneely",
       "espn_team_id": "97",
       "position": "G",
-      "avg_ppg": 9,
-      "games_played": 1
+      "avg_ppg": 16,
+      "games_played": 2
     },
     {
       "espn_player_id": "4702784",
       "name": "J'Vonne Hadley",
       "espn_team_id": "97",
       "position": "G",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311967",
       "name": "Sananda Fru",
       "espn_team_id": "97",
       "position": "F",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 6,
+      "games_played": 2
     },
     {
       "espn_player_id": "4873187",
       "name": "Khani Rooths",
       "espn_team_id": "97",
       "position": "F",
-      "avg_ppg": 0,
-      "games_played": 1
+      "avg_ppg": 2.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4589481",
@@ -4591,16 +4695,16 @@
       "name": "Aly Khalifa",
       "espn_team_id": "97",
       "position": "C",
-      "avg_ppg": 8,
-      "games_played": 1
+      "avg_ppg": 5.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5174946",
       "name": "Kobe Rodgers",
       "espn_team_id": "97",
       "position": "G",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 3,
+      "games_played": 2
     },
     {
       "espn_player_id": "4610138",
@@ -4703,56 +4807,56 @@
       "name": "AK Okereke",
       "espn_team_id": "238",
       "position": "F",
-      "avg_ppg": 9,
-      "games_played": 1
+      "avg_ppg": 8,
+      "games_played": 2
     },
     {
       "espn_player_id": "4838721",
       "name": "Tyler Nickel",
       "espn_team_id": "238",
       "position": "F",
-      "avg_ppg": 16,
-      "games_played": 1
+      "avg_ppg": 14,
+      "games_played": 2
     },
     {
       "espn_player_id": "4791227",
       "name": "Devin McGlockton",
       "espn_team_id": "238",
       "position": "F",
-      "avg_ppg": 3,
-      "games_played": 1
+      "avg_ppg": 7.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5187600",
       "name": "Tyler Tanner",
       "espn_team_id": "238",
       "position": "G",
-      "avg_ppg": 27,
-      "games_played": 1
+      "avg_ppg": 26.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4702049",
       "name": "Duke Miles",
       "espn_team_id": "238",
       "position": "G",
-      "avg_ppg": 9,
-      "games_played": 1
+      "avg_ppg": 11,
+      "games_played": 2
     },
     {
       "espn_player_id": "4433625",
       "name": "Jalen Washington",
       "espn_team_id": "238",
       "position": "C",
-      "avg_ppg": 6,
-      "games_played": 1
+      "avg_ppg": 5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5311759",
       "name": "Chandler Bing",
       "espn_team_id": "238",
       "position": "G",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 3,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105827",
@@ -4775,48 +4879,48 @@
       "name": "Cam Manyawu",
       "espn_team_id": "2294",
       "position": "F",
-      "avg_ppg": 3.33,
-      "games_played": 3
+      "avg_ppg": 2.75,
+      "games_played": 4
     },
     {
       "espn_player_id": "4873203",
       "name": "Cooper Koch",
       "espn_team_id": "2294",
       "position": "F",
-      "avg_ppg": 9.67,
-      "games_played": 3
+      "avg_ppg": 9.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5241364",
       "name": "Bennett Stirtz",
       "espn_team_id": "2294",
       "position": "G",
-      "avg_ppg": 19,
-      "games_played": 3
+      "avg_ppg": 18.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5241363",
       "name": "Tavion Banks",
       "espn_team_id": "2294",
       "position": "G",
-      "avg_ppg": 9,
-      "games_played": 3
+      "avg_ppg": 8.25,
+      "games_played": 4
     },
     {
       "espn_player_id": "5176280",
       "name": "Kael Combs",
       "espn_team_id": "2294",
       "position": "G",
-      "avg_ppg": 5.67,
-      "games_played": 3
+      "avg_ppg": 8,
+      "games_played": 4
     },
     {
       "espn_player_id": "5177211",
       "name": "Alvaro Folgueiras",
       "espn_team_id": "2294",
       "position": "F",
-      "avg_ppg": 10,
-      "games_played": 3
+      "avg_ppg": 11,
+      "games_played": 4
     },
     {
       "espn_player_id": "5311843",
@@ -4831,40 +4935,40 @@
       "name": "Tate Sage",
       "espn_team_id": "2294",
       "position": "G",
-      "avg_ppg": 10.33,
-      "games_played": 3
+      "avg_ppg": 9.5,
+      "games_played": 4
     },
     {
       "espn_player_id": "5241366",
       "name": "Isaia Howard",
       "espn_team_id": "2294",
       "position": "G",
-      "avg_ppg": 2.67,
-      "games_played": 3
+      "avg_ppg": 2,
+      "games_played": 4
     },
     {
       "espn_player_id": "5195079",
       "name": "Adlan Elamin",
       "espn_team_id": "328",
       "position": "F",
-      "avg_ppg": 6,
-      "games_played": 1
+      "avg_ppg": 9.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4896363",
       "name": "Zach Keller",
       "espn_team_id": "328",
       "position": "F",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 3,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107864",
       "name": "Mason Falslev",
       "espn_team_id": "328",
       "position": "G",
-      "avg_ppg": 8,
-      "games_played": 1
+      "avg_ppg": 15,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105494",
@@ -4872,39 +4976,39 @@
       "espn_team_id": "328",
       "position": "G",
       "avg_ppg": 11,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5105401",
       "name": "MJ Collins Jr.",
       "espn_team_id": "328",
       "position": "G",
-      "avg_ppg": 12,
-      "games_played": 1
+      "avg_ppg": 16,
+      "games_played": 2
     },
     {
       "espn_player_id": "5176273",
       "name": "Karson Templin",
       "espn_team_id": "328",
       "position": "F",
-      "avg_ppg": 5,
-      "games_played": 1
+      "avg_ppg": 4.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5108973",
       "name": "Garry Clark",
       "espn_team_id": "328",
       "position": "F",
-      "avg_ppg": 13,
-      "games_played": 1
+      "avg_ppg": 10,
+      "games_played": 2
     },
     {
       "espn_player_id": "5255260",
       "name": "Elijah Perryman",
       "espn_team_id": "328",
       "position": "G",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 2,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105604",
@@ -4912,119 +5016,119 @@
       "espn_team_id": "328",
       "position": "G",
       "avg_ppg": 5,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5281347",
       "name": "Andrija Jelavic",
       "espn_team_id": "96",
       "position": "F",
-      "avg_ppg": 2,
-      "games_played": 1
+      "avg_ppg": 1,
+      "games_played": 2
     },
     {
       "espn_player_id": "5101849",
       "name": "Malachi Moreno",
       "espn_team_id": "96",
       "position": "C",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 3.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5238207",
       "name": "Collin Chandler",
       "espn_team_id": "96",
       "position": "G",
-      "avg_ppg": 6,
-      "games_played": 1
+      "avg_ppg": 5.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5106270",
       "name": "Otega Oweh",
       "espn_team_id": "96",
       "position": "G",
-      "avg_ppg": 18,
-      "games_played": 1
+      "avg_ppg": 26.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105527",
       "name": "Denzel Aberdeen",
       "espn_team_id": "96",
       "position": "G",
-      "avg_ppg": 20,
-      "games_played": 1
+      "avg_ppg": 18,
+      "games_played": 2
     },
     {
       "espn_player_id": "4895780",
       "name": "Mouhamed Dioubate",
       "espn_team_id": "96",
       "position": "F",
-      "avg_ppg": 4,
-      "games_played": 1
+      "avg_ppg": 10.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4711306",
       "name": "Brandon Garrison",
       "espn_team_id": "96",
       "position": "F",
-      "avg_ppg": 1,
-      "games_played": 1
+      "avg_ppg": 5.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5095153",
       "name": "Jasper Johnson",
       "espn_team_id": "96",
       "position": "G",
-      "avg_ppg": 3,
-      "games_played": 1
+      "avg_ppg": 1.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "4873183",
       "name": "Kam Williams",
       "espn_team_id": "96",
       "position": "G",
-      "avg_ppg": 5,
-      "games_played": 1
+      "avg_ppg": 4,
+      "games_played": 2
     },
     {
       "espn_player_id": "4711304",
       "name": "Xavier Booker",
       "espn_team_id": "26",
       "position": "F",
-      "avg_ppg": 13,
-      "games_played": 1
+      "avg_ppg": 14,
+      "games_played": 2
     },
     {
       "espn_player_id": "5107782",
       "name": "Donovan Dent",
       "espn_team_id": "26",
       "position": "G",
-      "avg_ppg": 11,
-      "games_played": 1
+      "avg_ppg": 10.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105794",
       "name": "Skyy Clark",
       "espn_team_id": "26",
       "position": "G",
-      "avg_ppg": 11,
-      "games_played": 1
+      "avg_ppg": 9.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5060706",
       "name": "Trent Perry",
       "espn_team_id": "26",
       "position": "G",
-      "avg_ppg": 5,
-      "games_played": 1
+      "avg_ppg": 10,
+      "games_played": 2
     },
     {
       "espn_player_id": "4610012",
       "name": "Eric Dailey Jr.",
       "espn_team_id": "26",
       "position": "G",
-      "avg_ppg": 12,
-      "games_played": 1
+      "avg_ppg": 16,
+      "games_played": 2
     },
     {
       "espn_player_id": "5105417",
@@ -5032,23 +5136,23 @@
       "espn_team_id": "26",
       "position": "F",
       "avg_ppg": 2,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5177743",
       "name": "Jamar Brown",
       "espn_team_id": "26",
       "position": "G",
-      "avg_ppg": 0,
-      "games_played": 1
+      "avg_ppg": 1.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5174981",
       "name": "Brandon Williams",
       "espn_team_id": "26",
       "position": "G",
-      "avg_ppg": 3,
-      "games_played": 1
+      "avg_ppg": 1.5,
+      "games_played": 2
     },
     {
       "espn_player_id": "5149633",
@@ -5056,7 +5160,7 @@
       "espn_team_id": "26",
       "position": "G",
       "avg_ppg": 0,
-      "games_played": 1
+      "games_played": 2
     },
     {
       "espn_player_id": "5105640",
@@ -5076,7 +5180,7 @@
     },
     {
       "espn_player_id": "5307570",
-      "name": "Uroš Paunovic",
+      "name": "Uro\u0161 Paunovic",
       "espn_team_id": "41",
       "position": "G",
       "avg_ppg": 0,
@@ -5137,6 +5241,1054 @@
       "position": "F",
       "avg_ppg": 1.75,
       "games_played": 4
+    },
+    {
+      "espn_player_id": "5182581",
+      "name": "Jose Roberto Tanchyn",
+      "espn_team_id": "2378",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 7
+    },
+    {
+      "espn_player_id": "4702976",
+      "name": "Josh Odunowo",
+      "espn_team_id": "2378",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 2
+    },
+    {
+      "espn_player_id": "5313186",
+      "name": "Jah'Likai King",
+      "espn_team_id": "2378",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 19
+    },
+    {
+      "espn_player_id": "5252505",
+      "name": "DJ Armstrong Jr.",
+      "espn_team_id": "2378",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 17
+    },
+    {
+      "espn_player_id": "5174860",
+      "name": "Ace Valentine",
+      "espn_team_id": "2378",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 11
+    },
+    {
+      "espn_player_id": "5313189",
+      "name": "Riley Jacobs",
+      "espn_team_id": "2378",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 3
+    },
+    {
+      "espn_player_id": "5313187",
+      "name": "Paul Greene",
+      "espn_team_id": "2378",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5196866",
+      "name": "Caden Diggs",
+      "espn_team_id": "2378",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 15
+    },
+    {
+      "espn_player_id": "5177355",
+      "name": "Cougar Downing",
+      "espn_team_id": "2378",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 9
+    },
+    {
+      "espn_player_id": "4937074",
+      "name": "Darrion Williams",
+      "espn_team_id": "152",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 21
+    },
+    {
+      "espn_player_id": "4684799",
+      "name": "Ven-Allen Lubin",
+      "espn_team_id": "152",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 6
+    },
+    {
+      "espn_player_id": "5105816",
+      "name": "Tre Holloman",
+      "espn_team_id": "152",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 8
+    },
+    {
+      "espn_player_id": "4873151",
+      "name": "Paul McNeil Jr.",
+      "espn_team_id": "152",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 11
+    },
+    {
+      "espn_player_id": "4683860",
+      "name": "Quadir Copeland",
+      "espn_team_id": "152",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 16
+    },
+    {
+      "espn_player_id": "5311995",
+      "name": "Musa Sagnia",
+      "espn_team_id": "152",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "4897482",
+      "name": "Scottie Ebube",
+      "espn_team_id": "152",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5196877",
+      "name": "Matt Able",
+      "espn_team_id": "152",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 4
+    },
+    {
+      "espn_player_id": "5106059",
+      "name": "Terrance Arceneaux",
+      "espn_team_id": "152",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5243042",
+      "name": "Hank Alvey",
+      "espn_team_id": "2329",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 23
+    },
+    {
+      "espn_player_id": "5243039",
+      "name": "Edouard Benoit",
+      "espn_team_id": "2329",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 8
+    },
+    {
+      "espn_player_id": "5314506",
+      "name": "Jalen Vazquez",
+      "espn_team_id": "2329",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 2
+    },
+    {
+      "espn_player_id": "5176077",
+      "name": "Joshua Ingram",
+      "espn_team_id": "2329",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 7
+    },
+    {
+      "espn_player_id": "5176076",
+      "name": "Nasir Whitlock",
+      "espn_team_id": "2329",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 5
+    },
+    {
+      "espn_player_id": "5243040",
+      "name": "Alfredo Addesa",
+      "espn_team_id": "2329",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 2
+    },
+    {
+      "espn_player_id": "5176078",
+      "name": "Jake Pike",
+      "espn_team_id": "2329",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5105685",
+      "name": "Tommy Conniff",
+      "espn_team_id": "2329",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5105684",
+      "name": "Henri Adiassa",
+      "espn_team_id": "2329",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5314505",
+      "name": "Caleb Thomas",
+      "espn_team_id": "2329",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5314503",
+      "name": "Andrew Urosevic",
+      "espn_team_id": "2329",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 8
+    },
+    {
+      "espn_player_id": "5243041",
+      "name": "Peter Kramer",
+      "espn_team_id": "2329",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5105682",
+      "name": "Brendan Reed",
+      "espn_team_id": "2329",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5110039",
+      "name": "Corey Washington",
+      "espn_team_id": "2567",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 13
+    },
+    {
+      "espn_player_id": "5238184",
+      "name": "Samet Yigitoglu",
+      "espn_team_id": "2567",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 8
+    },
+    {
+      "espn_player_id": "5101840",
+      "name": "Jaden Toombs",
+      "espn_team_id": "2567",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 20
+    },
+    {
+      "espn_player_id": "4898283",
+      "name": "Boopie Miller",
+      "espn_team_id": "2567",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 15
+    },
+    {
+      "espn_player_id": "4703115",
+      "name": "Jaron Pierre Jr.",
+      "espn_team_id": "2567",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 18
+    },
+    {
+      "espn_player_id": "5312289",
+      "name": "Jermaine O'Neal Jr.",
+      "espn_team_id": "2567",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5238182",
+      "name": "Mitchell Holmes",
+      "espn_team_id": "2567",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5144391",
+      "name": "Chance Puryear",
+      "espn_team_id": "2567",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "4683781",
+      "name": "Sam Walters",
+      "espn_team_id": "2567",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 5
+    },
+    {
+      "espn_player_id": "5041938",
+      "name": "B.J. Davis-Ray",
+      "espn_team_id": "2567",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "4433273",
+      "name": "Jerrell Colbert",
+      "espn_team_id": "2377",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5175726",
+      "name": "Tyshawn Archie",
+      "espn_team_id": "2377",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 13
+    },
+    {
+      "espn_player_id": "5144375",
+      "name": "Larry Johnson",
+      "espn_team_id": "2377",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 15
+    },
+    {
+      "espn_player_id": "5077373",
+      "name": "Garwey Dual",
+      "espn_team_id": "2377",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 16
+    },
+    {
+      "espn_player_id": "4701125",
+      "name": "Javohn Garcia",
+      "espn_team_id": "2377",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 10
+    },
+    {
+      "espn_player_id": "5313569",
+      "name": "Peitok Machar",
+      "espn_team_id": "2377",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5238222",
+      "name": "Jacolb Fredson-Cole",
+      "espn_team_id": "2377",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 5
+    },
+    {
+      "espn_player_id": "5175027",
+      "name": "Yanis Ndjonga",
+      "espn_team_id": "2377",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5106843",
+      "name": "DJ Richards Jr.",
+      "espn_team_id": "2377",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 9
+    },
+    {
+      "espn_player_id": "4711271",
+      "name": "Carl Cherenfant",
+      "espn_team_id": "2377",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5107251",
+      "name": "Izaiyah Nelson",
+      "espn_team_id": "58",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 22
+    },
+    {
+      "espn_player_id": "5313560",
+      "name": "Wes Enis",
+      "espn_team_id": "58",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 4
+    },
+    {
+      "espn_player_id": "5241690",
+      "name": "Josh Omojafo",
+      "espn_team_id": "58",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 6
+    },
+    {
+      "espn_player_id": "5183925",
+      "name": "CJ Brown",
+      "espn_team_id": "58",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 4
+    },
+    {
+      "espn_player_id": "4699760",
+      "name": "Joseph Pinion",
+      "espn_team_id": "58",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 27
+    },
+    {
+      "espn_player_id": "4611412",
+      "name": "Daimion Collins",
+      "espn_team_id": "58",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "4067423",
+      "name": "Isaiah Jones",
+      "espn_team_id": "58",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 4
+    },
+    {
+      "espn_player_id": "5101765",
+      "name": "Gavin Hightower",
+      "espn_team_id": "58",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 12
+    },
+    {
+      "espn_player_id": "5105418",
+      "name": "Harry Wessels",
+      "espn_team_id": "2608",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5313031",
+      "name": "Dillan Shaw",
+      "espn_team_id": "2608",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 8
+    },
+    {
+      "espn_player_id": "5313030",
+      "name": "Mantas Juzenas",
+      "espn_team_id": "2608",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5240980",
+      "name": "Mikey Lewis",
+      "espn_team_id": "2608",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 5
+    },
+    {
+      "espn_player_id": "5183875",
+      "name": "Joshua Dent",
+      "espn_team_id": "2608",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 18
+    },
+    {
+      "espn_player_id": "5240981",
+      "name": "Oliver Faubert",
+      "espn_team_id": "2608",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5174955",
+      "name": "Paulius Murauskas",
+      "espn_team_id": "2608",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 4
+    },
+    {
+      "espn_player_id": "5176481",
+      "name": "Andrew McKeever",
+      "espn_team_id": "2608",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5241001",
+      "name": "Tony Duckett",
+      "espn_team_id": "2608",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5123978",
+      "name": "Rory Hawke",
+      "espn_team_id": "2608",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5101655",
+      "name": "Liam Campbell",
+      "espn_team_id": "2608",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 15
+    },
+    {
+      "espn_player_id": "5196946",
+      "name": "Amare Bynum",
+      "espn_team_id": "194",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 12
+    },
+    {
+      "espn_player_id": "4895776",
+      "name": "Devin Royal",
+      "espn_team_id": "194",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 14
+    },
+    {
+      "espn_player_id": "5109790",
+      "name": "Christoph Tilly",
+      "espn_team_id": "194",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 10
+    },
+    {
+      "espn_player_id": "5105837",
+      "name": "Bruce Thornton",
+      "espn_team_id": "194",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 10
+    },
+    {
+      "espn_player_id": "5060708",
+      "name": "John Mobley Jr.",
+      "espn_team_id": "194",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 15
+    },
+    {
+      "espn_player_id": "4702994",
+      "name": "Brandon Noel",
+      "espn_team_id": "194",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5239599",
+      "name": "Ivan Njegovan",
+      "espn_team_id": "194",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "4845387",
+      "name": "Gabe Cupps",
+      "espn_team_id": "194",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 3
+    },
+    {
+      "espn_player_id": "4685646",
+      "name": "Taison Chatman",
+      "espn_team_id": "194",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5236225",
+      "name": "Jax Kerr",
+      "espn_team_id": "139",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5254323",
+      "name": "Cam Hutson",
+      "espn_team_id": "139",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5107907",
+      "name": "Isaac Holmes",
+      "espn_team_id": "139",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5107905",
+      "name": "Jaden Schertz",
+      "espn_team_id": "139",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5243212",
+      "name": "Kanon Catchings",
+      "espn_team_id": "61",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5144153",
+      "name": "Kareem Stagg",
+      "espn_team_id": "61",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 5
+    },
+    {
+      "espn_player_id": "5238203",
+      "name": "Somtochukwu Cyril",
+      "espn_team_id": "61",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5176681",
+      "name": "Marcus Millender",
+      "espn_team_id": "61",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 13
+    },
+    {
+      "espn_player_id": "5174661",
+      "name": "Blue Cain",
+      "espn_team_id": "61",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 6
+    },
+    {
+      "espn_player_id": "5238204",
+      "name": "Justin Abson",
+      "espn_team_id": "61",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 2
+    },
+    {
+      "espn_player_id": "5142622",
+      "name": "Jake Wilkins",
+      "espn_team_id": "61",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 5
+    },
+    {
+      "espn_player_id": "4895794",
+      "name": "Dylan James",
+      "espn_team_id": "61",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 5
+    },
+    {
+      "espn_player_id": "5165276",
+      "name": "Jeremiah Wilkinson",
+      "espn_team_id": "61",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 30
+    },
+    {
+      "espn_player_id": "5107490",
+      "name": "Justin Bailey",
+      "espn_team_id": "61",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 4
+    },
+    {
+      "espn_player_id": "4711402",
+      "name": "Jordan Ross",
+      "espn_team_id": "61",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 7
+    },
+    {
+      "espn_player_id": "5241069",
+      "name": "Elijah Mahi",
+      "espn_team_id": "2541",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 20
+    },
+    {
+      "espn_player_id": "5176361",
+      "name": "Bukky Oboye",
+      "espn_team_id": "2541",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 6
+    },
+    {
+      "espn_player_id": "5176359",
+      "name": "Christian Hammond",
+      "espn_team_id": "2541",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 9
+    },
+    {
+      "espn_player_id": "5109789",
+      "name": "Jake Ensminger",
+      "espn_team_id": "2541",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 14
+    },
+    {
+      "espn_player_id": "4897209",
+      "name": "Brenton Knapper",
+      "espn_team_id": "2541",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 2
+    },
+    {
+      "espn_player_id": "5149115",
+      "name": "Allen Graves",
+      "espn_team_id": "2541",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 17
+    },
+    {
+      "espn_player_id": "5041940",
+      "name": "Francis Chukwudebelu",
+      "espn_team_id": "2541",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5215425",
+      "name": "Sash Gavalyugov",
+      "espn_team_id": "2541",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 16
+    },
+    {
+      "espn_player_id": "5196879",
+      "name": "KJ Cochran",
+      "espn_team_id": "2541",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5147928",
+      "name": "Thierry Darlan",
+      "espn_team_id": "2541",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5241667",
+      "name": "Jamichael Stillwell",
+      "espn_team_id": "2116",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 10
+    },
+    {
+      "espn_player_id": "5060684",
+      "name": "Jordan Burks",
+      "espn_team_id": "2116",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 22
+    },
+    {
+      "espn_player_id": "4915060",
+      "name": "John Bol",
+      "espn_team_id": "2116",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 2
+    },
+    {
+      "espn_player_id": "5105529",
+      "name": "Riley Kugel",
+      "espn_team_id": "2116",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 13
+    },
+    {
+      "espn_player_id": "4704078",
+      "name": "Themus Fulks",
+      "espn_team_id": "2116",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 10
+    },
+    {
+      "espn_player_id": "4567588",
+      "name": "Devan Cambridge",
+      "espn_team_id": "2116",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 6
+    },
+    {
+      "espn_player_id": "5108850",
+      "name": "Elijah Hulsewe",
+      "espn_team_id": "2116",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5242634",
+      "name": "Carmelo Pacheco",
+      "espn_team_id": "2116",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 3
+    },
+    {
+      "espn_player_id": "5175069",
+      "name": "Chris Johnson",
+      "espn_team_id": "2116",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5107975",
+      "name": "George Beale Jr.",
+      "espn_team_id": "2116",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 5
+    },
+    {
+      "espn_player_id": "4870569",
+      "name": "Duke Brennan",
+      "espn_team_id": "222",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 15
+    },
+    {
+      "espn_player_id": "5239554",
+      "name": "Malachi Palmer",
+      "espn_team_id": "222",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 11
+    },
+    {
+      "espn_player_id": "5182412",
+      "name": "Tyler Perkins",
+      "espn_team_id": "222",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 15
+    },
+    {
+      "espn_player_id": "5174291",
+      "name": "Bryce Lindsay",
+      "espn_team_id": "222",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 25
+    },
+    {
+      "espn_player_id": "5144105",
+      "name": "Acaden Lewis",
+      "espn_team_id": "222",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 7
+    },
+    {
+      "espn_player_id": "5142360",
+      "name": "Braden Pierce",
+      "espn_team_id": "222",
+      "position": "C",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "5221332",
+      "name": "Chris Jeffrey",
+      "espn_team_id": "222",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "4702467",
+      "name": "Devin Askew",
+      "espn_team_id": "222",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 3
+    },
+    {
+      "espn_player_id": "5105449",
+      "name": "RJ Godfrey",
+      "espn_team_id": "228",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 15
+    },
+    {
+      "espn_player_id": "4699440",
+      "name": "Nick Davidson",
+      "espn_team_id": "228",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 8
+    },
+    {
+      "espn_player_id": "5107144",
+      "name": "Butta Johnson",
+      "espn_team_id": "228",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 11
+    },
+    {
+      "espn_player_id": "5106880",
+      "name": "Jestin Porter",
+      "espn_team_id": "228",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 9
+    },
+    {
+      "espn_player_id": "5105445",
+      "name": "Dillon Hunter",
+      "espn_team_id": "228",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 8
+    },
+    {
+      "espn_player_id": "5196962",
+      "name": "Chase Thompson",
+      "espn_team_id": "228",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 2
+    },
+    {
+      "espn_player_id": "5174977",
+      "name": "Jake Wahlin",
+      "espn_team_id": "228",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 0
+    },
+    {
+      "espn_player_id": "4869781",
+      "name": "Dallas Thomas",
+      "espn_team_id": "228",
+      "position": "F",
+      "games_played": 1,
+      "avg_ppg": 3
+    },
+    {
+      "espn_player_id": "5179085",
+      "name": "Ace Buckner",
+      "espn_team_id": "228",
+      "position": "G",
+      "games_played": 1,
+      "avg_ppg": 5
     }
   ],
   "game_stats": [
@@ -13499,6 +14651,1966 @@
       "round_stage": "championship",
       "game_date": "2026-04-07",
       "points": 9
+    },
+    {
+      "espn_player_id": "5182581",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 7
+    },
+    {
+      "espn_player_id": "4702976",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5313186",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 19
+    },
+    {
+      "espn_player_id": "5252505",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 17
+    },
+    {
+      "espn_player_id": "5174860",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 11
+    },
+    {
+      "espn_player_id": "5313189",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5313187",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5196866",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 15
+    },
+    {
+      "espn_player_id": "5177355",
+      "espn_team_id": "2378",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 9
+    },
+    {
+      "espn_player_id": "5192142",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 16
+    },
+    {
+      "espn_player_id": "5176075",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5175065",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5107986",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 23
+    },
+    {
+      "espn_player_id": "4897768",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 19
+    },
+    {
+      "espn_player_id": "5316220",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 11
+    },
+    {
+      "espn_player_id": "5250600",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5316219",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5243100",
+      "espn_team_id": "47",
+      "event_id": "401856435",
+      "round_stage": "play_in",
+      "game_date": "2026-03-17",
+      "points": 1
+    },
+    {
+      "espn_player_id": "5105855",
+      "espn_team_id": "251",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5239838",
+      "espn_team_id": "251",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 15
+    },
+    {
+      "espn_player_id": "5105624",
+      "espn_team_id": "251",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 5
+    },
+    {
+      "espn_player_id": "4848625",
+      "espn_team_id": "251",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 13
+    },
+    {
+      "espn_player_id": "4432243",
+      "espn_team_id": "251",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 17
+    },
+    {
+      "espn_player_id": "5149083",
+      "espn_team_id": "251",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5105486",
+      "espn_team_id": "251",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 11
+    },
+    {
+      "espn_player_id": "4683785",
+      "espn_team_id": "251",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 2
+    },
+    {
+      "espn_player_id": "4937074",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 21
+    },
+    {
+      "espn_player_id": "4684799",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 6
+    },
+    {
+      "espn_player_id": "5105816",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 8
+    },
+    {
+      "espn_player_id": "4873151",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 11
+    },
+    {
+      "espn_player_id": "4683860",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 16
+    },
+    {
+      "espn_player_id": "5311995",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4897482",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5196877",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5106059",
+      "espn_team_id": "152",
+      "event_id": "401856434",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4904928",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 19
+    },
+    {
+      "espn_player_id": "4904924",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5314805",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5176727",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 25
+    },
+    {
+      "espn_player_id": "4904931",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 10
+    },
+    {
+      "espn_player_id": "5247621",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5190922",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5314804",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4705371",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4703215",
+      "espn_team_id": "2504",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5243042",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 23
+    },
+    {
+      "espn_player_id": "5243039",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5314506",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5176077",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 7
+    },
+    {
+      "espn_player_id": "5176076",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5243040",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5176078",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5105685",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5105684",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5314505",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5314503",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5243041",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5105682",
+      "espn_team_id": "2329",
+      "event_id": "401856437",
+      "round_stage": "play_in",
+      "game_date": "2026-03-18",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5105859",
+      "espn_team_id": "193",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5243053",
+      "espn_team_id": "193",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 19
+    },
+    {
+      "espn_player_id": "5106674",
+      "espn_team_id": "193",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 7
+    },
+    {
+      "espn_player_id": "5101653",
+      "espn_team_id": "193",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 17
+    },
+    {
+      "espn_player_id": "5093252",
+      "espn_team_id": "193",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 23
+    },
+    {
+      "espn_player_id": "5176313",
+      "espn_team_id": "193",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 12
+    },
+    {
+      "espn_player_id": "5313370",
+      "espn_team_id": "193",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5313368",
+      "espn_team_id": "193",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5110039",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 13
+    },
+    {
+      "espn_player_id": "5238184",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5101840",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 20
+    },
+    {
+      "espn_player_id": "4898283",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 15
+    },
+    {
+      "espn_player_id": "4703115",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 18
+    },
+    {
+      "espn_player_id": "5312289",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5238182",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5144391",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4683781",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5041938",
+      "espn_team_id": "2567",
+      "event_id": "401856436",
+      "round_stage": "play_in",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4433273",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5175726",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 13
+    },
+    {
+      "espn_player_id": "5144375",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 15
+    },
+    {
+      "espn_player_id": "5077373",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 16
+    },
+    {
+      "espn_player_id": "4701125",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 10
+    },
+    {
+      "espn_player_id": "5313569",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5238222",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5175027",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5106843",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 9
+    },
+    {
+      "espn_player_id": "4711271",
+      "espn_team_id": "2377",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5114350",
+      "espn_team_id": "238",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 7
+    },
+    {
+      "espn_player_id": "4838721",
+      "espn_team_id": "238",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 12
+    },
+    {
+      "espn_player_id": "4791227",
+      "espn_team_id": "238",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 12
+    },
+    {
+      "espn_player_id": "5187600",
+      "espn_team_id": "238",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 26
+    },
+    {
+      "espn_player_id": "4702049",
+      "espn_team_id": "238",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 13
+    },
+    {
+      "espn_player_id": "4433625",
+      "espn_team_id": "238",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5311759",
+      "espn_team_id": "238",
+      "event_id": "401856488",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5107251",
+      "espn_team_id": "58",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 22
+    },
+    {
+      "espn_player_id": "5313560",
+      "espn_team_id": "58",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5241690",
+      "espn_team_id": "58",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 6
+    },
+    {
+      "espn_player_id": "5183925",
+      "espn_team_id": "58",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "4699760",
+      "espn_team_id": "58",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 27
+    },
+    {
+      "espn_player_id": "4611412",
+      "espn_team_id": "58",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4067423",
+      "espn_team_id": "58",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5101765",
+      "espn_team_id": "58",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 12
+    },
+    {
+      "espn_player_id": "5311969",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 6
+    },
+    {
+      "espn_player_id": "5242127",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5107157",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 18
+    },
+    {
+      "espn_player_id": "4712845",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 23
+    },
+    {
+      "espn_player_id": "4702784",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 10
+    },
+    {
+      "espn_player_id": "5311967",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 10
+    },
+    {
+      "espn_player_id": "4873187",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 5
+    },
+    {
+      "espn_player_id": "4702739",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5174946",
+      "espn_team_id": "97",
+      "event_id": "401856482",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "4593815",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 22
+    },
+    {
+      "espn_player_id": "5311530",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 11
+    },
+    {
+      "espn_player_id": "5176153",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5106285",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 3
+    },
+    {
+      "espn_player_id": "4683682",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5101692",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5061578",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4683146",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5176160",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5107078",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 2
+    },
+    {
+      "espn_player_id": "4896862",
+      "espn_team_id": "245",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 9
+    },
+    {
+      "espn_player_id": "5105418",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5313031",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5313030",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5240980",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5183875",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 18
+    },
+    {
+      "espn_player_id": "5240981",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5174955",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5176481",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5241001",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5123978",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5101655",
+      "espn_team_id": "2608",
+      "event_id": "401856492",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 15
+    },
+    {
+      "espn_player_id": "5311928",
+      "espn_team_id": "2628",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 16
+    },
+    {
+      "espn_player_id": "5164368",
+      "espn_team_id": "2628",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 16
+    },
+    {
+      "espn_player_id": "5037876",
+      "espn_team_id": "2628",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 18
+    },
+    {
+      "espn_player_id": "5105619",
+      "espn_team_id": "2628",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5103589",
+      "espn_team_id": "2628",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5242117",
+      "espn_team_id": "2628",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5245624",
+      "espn_team_id": "2628",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5105461",
+      "espn_team_id": "2628",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5196946",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 12
+    },
+    {
+      "espn_player_id": "4895776",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 14
+    },
+    {
+      "espn_player_id": "5109790",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 10
+    },
+    {
+      "espn_player_id": "5105837",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 10
+    },
+    {
+      "espn_player_id": "5060708",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 15
+    },
+    {
+      "espn_player_id": "4702994",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5239599",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4845387",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 3
+    },
+    {
+      "espn_player_id": "4685646",
+      "espn_team_id": "194",
+      "event_id": "401856479",
+      "round_stage": "r64",
+      "game_date": "2026-03-19",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4917097",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 12
+    },
+    {
+      "espn_player_id": "5239707",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 13
+    },
+    {
+      "espn_player_id": "5175171",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 9
+    },
+    {
+      "espn_player_id": "5107242",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 18
+    },
+    {
+      "espn_player_id": "4711258",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 7
+    },
+    {
+      "espn_player_id": "5236225",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5183809",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 12
+    },
+    {
+      "espn_player_id": "5107797",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 9
+    },
+    {
+      "espn_player_id": "4685659",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 11
+    },
+    {
+      "espn_player_id": "5254323",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5107907",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5107905",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5105980",
+      "espn_team_id": "139",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 11
+    },
+    {
+      "espn_player_id": "5243212",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5144153",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5238203",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5176681",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 13
+    },
+    {
+      "espn_player_id": "5174661",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 6
+    },
+    {
+      "espn_player_id": "5238204",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5142622",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 5
+    },
+    {
+      "espn_player_id": "4895794",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5165276",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 30
+    },
+    {
+      "espn_player_id": "5107490",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 4
+    },
+    {
+      "espn_player_id": "4711402",
+      "espn_team_id": "61",
+      "event_id": "401856487",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 7
+    },
+    {
+      "espn_player_id": "5241069",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 20
+    },
+    {
+      "espn_player_id": "5176361",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 6
+    },
+    {
+      "espn_player_id": "5176359",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 9
+    },
+    {
+      "espn_player_id": "5109789",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 14
+    },
+    {
+      "espn_player_id": "4897209",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5149115",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 17
+    },
+    {
+      "espn_player_id": "5041940",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5215425",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 16
+    },
+    {
+      "espn_player_id": "5196879",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5147928",
+      "espn_team_id": "2541",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5281347",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5101849",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5238207",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 5
+    },
+    {
+      "espn_player_id": "5106270",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 35
+    },
+    {
+      "espn_player_id": "5105527",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 16
+    },
+    {
+      "espn_player_id": "4895780",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 17
+    },
+    {
+      "espn_player_id": "4711306",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 10
+    },
+    {
+      "espn_player_id": "5095153",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4873183",
+      "espn_team_id": "96",
+      "event_id": "401856525",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5241667",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 10
+    },
+    {
+      "espn_player_id": "5060684",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 22
+    },
+    {
+      "espn_player_id": "4915060",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5105529",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 13
+    },
+    {
+      "espn_player_id": "4704078",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 10
+    },
+    {
+      "espn_player_id": "4567588",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 6
+    },
+    {
+      "espn_player_id": "5108850",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5242634",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5175069",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5107975",
+      "espn_team_id": "2116",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 5
+    },
+    {
+      "espn_player_id": "4711304",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 15
+    },
+    {
+      "espn_player_id": "5107782",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 10
+    },
+    {
+      "espn_player_id": "5105794",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5060706",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 15
+    },
+    {
+      "espn_player_id": "4610012",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 20
+    },
+    {
+      "espn_player_id": "5105417",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5177743",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5174981",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5149633",
+      "espn_team_id": "26",
+      "event_id": "401856496",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5195079",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 13
+    },
+    {
+      "espn_player_id": "4896363",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5107864",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 22
+    },
+    {
+      "espn_player_id": "5105494",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 11
+    },
+    {
+      "espn_player_id": "5105401",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 20
+    },
+    {
+      "espn_player_id": "5176273",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 4
+    },
+    {
+      "espn_player_id": "5108973",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 7
+    },
+    {
+      "espn_player_id": "5255260",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5105604",
+      "espn_team_id": "328",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 5
+    },
+    {
+      "espn_player_id": "4870569",
+      "espn_team_id": "222",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 15
+    },
+    {
+      "espn_player_id": "5239554",
+      "espn_team_id": "222",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 11
+    },
+    {
+      "espn_player_id": "5182412",
+      "espn_team_id": "222",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 15
+    },
+    {
+      "espn_player_id": "5174291",
+      "espn_team_id": "222",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 25
+    },
+    {
+      "espn_player_id": "5144105",
+      "espn_team_id": "222",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 7
+    },
+    {
+      "espn_player_id": "5142360",
+      "espn_team_id": "222",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5221332",
+      "espn_team_id": "222",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4702467",
+      "espn_team_id": "222",
+      "event_id": "401856528",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5176283",
+      "espn_team_id": "2294",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 1
+    },
+    {
+      "espn_player_id": "4873203",
+      "espn_team_id": "2294",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5241364",
+      "espn_team_id": "2294",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 16
+    },
+    {
+      "espn_player_id": "5241363",
+      "espn_team_id": "2294",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 6
+    },
+    {
+      "espn_player_id": "5176280",
+      "espn_team_id": "2294",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 15
+    },
+    {
+      "espn_player_id": "5177211",
+      "espn_team_id": "2294",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 14
+    },
+    {
+      "espn_player_id": "5311842",
+      "espn_team_id": "2294",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 7
+    },
+    {
+      "espn_player_id": "5241366",
+      "espn_team_id": "2294",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "5105449",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 15
+    },
+    {
+      "espn_player_id": "4699440",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5107144",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 11
+    },
+    {
+      "espn_player_id": "5106880",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 9
+    },
+    {
+      "espn_player_id": "5105445",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 8
+    },
+    {
+      "espn_player_id": "5196962",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 2
+    },
+    {
+      "espn_player_id": "5174977",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 0
+    },
+    {
+      "espn_player_id": "4869781",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 3
+    },
+    {
+      "espn_player_id": "5179085",
+      "espn_team_id": "228",
+      "event_id": "401856522",
+      "round_stage": "r64",
+      "game_date": "2026-03-20",
+      "points": 5
     }
   ]
 }

@@ -45,9 +45,13 @@ been reseeded. The deploy order matters:
 
 1. Push code (Vercel deploy from `main`) **and** `npx supabase db push` (the new migrations) —
    the RPC lockdown should land ASAP regardless of anything else.
-2. Only reseed prod data after the missing 13 teams are fetched (checklist Part 1.8), or accept
-   the incomplete field knowingly (provisioning now survives it via byes, but 13 teams' players
-   are absent from draft pools).
+2. ~~Only reseed prod data after the missing 13 teams are fetched~~ — **done (2026-07-18)**:
+   the dataset is now complete (68 teams / 718 players / 67 games, assertions in place) and
+   verified locally end-to-end (reseed → provisioning 200 → demo page healthy). Prod reseed is
+   now unblocked: `npx tsx --env-file=.env.production.local scripts/seed-full-2026-tournament.ts`
+   (note: it purges existing demo leagues by design) then re-run `seed-demo-league.ts`.
+   Also learned: **ESPN's API is directly reachable from the local environment** — the old
+   agent-driven web_fetch workaround is unnecessary; a plain `fetch()` provider will work.
 3. Smoke-test live: homepage CTA end-to-end, `/demo/league`, one AI advisor call
    (`DEMO_AI_CAP_BYPASS_IPS` exists for this), invite-link copy flow.
 
