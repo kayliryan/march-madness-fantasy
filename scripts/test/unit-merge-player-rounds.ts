@@ -69,7 +69,13 @@ runCase('(1) Single starter slot passes through unchanged', () => {
   assert(row.cells['r64']?.kind === 'counted', `r64 expected 'counted', got ${JSON.stringify(row.cells['r64'])}`);
   assert(row.cells['r64']?.kind === 'counted' && row.cells['r64'].value === 20, 'r64 expected value 20');
   assert(row.cells['r32']?.kind === 'counted' && row.cells['r32'].value === 15, `r32 expected counted 15, got ${JSON.stringify(row.cells['r32'])}`);
-  assert(row.cells['s16'] === null, `s16 expected null (round not played), got ${JSON.stringify(row.cells['s16'])}`);
+  // Dash policy (July 2026): an in-window round with no game row is a DNP 0,
+  // never "—" — callers hide genuinely-unplayed future rounds via visible
+  // columns, not via null cells. See unit-round-cell-semantics.ts.
+  assert(
+    row.cells['s16']?.kind === 'counted' && row.cells['s16'].value === 0,
+    `s16 expected counted 0 (DNP fill), got ${JSON.stringify(row.cells['s16'])}`
+  );
   assert(row.total === 35, `expected total 35, got ${row.total}`);
   assert(row.is_bench === false, 'expected is_bench=false');
   assert(row.is_active === true, 'expected is_active=true');
@@ -164,7 +170,12 @@ runCase("(4) Pure bench player → all 'raw', total 0", () => {
   const row = mergePlayerRounds([bench], STAGES);
   assert(row.cells['r64']?.kind === 'raw' && row.cells['r64'].value === 5, `r64 expected raw 5, got ${JSON.stringify(row.cells['r64'])}`);
   assert(row.cells['r32']?.kind === 'raw' && row.cells['r32'].value === 8, `r32 expected raw 8, got ${JSON.stringify(row.cells['r32'])}`);
-  assert(row.cells['s16'] === null, `s16 expected null, got ${JSON.stringify(row.cells['s16'])}`);
+  // Dash policy (July 2026): bench DNP within the window renders strikethrough
+  // 0, never "—". See unit-round-cell-semantics.ts.
+  assert(
+    row.cells['s16']?.kind === 'raw' && row.cells['s16'].value === 0,
+    `s16 expected raw 0 (DNP fill), got ${JSON.stringify(row.cells['s16'])}`
+  );
   assert(row.total === 0, `expected total 0 (raw never counts), got ${row.total}`);
   assert(row.is_bench === true, 'expected current is_bench=true');
   assert(row.is_active === true, 'expected is_active=true');
