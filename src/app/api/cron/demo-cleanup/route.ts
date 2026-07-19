@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { AI_MEMBER_POOL_IDS } from '@/lib/services/DemoProvisioningService';
 
 const JOB_NAME = 'demo_cleanup';
+
+// The shared AI-member pool users are permanent infrastructure reused by every
+// demo league — they must NEVER be deleted here, even when they show up as
+// ai_member_user_id rows for orphaned leagues. Legacy per-commissioner AI users
+// (from leagues provisioned before the shared pool existed) are not in this set
+// and still get cleaned up below.
+const POOL_ID_SET = new Set<string>(AI_MEMBER_POOL_IDS);
 
 // Best-effort lock release — 10-minute timeout (Section 3.18) is the fallback if this fails.
 async function releaseCronLock(jobName: string): Promise<void> {
@@ -51,9 +59,12 @@ export async function GET(request: NextRequest) {
 
   // Delete AI member auth.users rows BEFORE deleting leagues
   // (league_members cascade destroys the mapping after league deletion).
+  // Shared-pool AI users are filtered OUT — deleting them would break every
+  // other live demo league that shares them (see POOL_ID_SET above). Only
+  // legacy per-commissioner AI users remain in this list.
   const aiMemberIds = [...new Set(
     (orphanedData as { ai_member_user_id: string }[]).map((r) => r.ai_member_user_id)
-  )];
+  )].filter((id) => !POOL_ID_SET.has(id));
   for (const id of aiMemberIds) {
     await supabaseAdmin.auth.admin.deleteUser(id).catch(() => {});
   }
@@ -93,7 +104,11 @@ export async function GET(request: NextRequest) {
 
   // Mirrors what an auth.users -> public.users ON DELETE CASCADE would do if that
   // FK existed: drop the now-orphaned public.users rows for AI members and the commissioner.
-  const orphanedUserIds = [...new Set([...aiMemberIds, ...commissionerIds])];
+  // aiMemberIds is already pool-filtered; the extra .filter is belt-and-suspenders
+  // (the RPC also only deletes rows whose auth.users row is gone, which is never
+  // true for pool users since we never delete their auth rows above).
+  const orphanedUserIds = [...new Set([...aiMemberIds, ...commissionerIds])]
+    .filter((id) => !POOL_ID_SET.has(id));
   const { error: usersDeleteError } = await supabaseAdmin
     .rpc('delete_orphaned_demo_users', { p_user_ids: orphanedUserIds });
   if (usersDeleteError) {

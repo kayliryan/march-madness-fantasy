@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import type { Session } from '@supabase/supabase-js';
 import { DemoProvisioningService } from '@/lib/services/DemoProvisioningService';
 import { checkDemoProvisionAllowed, logDemoProvision } from '@/lib/utils/demoAiCap';
 
@@ -34,18 +35,35 @@ export async function POST(request: NextRequest) {
     }
   );
 
-  // Step: anonymous session, no demo_viewer claim (provisioned commissioners get full write access)
-  const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
-  if (anonError || !anonData.session || !anonData.user) {
-    console.error('[demo/provision] signInAnonymously failed:', anonError);
+  // Step: anonymous session, no demo_viewer claim (provisioned commissioners get
+  // full write access). The shared AI-member pool check is independent of the anon
+  // user, so overlap it with the GoTrue call — but keep both AFTER the cap check
+  // above (a capped request must not create an anon session or pool users).
+  let session: Session;
+  let anonUserId: string;
+  try {
+    const [anonResult] = await Promise.all([
+      supabase.auth.signInAnonymously(),
+      DemoProvisioningService.ensureAiMemberPool(),
+    ]);
+    const { data: anonData, error: anonError } = anonResult;
+    if (anonError || !anonData.session || !anonData.user) {
+      console.error('[demo/provision] signInAnonymously failed:', anonError);
+      return NextResponse.json({ error: 'Failed to create demo session' }, { status: 500 });
+    }
+    session = anonData.session;
+    anonUserId = anonData.user.id;
+  } catch (err) {
+    console.error('[demo/provision] session/pool setup failed:', err);
     return NextResponse.json({ error: 'Failed to create demo session' }, { status: 500 });
   }
 
   try {
-    const { league_id, draft_session_id } = await DemoProvisioningService.provision(anonData.user.id);
-    await logDemoProvision(ip);
+    const { league_id, draft_session_id } = await DemoProvisioningService.provision(anonUserId);
+    // Fire-and-forget: this is a rate-limit log write, not a correctness gate —
+    // don't spend a round trip of user-facing latency waiting on it.
+    logDemoProvision(ip).catch((err) => console.error('[demo/provision] logDemoProvision failed:', err));
 
-    const { session } = anonData;
     const expires_at = session.expires_at
       ? new Date(session.expires_at * 1000).toISOString()
       : new Date(Date.now() + session.expires_in * 1000).toISOString();

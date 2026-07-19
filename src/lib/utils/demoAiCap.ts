@@ -186,36 +186,47 @@ export async function checkDemoProvisionAllowed(
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const now = new Date().toISOString();
 
-  // Concurrent-league cap (primary backstop — not the IP limit)
-  const { count: activeLeagues } = await supabaseAdmin
-    .from('leagues')
-    .select('id', { count: 'exact', head: true })
-    .eq('is_demo', true)
-    .or(`demo_expires_at.is.null,demo_expires_at.gt.${now}`);
+  // The two counts are independent — run them in one parallel round trip instead
+  // of two sequential ones (this is on the latency-critical provision path).
+  // Localhost and allowlisted tester IPs skip the per-IP count entirely;
+  // rate-limiting them defeats testing without providing any real abuse protection.
+  const [{ count: activeLeagues }, ipCountResult] = await Promise.all([
+    // Concurrent-league cap (primary backstop — not the IP limit)
+    supabaseAdmin
+      .from('leagues')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_demo', true)
+      .or(`demo_expires_at.is.null,demo_expires_at.gt.${now}`),
+    // Per-IP rate limit (secondary signal — see NOTE on limitations above).
+    isTrustedTestIp(ip)
+      ? Promise.resolve(null)
+      : supabaseAdmin
+          .from('demo_provision_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('ip', ip)
+          .gte('provisioned_at', since24h),
+  ]);
 
+  // Check order preserved from the previous sequential version: the concurrent
+  // cap (primary backstop) wins if both are exceeded.
   if ((activeLeagues ?? 0) >= DEMO_CONCURRENT_LEAGUE_CAP) {
     return { allowed: false, reason: 'concurrent_cap' };
   }
 
-  // Per-IP rate limit (secondary signal — see NOTE on limitations above).
-  // Localhost and allowlisted tester IPs skip this; rate-limiting them defeats
-  // testing without providing any real abuse protection.
-  if (!isTrustedTestIp(ip)) {
-    const { count: ipCount } = await supabaseAdmin
-      .from('demo_provision_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('ip', ip)
-      .gte('provisioned_at', since24h);
-
-    if ((ipCount ?? 0) >= DEMO_PROVISION_PER_IP_PER_DAY) {
-      return { allowed: false, reason: 'ip_rate_limit' };
-    }
+  if (ipCountResult !== null && (ipCountResult.count ?? 0) >= DEMO_PROVISION_PER_IP_PER_DAY) {
+    return { allowed: false, reason: 'ip_rate_limit' };
   }
 
   return { allowed: true };
 }
 
-/** Logs a provision event for per-IP rate tracking (call after successful provision). */
+/**
+ * Logs a provision event for per-IP rate tracking (call after successful provision).
+ * Callers on the latency-critical path may fire-and-forget this (with .catch) —
+ * it's a rate-limit log write, not a correctness gate. Throws on insert error so
+ * a fire-and-forget .catch actually sees failures.
+ */
 export async function logDemoProvision(ip: string): Promise<void> {
-  await supabaseAdmin.from('demo_provision_log').insert({ ip });
+  const { error } = await supabaseAdmin.from('demo_provision_log').insert({ ip });
+  if (error) throw error;
 }
