@@ -114,3 +114,19 @@ documented, none are code bugs:**
   environmental (see above) before treating it as a regression.
 - Nothing here was force-pushed or rebased; history is append-only, matching the migration
   discipline.
+
+## Production deploy status (2026-07-18, end of final session)
+
+- **Live on marchmonsters.com:** all code through `a6f4154`, plus the complete real 2026
+  dataset (reseeded) and a fresh static demo league. "Explore as Commissioner" warm latency:
+  ~5s → **2.2s** (shared AI-member pool `a6f4154`: zero GoTrue createUser calls warm; the 7
+  pool auth users are permanent infrastructure — demo-cleanup exempts them by id).
+- **NOT done: the 5 pending migrations** (`20260713000004` through `20260718000002`).
+  `supabase db push` requires the prod database password, which only Kayli has (the attempt
+  in-session failed auth). Until she runs it, prod degrades gracefully but notably: the RPC
+  EXECUTE security lockdown is NOT in effect, demo per-league + real-league AI caps are
+  inactive, sync heartbeat isn't recorded, and league-scoped position overrides are
+  unavailable. **Running `npx supabase db push` (it will prompt for the DB password) is the
+  single most important remaining step.**
+- Remaining latency (~2.2s warm) is round-trip count × Vercel↔Supabase RTT; check region
+  alignment (no `regions` key in vercel.json → default iad1) before further code changes.
