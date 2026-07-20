@@ -104,6 +104,30 @@ export default function Home() {
         <DemoCTAs />
       </main>
 
+      {/* What is this project */}
+      <section className="mx-auto max-w-4xl px-6 pb-16 sm:px-10">
+        <div className="rounded-lg border border-neutral-800 bg-[#0d0d0d] p-6 sm:p-8">
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-yellow-400">
+            What this is
+          </p>
+          <p className="text-sm text-neutral-300 leading-relaxed">
+            This is a real fantasy-sports web app for the NCAA March Madness tournament: you draft
+            college players, their actual per-game tournament points accrue round by round, and a
+            benched player automatically promotes into your starting lineup when a starter&apos;s
+            team gets eliminated.
+          </p>
+          <p className="mt-4 text-sm text-neutral-300 leading-relaxed">
+            It&apos;s a genuine full-stack build, not a tutorial project — a real-time snake draft
+            with concurrency-safe pick submission, a live scoring engine, Postgres with row-level
+            security enforced throughout, and an AI draft advisor.
+          </p>
+          <p className="mt-4 text-sm text-neutral-300 leading-relaxed">
+            The demo above is the actual app running on real 2026 tournament data — no signup
+            required.
+          </p>
+        </div>
+      </section>
+
       {/* How the demo works */}
       <section className="mx-auto max-w-5xl px-6 pb-16 sm:px-10">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
@@ -145,6 +169,38 @@ export default function Home() {
               {item}
             </span>
           ))}
+        </div>
+      </section>
+
+      {/* About the developer */}
+      <section className="mx-auto max-w-5xl px-6 pb-16 sm:px-10">
+        <div className="rounded-lg border border-neutral-800 bg-[#0d0d0d] p-6 sm:p-8 text-center">
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-neutral-600">
+            Built by Kayli Ryan
+          </p>
+          <p className="mx-auto max-w-xl text-sm text-neutral-400 leading-relaxed">
+            Kayli Ryan is a full-stack software engineer with 3 years of experience building
+            production web applications. She built this project end to end — Next.js, Supabase/Postgres,
+            real-time features, and AI integration.
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <a
+              href="https://www.linkedin.com/in/kayliryan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-4 py-2 text-xs font-bold uppercase tracking-wide text-neutral-300 hover:border-yellow-400 hover:text-yellow-400"
+            >
+              LinkedIn
+            </a>
+            <a
+              href="https://www.github.com/kayliryan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-4 py-2 text-xs font-bold uppercase tracking-wide text-neutral-300 hover:border-yellow-400 hover:text-yellow-400"
+            >
+              GitHub
+            </a>
+          </div>
         </div>
       </section>
 
