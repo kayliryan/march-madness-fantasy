@@ -71,10 +71,31 @@ runCase('Starter DNP in a played round → counted 0, never “—”', () => {
   assert(c.r32?.kind === 'counted' && c.r32.value === 0, `r32 DNP: expected counted 0, got ${JSON.stringify(c.r32)}`);
 });
 
-runCase('Starter with a game score but no credit yet (accumulator lag) → raw, not a false 0', () => {
+runCase('Starter with a game score but no credit yet (accumulator lag) → counted with the real score', () => {
+  // NEW inclusive semantics: a starter inside the scoring window ALWAYS counts. If the
+  // scoring_event is not written yet, surface the real game score as counted (it will
+  // count) rather than a struck 'raw' or a false 0.
   const slot: RoundCellSlot = { is_bench: false, acquired_at_round_stage: 'draft', released_at_round_stage: null };
   const cell = getRoundCell('r32', { r64: 15 }, { r64: 15, r32: 22 }, slot);
-  assert(cell?.kind === 'raw' && cell.value === 22, `expected raw 22, got ${JSON.stringify(cell)}`);
+  assert(cell?.kind === 'counted' && cell.value === 22, `expected counted 22, got ${JSON.stringify(cell)}`);
+});
+
+runCase('Starter’s elimination round itself → COUNTED (the loss counts), Elim strictly after', () => {
+  // NEW inclusive semantics: released_at_round_stage is the loss round; it counts.
+  // (Old semantics rendered it 'raw'/struck.)
+  const slot: RoundCellSlot = { is_bench: false, acquired_at_round_stage: 'draft', released_at_round_stage: 's16', release_reason: 'eliminated' };
+  const c = cells({ r64: 20, r32: 9, s16: 7 }, { r64: 20, r32: 9, s16: 7 }, slot);
+  assert(c.r64?.kind === 'counted' && c.r64.value === 20, `r64: ${JSON.stringify(c.r64)}`);
+  assert(c.s16?.kind === 'counted' && c.s16.value === 7, `s16 (loss round) expected counted 7, got ${JSON.stringify(c.s16)}`);
+  for (const s of ['e8', 'f4', 'championship'] as const) {
+    assert(c[s]?.kind === 'elim', `${s}: expected elim, got ${JSON.stringify(c[s])}`);
+  }
+});
+
+runCase('Loss round with a game but no credited value → counted with the raw value', () => {
+  const slot: RoundCellSlot = { is_bench: false, acquired_at_round_stage: 'draft', released_at_round_stage: 'r32', release_reason: 'eliminated' };
+  const cell = getRoundCell('r32', {}, { r64: 12, r32: 8 }, slot); // no counted_pts yet
+  assert(cell?.kind === 'counted' && cell.value === 8, `expected counted 8, got ${JSON.stringify(cell)}`);
 });
 
 // ── The two legitimate “—” cases ──────────────────────────────────────────
@@ -95,11 +116,23 @@ runCase('Rounds before acquisition → “—” preserved', () => {
   assert(getRoundCell('r32', {}, {}, slot) === null, 'pre-acquisition r32 should be null');
 });
 
-// ── Promotion masking (why bench post-release = elim is safe) ─────────────
+// ── Promotion: release_reason='substituted' bench row ─────────────────────
+
+runCase('Promoted bench row (release_reason=substituted): raw before promotion, null from the promotion round on', () => {
+  // Bench slot released r32 because the player was PROMOTED (not their team dying).
+  const benchSlot: RoundCellSlot = { is_bench: true, acquired_at_round_stage: 'draft', released_at_round_stage: 'r32', release_reason: 'substituted' };
+  const raw = { r64: 9, r32: 14, s16: 18 };
+  // Before the promotion round → raw (struck bench points)
+  const r64 = getRoundCell('r64', {}, raw, benchSlot);
+  assert(r64?.kind === 'raw' && r64.value === 9, `r64 expected raw 9, got ${JSON.stringify(r64)}`);
+  // The promotion round and everything after → null (the starter slot owns them)
+  assert(getRoundCell('r32', {}, raw, benchSlot) === null, 'r32 (promotion round) must be null on the substituted bench row');
+  assert(getRoundCell('s16', {}, raw, benchSlot) === null, 's16 must be null on the substituted bench row');
+});
 
 runCase('Promoted player: starter cells outrank the old bench slot in per-player views', () => {
   // Old bench slot released r32 (promotion); new starter slot acquired r32.
-  const benchSlot: RoundCellSlot = { is_bench: true, acquired_at_round_stage: 'draft', released_at_round_stage: 'r32' };
+  const benchSlot: RoundCellSlot = { is_bench: true, acquired_at_round_stage: 'draft', released_at_round_stage: 'r32', release_reason: 'substituted' };
   const starterSlot: RoundCellSlot = { is_bench: false, acquired_at_round_stage: 'r32', released_at_round_stage: null };
   const counted = { r32: 14, s16: 18 };
   const raw = { r64: 9, r32: 14, s16: 18 };

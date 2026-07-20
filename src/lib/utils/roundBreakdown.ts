@@ -7,10 +7,11 @@ import type { RoundStage } from '@/lib/constants/rounds';
  * page, and the mock draft season simulator). One rule set, one place.
  *
  * - 'counted' — this roster slot was active (starting) this round; the value
- *   counts toward the user's total.
- * - 'raw'     — the player's team played this round, but the points don't
- *   count (they were on the bench, or this is the round their team lost while
- *   they were starting — the game still happened, just doesn't score).
+ *   counts toward the user's total. INCLUDES the round the team lost while the
+ *   player was starting — the elimination game is a real game the starter played,
+ *   so it scores (see the inclusive window below).
+ * - 'raw'     — the player's team played this round, but the points don't count
+ *   (they were on the bench).
  * - 'elim'    — this player's team was already out by this round; nothing to show.
  * - null      — not on this roster slot yet, or the round hasn't happened.
  */
@@ -24,6 +25,15 @@ export interface RoundCellSlot {
   is_bench: boolean;
   acquired_at_round_stage: string;
   released_at_round_stage?: string | null;
+  /**
+   * Why the slot ended. Only 'substituted' changes the semantics here: it marks
+   * a BENCH row that ended because the player was promoted away (not their team
+   * dying), so this row only owns the rounds strictly BEFORE the promotion — the
+   * player's separate starter row owns the promotion round onward. Any other
+   * value (or undefined) is treated as a team-elimination / still-active window
+   * whose release round is INCLUSIVE (the loss round counts).
+   */
+  release_reason?: string | null;
 }
 
 /** Points lookup accepted by getRoundCell — callers may already have either shape. */
@@ -40,21 +50,28 @@ function lookupPoints(points: PointsLookup, stage: string): number | undefined {
  * rawPoints: round_stage -> the player's actual game score that round, regardless of active/bench
  * slot: acquisition/release window + whether this assignment is a bench or starter slot
  *
+ * The scoring window is [acqIdx, relIdx] and is INCLUSIVE of the release round
+ * for a team-elimination (release_reason 'eliminated', or a null release meaning
+ * still active): the round the team lost is a real game the starter played, so it
+ * COUNTS. Only strictly-after-release rounds are 'elim'. This mirrors
+ * ScoreAccumulator's inclusive crediting window so the display total equals the
+ * summed 'counted' cells.
+ *
+ * release_reason 'substituted' is the one exception: it marks a BENCH row that
+ * ended because the player was promoted away (not their team dying). That row
+ * only owns the rounds strictly BEFORE the promotion (raw/struck); the promotion
+ * round onward returns null because the player's separate STARTER row owns those
+ * rounds, and every per-player view (mergePlayerRounds, buildRoundEntries) then
+ * shows the starter cells. (Older prod data wrote 'eliminated' on promoted bench
+ * rows; that still renders correctly via counted > raw > elim > null masking —
+ * 'substituted' just makes it explicit.)
+ *
  * Dash policy: within a slot's owned window a cell is NEVER null — a missing
  * game_scores row means the player didn't check in (DNP) while their team
  * played, which renders as 0 (single-elimination: an alive team plays every
- * round). null is reserved for the two structural cases: rounds before the
- * slot was acquired, and the play_in column for the 60 teams that were never
- * in a First Four game.
- *
- * Post-release bench cells return 'elim', mirroring how released starter
- * slots already render. When the release was actually a PROMOTION (not the
- * team dying), the same player has a starter slot covering those rounds, and
- * every per-player view (mergePlayerRounds, buildRoundEntries) picks the best
- * cell by counted > raw > elim > null — so the starter cells win and the
- * 'elim' never shows. release_reason can't distinguish the two cases at slot
- * level: promotions also write release_reason='eliminated' on the vacated
- * bench row (see RosterActivationService.activateSlot).
+ * round). null is reserved for the structural cases: rounds before the slot was
+ * acquired, the play_in column for teams that were never in a First Four game,
+ * and a 'substituted' bench row's post-promotion rounds.
  */
 export function getRoundCell(
   stage: RoundStage,
@@ -75,34 +92,35 @@ export function getRoundCell(
   // play_in row means "no game existed", not "scored zero".
   const playInNoGame = stage === 'play_in' && lookupPoints(rawPoints, stage) === undefined;
 
+  // A bench row that ended because the player was PROMOTED away: it owns only the
+  // rounds strictly before the promotion; the promotion round onward belongs to
+  // the player's starter row (merge prefers it).
+  if (slot.release_reason === 'substituted') {
+    if (stageIdx >= relIdx) return null;
+    if (playInNoGame) return null;
+    return { kind: 'raw', value: lookupPoints(rawPoints, stage) ?? 0 };
+  }
+
+  // Team-elimination ('eliminated') or still-active (null release): the window
+  // [acqIdx, relIdx] is INCLUSIVE of the release round — the loss round counts.
+  if (stageIdx > relIdx) return { kind: 'elim' }; // strictly after elimination
+
+  if (playInNoGame) return null;
+
   if (slot.is_bench) {
-    // Bench period runs through (and including) the release round, if any
-    const inBenchPeriod = stageIdx < relIdx || (slot.released_at_round_stage != null && stageIdx === relIdx);
-    if (!inBenchPeriod) return { kind: 'elim' }; // see doc comment — masked by starter cells when promoted
-    if (playInNoGame) return null;
+    // Bench never scores toward the total, but the game still happened this round.
     return { kind: 'raw', value: lookupPoints(rawPoints, stage) ?? 0 };
   }
 
-  // Active/starter slot — inside the scoring window, counts toward the total
-  if (stageIdx < relIdx) {
-    if (playInNoGame) return null;
-    const counted = lookupPoints(countedPoints, stage);
-    if (counted !== undefined) return { kind: 'counted', value: counted };
-    // Game happened but nothing credited yet (accumulator lag / fire-and-forget
-    // recompute in flight): show the real score as raw rather than a false 0.
-    const raw = lookupPoints(rawPoints, stage);
-    if (raw !== undefined) return { kind: 'raw', value: raw };
-    return { kind: 'counted', value: 0 }; // DNP — played-round zero, counts as zero
-  }
-
-  // Elimination round itself — the team played (and lost) this round; show the raw game score
-  if (stageIdx === relIdx && slot.released_at_round_stage != null) {
-    if (playInNoGame) return null;
-    return { kind: 'raw', value: lookupPoints(rawPoints, stage) ?? 0 };
-  }
-
-  // Any round after elimination
-  return { kind: 'elim' };
+  // Starter inside the (inclusive) scoring window — counts toward the total.
+  const counted = lookupPoints(countedPoints, stage);
+  if (counted !== undefined) return { kind: 'counted', value: counted };
+  // Game happened but nothing credited yet (accumulator lag / fire-and-forget
+  // recompute in flight): the player was starting, so it still counts — surface
+  // the real score as counted rather than a false 0.
+  const raw = lookupPoints(rawPoints, stage);
+  if (raw !== undefined) return { kind: 'counted', value: raw };
+  return { kind: 'counted', value: 0 }; // DNP — played-round zero, counts as zero
 }
 
 /** Convenience: build a round_stage -> points Map from an array of {round_stage, points}. */

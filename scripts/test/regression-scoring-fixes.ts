@@ -7,9 +7,10 @@ import { db, assert, createTestLeague, cleanupTestLeague, setSubmittedBenchOrder
  * Regression tests for two scoring-engine correctness fixes:
  *
  *  Bug 1 — ScoreAccumulator credited bench slots as if they were starters.
- *    Canonical rule (src/lib/utils/roundBreakdown.ts): a slot's points count only
- *    when is_bench=false AND the game round is strictly before released_at_round_stage.
- *    Bench slots NEVER score.
+ *    Canonical rule (src/lib/utils/roundBreakdown.ts): a starter slot's points count
+ *    when is_bench=false AND acqIdx <= gameRound <= releaseRound — INCLUSIVE of the
+ *    release round (the team's elimination/loss game still scores). Bench slots NEVER
+ *    score.
  *
  *  Bug 2 — activateBatch (end_of_round leagues) never released eliminated starters'
  *    slots; only activateImmediate ever set is_active=false + released_at_round_stage.
@@ -175,13 +176,14 @@ async function main(): Promise<void> {
     }
   });
 
-  // Case 2 — Release-round boundary is strict: round == released_at_round_stage does NOT score
-  await runCase('Case 2 — Release-round boundary (r64 credited, r32 not)', async () => {
+  // Case 2 — Release-round boundary is INCLUSIVE for team-elimination: the release
+  // round (the loss game) IS credited; the round strictly after is not.
+  await runCase('Case 2 — Release-round boundary inclusive (r64 and the r32 loss both credited, s16 not)', async () => {
     const league = await createTestLeague({ memberCount: 2, activationTiming: 'immediate' });
     try {
       const starter = league.player_assignments.get(league.commissioner_id)![0]; // G1
 
-      // Starter released entering r32: scores r64 (strictly before release), NOT r32.
+      // Starter's team eliminated in r32: scores r64 AND r32 (the loss round), NOT s16.
       await db
         .from('roster_slots')
         .update({ released_at_round_stage: 'r32', is_active: false, release_reason: 'eliminated' })
@@ -190,7 +192,8 @@ async function main(): Promise<void> {
 
       const gsR64 = await upsertGameScore(starter, 'r64', '2026-04-12', 21);
       const gsR32 = await upsertGameScore(starter, 'r32', '2026-04-12', 30);
-      await ScoreAccumulator.runForGames([gsR64, gsR32]);
+      const gsS16 = await upsertGameScore(starter, 's16', '2026-04-12', 40); // after elimination — must not count
+      await ScoreAccumulator.runForGames([gsR64, gsR32, gsS16]);
 
       const evR64 = await getEventByGameScore(league.league_id, gsR64);
       assert(
@@ -200,8 +203,14 @@ async function main(): Promise<void> {
 
       const evR32 = await getEventByGameScore(league.league_id, gsR32);
       assert(
-        evR32 === null,
-        `r32 game (the release round itself): expected NO credit, got ${JSON.stringify(evR32)}`
+        evR32 !== null && evR32.points_credited === 30,
+        `r32 game (the elimination/loss round itself): expected credited @30 (inclusive), got ${JSON.stringify(evR32)}`
+      );
+
+      const evS16 = await getEventByGameScore(league.league_id, gsS16);
+      assert(
+        evS16 === null,
+        `s16 game (strictly after elimination): expected NO credit, got ${JSON.stringify(evS16)}`
       );
     } finally {
       await cleanupTestLeague(league.league_id);

@@ -148,9 +148,10 @@ runCase('(d) Bench→starter transition round dedupes to exactly one row, starte
   assert(rows[0].cell?.kind === 'counted', `expected 'counted', got ${JSON.stringify(rows[0].cell)}`);
 });
 
-// (e) The release round itself → 'raw', not 'counted', for a plain starter
-//     whose team lost that round (no promotion/continuation involved).
-runCase("(e) Starter's release round itself → kind 'raw', not 'counted'", () => {
+// (e) The release round itself → 'counted' (the loss game scores), for a plain
+//     starter whose team lost that round. NEW inclusive semantics: the elimination
+//     round is inside the scoring window and counts; ScoreAccumulator credits it too.
+runCase("(e) Starter's release round itself → kind 'counted' (the loss counts)", () => {
   const slots = [
     slot({
       id: 'slot-e',
@@ -160,13 +161,14 @@ runCase("(e) Starter's release round itself → kind 'raw', not 'counted'", () =
     }),
   ];
   const gameScores = [gameScore('player-e', 'r32', 9)]; // the game they lost
-  const scoringEvents: RoundEntryScoringEventInput[] = []; // no credited points for the loss
+  // The accumulator now credits the loss round (inclusive window).
+  const scoringEvents = [scoringEvent(LEAGUE_USER, 'player-e', 'slot-e', 'r32', 9)];
 
   const rows = buildRoundEntries('r32', slots, gameScores, scoringEvents);
   assert(rows.length === 1, `expected 1 row, got ${rows.length}`);
-  assert(rows[0].cell?.kind === 'raw', `expected 'raw' at release round, got ${JSON.stringify(rows[0].cell)}`);
+  assert(rows[0].cell?.kind === 'counted', `expected 'counted' at release round, got ${JSON.stringify(rows[0].cell)}`);
   assert(
-    rows[0].cell?.kind === 'raw' && rows[0].cell.value === 9,
+    rows[0].cell?.kind === 'counted' && rows[0].cell.value === 9,
     `expected value 9, got ${JSON.stringify(rows[0].cell)}`
   );
 });

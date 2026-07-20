@@ -181,7 +181,7 @@ export interface RosterSlot {
   is_bench: boolean;
   acquired_at_round_stage: string;
   released_at_round_stage?: string;
-  release_reason?: 'eliminated' | 'injury_sub' | 'correction' | 'traded' | 'waiver' | 'draft_cancelled';
+  release_reason?: 'eliminated' | 'substituted' | 'injury_sub' | 'correction' | 'traded' | 'waiver' | 'draft_cancelled';
   override_by?: string;
   override_reason?: string;
   created_at: string;

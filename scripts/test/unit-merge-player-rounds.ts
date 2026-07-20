@@ -95,6 +95,7 @@ runCase('(2) Bench-then-promoted merges to one row, counted wins the transition 
     is_active: false,
     acquired_at_round_stage: 'draft',
     released_at_round_stage: 'r32', // promoted at r32
+    release_reason: 'substituted', // ended by promotion, not team elimination
     counted_pts: {}, // bench never earns credited points
     raw_pts: { r64: 10, r32: 12, s16: 18 },
   });
@@ -132,24 +133,25 @@ runCase('(2) Bench-then-promoted merges to one row, counted wins the transition 
 
 // (3) Player eliminated with no promotion → trailing 'elim' cells, current
 //     status released.
-runCase("(3) Eliminated starter → trailing 'elim' cells, current status released", () => {
+runCase("(3) Eliminated starter → loss round counts, trailing 'elim' cells, current status released", () => {
   const starter = slot({
     player_id: 'p3',
     is_active: false, // released when eliminated
     acquired_at_round_stage: 'draft',
     released_at_round_stage: 's16', // team lost in s16
-    counted_pts: { r64: 20, r32: 9 },
+    release_reason: 'eliminated',
+    counted_pts: { r64: 20, r32: 9, s16: 7 }, // accumulator now credits the loss round (inclusive)
     raw_pts: { r64: 20, r32: 9, s16: 7 },
   });
 
   const row = mergePlayerRounds([starter], STAGES);
   assert(row.cells['r64']?.kind === 'counted' && row.cells['r64'].value === 20, `r64 expected counted 20, got ${JSON.stringify(row.cells['r64'])}`);
   assert(row.cells['r32']?.kind === 'counted' && row.cells['r32'].value === 9, `r32 expected counted 9, got ${JSON.stringify(row.cells['r32'])}`);
-  // Elimination round itself: raw (played and lost — doesn't count)
-  assert(row.cells['s16']?.kind === 'raw' && row.cells['s16'].value === 7, `s16 expected raw 7, got ${JSON.stringify(row.cells['s16'])}`);
+  // Elimination round itself: COUNTED (played and lost — the loss game still scores)
+  assert(row.cells['s16']?.kind === 'counted' && row.cells['s16'].value === 7, `s16 expected counted 7 (loss counts), got ${JSON.stringify(row.cells['s16'])}`);
   // Rounds after elimination: elim badge
   assert(row.cells['e8']?.kind === 'elim', `e8 expected 'elim', got ${JSON.stringify(row.cells['e8'])}`);
-  assert(row.total === 29, `expected total 29 (counted only), got ${row.total}`);
+  assert(row.total === 36, `expected total 36 (20+9+7, loss round included), got ${row.total}`);
   assert(row.is_active === false, 'expected current status released (is_active=false)');
   assert(row.had_bench_stint === false, 'expected had_bench_stint=false');
   assert(row.promoted_at_round_stage === null, 'expected promoted_at_round_stage=null');

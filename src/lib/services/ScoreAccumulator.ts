@@ -65,8 +65,15 @@ export const ScoreAccumulator = {
           relIdx = rawRelIdx === -1 ? 0 : rawRelIdx;
         }
 
-        // Player must have been active during this game: acquired at or before game, released after
-        if (!(acqIdx <= gameStageIdx && gameStageIdx < relIdx)) continue;
+        // Player must have been active during this game. The window is INCLUSIVE of
+        // the release round: a starter slot released because its team was eliminated
+        // (release_reason 'eliminated', or a null release meaning still active) still
+        // played — and lost — the release-round game, so that round counts. Bench
+        // slots are already skipped above, and promoted-away bench rows (the only
+        // 'substituted' case) are bench, so every slot reaching here is a starter
+        // whose loss round should score. The relIdx=0 sentinel (unknown release
+        // stage) still means "never scores": no real game has gameStageIdx <= 0.
+        if (!(acqIdx <= gameStageIdx && gameStageIdx <= relIdx)) continue;
 
         // Check league settings for play_in scoring
         if (game.round_stage === 'play_in') {

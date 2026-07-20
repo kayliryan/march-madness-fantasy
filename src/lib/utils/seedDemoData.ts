@@ -1,7 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ROUND_STAGE_ORDER } from '@/lib/constants/rounds';
 import type { RoundStage } from '@/lib/constants/rounds';
-import { REGION_ORDER, simulateBracketRound } from '@/lib/utils/bracketSim';
 
 const SLOT_KEYS = ['G1', 'G2', 'F1', 'F2', 'C1', 'B1', 'B2', 'B3'] as const;
 type SlotKey = (typeof SLOT_KEYS)[number];
@@ -18,10 +17,12 @@ function debugLog(...args: unknown[]): void {
   if (DEBUG) console.log(...args);
 }
 
-// Bracket order used to pair round-1 matchups within a region — same convention
-// as src/lib/utils/bracketSim.ts (adjacent pairs meet, winners advance).
-const SEED_BRACKET_ORDER = [1, 16, 8, 9, 5, 12, 4, 13, 6, 11, 3, 14, 7, 10, 2, 15];
-const BRACKET_ROUNDS: RoundStage[] = ['r64', 'r32', 's16', 'e8', 'f4', 'championship'];
+/** The round immediately after `stage`, or null if `stage` is the last round. */
+function nextRoundStage(stage: RoundStage): RoundStage | null {
+  const idx = ROUND_STAGE_ORDER.indexOf(stage);
+  if (idx === -1 || idx === ROUND_STAGE_ORDER.length - 1) return null;
+  return ROUND_STAGE_ORDER[idx + 1];
+}
 
 type PlayerRow = {
   id: string;
@@ -98,10 +99,8 @@ export async function seedDemoLeagueData(
   const [teamsRes, playersRes, leagueRowRes, existingSessionRes] = await Promise.all([
     supabaseAdmin
       .from('teams')
-      .select('id, seed, region, is_eliminated, eliminated_in_round_stage')
-      .eq('season', season)
-      .order('region')
-      .order('seed'),
+      .select('id, espn_team_id')
+      .eq('season', season),
     supabaseAdmin
       .from('players')
       .select('id, name, position, avg_ppg, team_id, teams(seed, region)')
@@ -127,79 +126,89 @@ export async function seedDemoLeagueData(
     throw new Error(`seedDemoLeagueData: no teams found for season ${season} — run seed-players-2026.ts first`);
   }
 
-  type TeamRow = (typeof teams)[number];
-  const teamsByRegionSeed = new Map<string, TeamRow[]>();
-  for (const t of teams) {
-    const key = `${t.region}:${t.seed}`;
-    const arr = teamsByRegionSeed.get(key) ?? [];
-    arr.push(t);
-    teamsByRegionSeed.set(key, arr);
-  }
-
-  const playInLoserIds = new Set<string>();
-  for (const [, arr] of teamsByRegionSeed) {
-    if (arr.length > 1) playInLoserIds.add(arr[1].id);
-  }
-
-  // Run a REAL paired single-elimination bracket (src/lib/utils/bracketSim.ts) instead
-  // of a seed-tier heuristic. The old version gave every #1/#2 seed in every region a
-  // free pass all the way to the championship (elim=null for any seed<=2), which meant
-  // several teams simultaneously "played" a championship game that only one team can
-  // ever actually reach. This produces exactly one champion, and every other team's
-  // elimination round reflects an actual (simulated) loss to a specific opponent.
-  const regionsPresent = [...new Set(teams.map((t) => t.region))].sort(
-    (a, b) => REGION_ORDER.indexOf(a) - REGION_ORDER.indexOf(b)
-  );
-  let currentField = regionsPresent.flatMap((region) =>
-    SEED_BRACKET_ORDER.map((seed) => {
-      const candidates = teamsByRegionSeed.get(`${region}:${seed}`) ?? [];
-      const winner = candidates.find((t) => !playInLoserIds.has(t.id)) ?? candidates[0];
-      return winner ? { name: winner.id, seed, region } : null;
-    }).filter((t): t is { name: string; seed: number; region: string } => t !== null)
-  );
-
-  const bracketElimRound = new Map<string, RoundStage>(); // team id -> round they lost in
-  for (let i = 0; i < BRACKET_ROUNDS.length && currentField.length > 1; i++) {
-    const { winners, matchups } = simulateBracketRound(currentField);
-    for (const m of matchups) bracketElimRound.set(m.loser.name, BRACKET_ROUNDS[i]);
-    currentField = winners;
-  }
-  // currentField now holds exactly one team: the champion (never eliminated).
-
-  const teamElimMap = new Map<string, RoundStage | null>();
-  const teamUpdatePromises: PromiseLike<unknown>[] = [];
-  for (const t of teams) {
-    const elimRound = playInLoserIds.has(t.id) ? 'play_in' : (bracketElimRound.get(t.id) ?? null);
-    teamElimMap.set(t.id, elimRound);
-    if (!t.is_eliminated && elimRound) {
-      teamUpdatePromises.push(
-        supabaseAdmin
-          .from('teams')
-          .update({ is_eliminated: true, eliminated_in_round_stage: elimRound })
-          .eq('id', t.id)
-      );
-    }
-  }
-  // Not awaited here — nothing later in this function re-reads the teams table, so
-  // these writes are folded into the step-2 Promise.all below instead of costing
-  // their own round-trip.
-
   if (!allPlayers?.length) {
     throw new Error(`seedDemoLeagueData: no players found for season ${season} — run seed-players-2026.ts first`);
   }
-  const players = allPlayers as unknown as PlayerRow[];
+
+  // ── Scope the demo to the REAL tournament ──
+  // The `season` row set is SHARED and, in practice, mixed: the real ESPN-fetched
+  // tournament (teams carry an espn_team_id) plus an imported "Historical" family
+  // league (region='Historical', espn_team_id null, its own duplicate player rows).
+  // The demo must showcase ONLY the real tournament, so restrict the draft pool and
+  // every derivation below to teams that have an espn_team_id. If NONE do (a clean
+  // env or a future season seeded differently), fall back to all teams so the seed
+  // still works.
+  const realTeamIds = new Set(
+    teams.filter((t) => (t as { espn_team_id?: string | null }).espn_team_id != null).map((t) => t.id)
+  );
+  const scopeToReal = realTeamIds.size > 0;
+  const isRealTeam = (teamId: string): boolean => !scopeToReal || realTeamIds.has(teamId);
+
+  const players = (allPlayers as unknown as PlayerRow[]).filter((p) => isRealTeam(p.team_id));
+  if (!players.length) {
+    throw new Error(`seedDemoLeagueData: no real-tournament players found for season ${season}`);
+  }
+
+  // ── Derive each team's elimination round from REAL game_scores ──
+  // A team's elimination round E = the last (highest-ordered) round_stage in which
+  // ANY of that team's players has a REAL game_scores row (source='espn_api') — i.e.
+  // the round they lost. This is the ONLY source of truth for demo eliminations:
+  // never bracketSim, never the (historically sim-corrupted) teams table. The
+  // source='espn_api' filter pins us to the authoritative ESPN tournament feed and
+  // ignores any 'manual' rows on the shared season (e.g. test-harness fixtures that
+  // never get cleaned up), so real scores and this derived E agree by construction.
+  // A team whose last real game is the championship reached the final and is mapped
+  // to null (never eliminated) — neither finalist ever shows an Elim cell, and no
+  // round exceeds 'championship', so counting through the final is correct for both.
+  const playerTeamId = new Map(players.map((p) => [p.id, p.team_id]));
+  const CHAMPIONSHIP_IDX = ROUND_STAGE_ORDER.indexOf('championship');
+
+  const teamMaxRoundIdx = new Map<string, number>();
+  const GAME_SCORES_PAGE = 1000;
+  for (let from = 0; ; from += GAME_SCORES_PAGE) {
+    const { data, error } = await supabaseAdmin
+      .from('game_scores')
+      .select('player_id, round_stage')
+      .eq('season', season)
+      .eq('source', 'espn_api')
+      .range(from, from + GAME_SCORES_PAGE - 1);
+    if (error) {
+      throw new Error(`seedDemoLeagueData: failed to read game_scores for elimination derivation: ${error.message}`);
+    }
+    if (!data || data.length === 0) break;
+    for (const gs of data) {
+      const teamId = playerTeamId.get(gs.player_id as string);
+      if (!teamId) continue; // player not in the real-tournament pool
+      const idx = ROUND_STAGE_ORDER.indexOf(gs.round_stage as RoundStage);
+      if (idx === -1) continue;
+      const cur = teamMaxRoundIdx.get(teamId) ?? -1;
+      if (idx > cur) teamMaxRoundIdx.set(teamId, idx);
+    }
+    if (data.length < GAME_SCORES_PAGE) break;
+  }
+
+  const teamElimMap = new Map<string, RoundStage | null>();
+  for (const t of teams) {
+    if (!isRealTeam(t.id)) continue;
+    const maxIdx = teamMaxRoundIdx.get(t.id);
+    // No games at all (shouldn't happen for a fully-seeded season) or reached the
+    // championship → null (never eliminated). Otherwise E = the last round played.
+    if (maxIdx === undefined || maxIdx >= CHAMPIONSHIP_IDX) {
+      teamElimMap.set(t.id, null);
+    } else {
+      teamElimMap.set(t.id, ROUND_STAGE_ORDER[maxIdx] as RoundStage);
+    }
+  }
 
   const subEligibilityMatrix = (leagueRow?.settings as { sub_eligibility_matrix?: Record<'G' | 'F' | 'C', ('G' | 'F' | 'C')[]> } | null)
     ?.sub_eligibility_matrix ?? { G: ['G', 'F'], F: ['G', 'F'], C: ['C'] };
 
+  // Draft-ordering heuristic: prefer players whose team survived longer (higher
+  // round index), then higher avg_ppg. Never-eliminated (finalists) sort highest.
   const survivalScore = (teamId: string): number => {
     const elim = teamElimMap.get(teamId);
-    if (elim === undefined || elim === null) return 5; // alive through e8 (seeds 1-2)
-    if (elim === 'e8') return 4;
-    if (elim === 's16') return 3;
-    if (elim === 'r32') return 2;
-    if (elim === 'r64') return 1;
-    return 0; // play_in loser
+    if (elim === undefined || elim === null) return ROUND_STAGE_ORDER.length;
+    return ROUND_STAGE_ORDER.indexOf(elim);
   };
 
   const sortedPlayers = [...players].sort((a, b) => {
@@ -265,8 +274,11 @@ export async function seedDemoLeagueData(
   // insert — reproduced empirically by re-running scripts/seed-demo-league.ts
   // twice against local Supabase before this fix). scoring_events must therefore
   // be deleted first. draft_picks has no such FK relationship to either table and
-  // can run alongside; likewise the team-elimination updates only touch `teams`,
-  // which nothing later in this function re-reads.
+  // can run alongside. This seed no longer writes teams.eliminated_in_round_stage:
+  // demo eliminations are derived from real game_scores (teamElimMap above), and
+  // the shared season-2026 teams table is corrected separately/idempotently by
+  // scripts/fix-team-eliminations-2026.ts so concurrent demo leagues never fight
+  // over those global rows.
   const t3 = Date.now();
   await Promise.all([
     existingSession?.id
@@ -278,9 +290,8 @@ export async function seedDemoLeagueData(
       const { error: rsErr } = await supabaseAdmin.from('roster_slots').delete().eq('league_id', league_id);
       if (rsErr) throw new Error(`seedDemoLeagueData: failed to delete roster_slots: ${rsErr.message}`);
     })(),
-    ...teamUpdatePromises,
   ]);
-  debugLog(`[seedDemo] 3. cleanup deletes + team elim updates (parallel): ${Date.now() - t3}ms (${teamUpdatePromises.length} team updates)`);
+  debugLog(`[seedDemo] 3. cleanup deletes (parallel): ${Date.now() - t3}ms`);
 
   const usedPlayerIds = new Set<string>();
   const roster: Record<string, Partial<Record<SlotKey, string>>> = {};
@@ -347,6 +358,9 @@ export async function seedDemoLeagueData(
     type Vacancy = { slot_key: SlotKey; position: 'G' | 'F' | 'C'; round: RoundStage };
     const pending: Vacancy[] = [];
 
+    // A starter released in round E (their team's elimination) COUNTS through E
+    // (the loss game scores) and leaves the slot vacant from E+1. The substitute
+    // therefore takes over at P = E+1, not at E.
     for (const slotKey of STARTER_SLOT_KEYS) {
       const playerId = roster[userId][slotKey];
       if (!playerId) continue;
@@ -360,12 +374,13 @@ export async function seedDemoLeagueData(
         released_at_round_stage: elim,
         release_reason: elim ? 'eliminated' : null,
       });
-      if (elim) pending.push({ slot_key: slotKey, position: SLOT_POSITIONS[slotKey], round: elim });
+      const takeover = elim ? nextRoundStage(elim) : null;
+      if (takeover) pending.push({ slot_key: slotKey, position: SLOT_POSITIONS[slotKey], round: takeover });
     }
 
     while (pending.length > 0) {
       pending.sort((a, b) => ROUND_STAGE_ORDER.indexOf(a.round) - ROUND_STAGE_ORDER.indexOf(b.round));
-      const vac = pending.shift()!;
+      const vac = pending.shift()!; // vac.round = P, the round the sub comes online
 
       const eligiblePositions = subEligibilityMatrix[vac.position] ?? [vac.position];
       const candidates = [...benchAvailable]
@@ -374,7 +389,10 @@ export async function seedDemoLeagueData(
         .filter((p) => {
           const pElim = teamElimMap.get(p.team_id) ?? null;
           if (!pElim) return true; // never eliminated — always eligible
-          return ROUND_STAGE_ORDER.indexOf(pElim) > ROUND_STAGE_ORDER.indexOf(vac.round);
+          // Must still be alive AT the takeover round P: their own elimination is
+          // at or after P (a player eliminated exactly at P played and lost that
+          // round, so they can start it — inclusive, matching the counted window).
+          return ROUND_STAGE_ORDER.indexOf(pElim) >= ROUND_STAGE_ORDER.indexOf(vac.round);
         })
         .sort((a, b) => b.avg_ppg - a.avg_ppg);
 
@@ -382,7 +400,7 @@ export async function seedDemoLeagueData(
 
       const chosen = candidates[0];
       benchAvailable.delete(chosen.id);
-      benchPromotedAt.set(chosen.id, vac.round);
+      benchPromotedAt.set(chosen.id, vac.round); // promotion round P
 
       const chosenElim = teamElimMap.get(chosen.team_id) ?? null;
       rows.push({
@@ -393,25 +411,31 @@ export async function seedDemoLeagueData(
         released_at_round_stage: chosenElim,
         release_reason: chosenElim ? 'eliminated' : null,
       });
-      if (chosenElim) pending.push({ slot_key: vac.slot_key, position: vac.position, round: chosenElim });
+      const cascade = chosenElim ? nextRoundStage(chosenElim) : null;
+      if (cascade) pending.push({ slot_key: vac.slot_key, position: vac.position, round: cascade });
     }
 
-    // Bench rows: released either when promoted off the bench (release_reason
-    // 'eliminated', matching activateSlot's treatment of the vacated bench row)
-    // or when their own team is eliminated — whichever comes first.
+    // Bench rows: released when the player was promoted off the bench
+    // (release_reason 'substituted' — the player continues as a starter in a
+    // separate row) OR when their own team is eliminated (release_reason
+    // 'eliminated'), whichever comes first. Promotion can only happen while the
+    // player's team is still alive, so a promoted bench player's release IS the
+    // promotion round.
     for (const slotKey of BENCH_SLOT_KEYS) {
       const playerId = roster[userId][slotKey];
       if (!playerId) continue;
       const player = playerById.get(playerId);
       const ownElim = player ? teamElimMap.get(player.team_id) ?? null : null;
-      const released = benchPromotedAt.get(playerId) ?? ownElim;
+      const promotedAt = benchPromotedAt.get(playerId) ?? null;
+      const released = promotedAt ?? ownElim;
+      const reason = promotedAt ? 'substituted' : ownElim ? 'eliminated' : null;
       rows.push({
         league_id, user_id: userId, player_id: playerId,
         slot_key: slotKey, slot_position: player?.position ?? SLOT_POSITIONS[slotKey],
         is_bench: true, is_active: !released,
         acquired_at_round_stage: 'draft',
         released_at_round_stage: released,
-        release_reason: released ? 'eliminated' : null,
+        release_reason: reason,
       });
     }
 
@@ -492,7 +516,9 @@ export async function seedDemoLeagueData(
     // written via the live ESPN sync). We just read back whichever rows belong to
     // the players this simulated draft actually picked, so scoring_events below
     // reflects what really happened in the tournament rather than a synthetic
-    // formula.
+    // formula. Pinned to source='espn_api' for the same reason as the elimination
+    // derivation above: it credits only the authoritative ESPN feed and ignores
+    // any 'manual' rows sharing the season (e.g. uncleaned test fixtures).
     (async () => {
       const usedPlayerIdList = [...usedPlayerIds];
       const collected: InsertedGameScore[] = [];
@@ -501,6 +527,7 @@ export async function seedDemoLeagueData(
           .from('game_scores')
           .select('id, player_id, round_stage, points')
           .eq('season', season)
+          .eq('source', 'espn_api')
           .in('player_id', usedPlayerIdList.slice(i, i + 100));
         if (error) throw new Error(`seedDemoLeagueData: failed to read game_scores: ${error.message}`);
         if (data) collected.push(...(data as InsertedGameScore[]));
@@ -543,8 +570,9 @@ export async function seedDemoLeagueData(
   );
 
   // ── 6. Compute scoring_events in memory, then bulk insert ──
-  // Replicates ScoreAccumulator._runForGamesInternal logic: a slot credits a game score
-  // when acqIdx <= gameIdx < relIdx (where -1 relIdx = never scores; null relIdx = always).
+  // Replicates ScoreAccumulator._runForGamesInternal logic: a starter slot credits a
+  // game score when acqIdx <= gameIdx <= relIdx — INCLUSIVE of the release round (the
+  // elimination/loss game counts). -1 relIdx sentinel = never scores; null relIdx = always.
   // This replaces ~400 sequential DB round-trips with a single bulk INSERT. Must run
   // after step 5 because it needs both rosterSlotIdByKey (from the roster_slots insert)
   // and allInsertedGameScores (from the game_scores read).
@@ -594,7 +622,12 @@ export async function seedDemoLeagueData(
     for (const gs of playerGames) {
       const gameIdx = ROUND_STAGE_ORDER.indexOf(gs.round_stage as RoundStage);
       if (gameIdx === -1) continue;
-      if (!(acqIdx <= gameIdx && gameIdx < relIdx)) continue;
+      // INCLUSIVE of the release round (mirrors ScoreAccumulator): a starter whose
+      // team was eliminated in round E still played — and lost — the E game, so it
+      // counts. Only bench slots (skipped above) and strictly-after-elimination
+      // rounds never score. The relIdx=0 sentinel (unknown release stage) keeps the
+      // slot from scoring since no real game has gameIdx <= 0.
+      if (!(acqIdx <= gameIdx && gameIdx <= relIdx)) continue;
 
       scoringEventsBatch.push({
         league_id,
