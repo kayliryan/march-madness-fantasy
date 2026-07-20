@@ -417,7 +417,7 @@ export default function LeaderboardPage() {
                                           </td>
                                         ))}
                                         <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
-                                          {row.total ? Math.round(row.total) : '—'}
+                                          {Math.round(row.total)}
                                         </td>
                                       </tr>
                                     ))}
@@ -469,7 +469,7 @@ export default function LeaderboardPage() {
                             </td>
                             {visibleColumns.map((stage) => (
                               <td key={stage} className="px-3 py-3 text-right text-neutral-300 tabular-nums">
-                                {points.has(stage) ? points.get(stage) : '—'}
+                                {points.get(stage) ?? 0}
                               </td>
                             ))}
                             <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">

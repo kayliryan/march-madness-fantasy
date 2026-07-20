@@ -182,7 +182,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Link href="/players" className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 shadow-sm hover:border-yellow-400/30 transition-colors">
               <p className="font-medium text-white">Player Explorer</p>
-              <p className="mt-1 text-sm text-neutral-500">Browse all 356 players by position, team, and PPG.</p>
+              <p className="mt-1 text-sm text-neutral-500">Browse every tournament player by position, team, and PPG.</p>
             </Link>
             <Link href="/demo/league" className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 shadow-sm hover:border-yellow-400/30 transition-colors">
               <p className="font-medium text-white">Demo League</p>

@@ -485,7 +485,7 @@ export default function DemoLeaguePage() {
                                           </td>
                                         ))}
                                         <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
-                                          {row.total > 0 ? Math.round(row.total) : '—'}
+                                          {Math.round(row.total)}
                                         </td>
                                       </tr>
                                     ))}
