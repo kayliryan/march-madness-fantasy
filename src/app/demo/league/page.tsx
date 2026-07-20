@@ -4,15 +4,13 @@ import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useDemoSession } from '@/lib/context/DemoSessionContext';
-import { ROUND_STAGE_ORDER, ROUND_LABELS } from '@/lib/constants/rounds';
-import type { RoundStage } from '@/lib/constants/rounds';
+import { ROUND_LABELS } from '@/lib/constants/rounds';
 import { groupAndMergeSlots } from '@/lib/utils/mergePlayerRounds';
+import { playedRoundStages } from '@/lib/utils/roundVisibility';
 import { RoundCellBadge } from '@/components/RoundCellBadge';
 import { InjuryBadge } from '@/components/InjuryBadge';
 
 const DEMO_LEAGUE_ID = process.env.NEXT_PUBLIC_DEMO_LEAGUE_ID ?? '00000000-0000-0000-0000-000000000001';
-
-const DISPLAY_ROUNDS = ROUND_STAGE_ORDER.filter((s) => s !== 'draft') as RoundStage[];
 
 interface Standing {
   user_id: string;
@@ -247,11 +245,11 @@ export default function DemoLeaguePage() {
     }
   }
 
-  // Rounds where any user has scored — used to decide which round columns to show
-  const playedRounds = new Set(
-    standings.flatMap((s) => Object.keys(s.per_round).filter((r) => (s.per_round[r] ?? 0) > 0))
-  );
-  const visibleRounds = DISPLAY_ROUNDS.filter((r) => playedRounds.has(r));
+  // Rounds where any user has a scoring_events row — used to decide which round
+  // columns to show. Presence, not value — see playedRoundStages() for why: a
+  // `> 0` filter here previously made a round vanish entirely whenever every
+  // league member's starters happened to score zero that round.
+  const visibleRounds = playedRoundStages(standings.map((s) => s.per_round));
 
   return (
     <div className="min-h-screen bg-black text-white" style={{ fontFamily: 'system-ui, sans-serif' }}>
@@ -411,7 +409,7 @@ export default function DemoLeaguePage() {
                             </td>
                             {visibleRounds.map((r) => (
                               <td key={r} className="px-3 py-3 text-right text-neutral-300 tabular-nums">
-                                {(entry.per_round[r] ?? 0) > 0 ? Math.round(entry.per_round[r]) : '—'}
+                                {Math.round(entry.per_round[r] ?? 0)}
                               </td>
                             ))}
                             <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">

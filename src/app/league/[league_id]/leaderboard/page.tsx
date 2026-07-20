@@ -513,7 +513,7 @@ export default function LeaderboardPage() {
                                 </td>
                               ))}
                               <td className="px-4 py-2 text-right text-xs font-medium text-neutral-400 tabular-nums">
-                                {row.total ? Math.round(row.total) : '—'}
+                                {Math.round(row.total)}
                               </td>
                             </tr>
                           ))}

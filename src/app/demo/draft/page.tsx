@@ -1374,7 +1374,7 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                                     );
                                   })}
                                   <td className="py-1.5 pl-2 pr-4 text-right font-medium tabular-nums text-neutral-400">
-                                    {rowTotal || '—'}
+                                    {rowTotal}
                                   </td>
                                 </tr>
                               );
