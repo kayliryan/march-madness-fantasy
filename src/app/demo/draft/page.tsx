@@ -3,10 +3,11 @@
 import { Fragment, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
-import type { RoundStage } from '@/lib/constants/rounds';
-import { buildInitialField, simulateBracketRound, REGION_ORDER, type BracketTeam } from '@/lib/utils/bracketSim';
-import { getRoundCell } from '@/lib/utils/roundBreakdown';
+import { ROUND_STAGE_ORDER, getNextRoundStage, type RoundStage } from '@/lib/constants/rounds';
+import { REGION_ORDER, type BracketTeam } from '@/lib/utils/bracketSim';
+import { getRoundCell, type RoundCell } from '@/lib/utils/roundBreakdown';
 import { RoundCellBadge } from '@/components/RoundCellBadge';
+import { PlayerNameCell } from '@/components/PlayerNameCell';
 import { NcaaBracketView } from '@/components/NcaaBracketView';
 
 interface Player {
@@ -14,7 +15,10 @@ interface Player {
   name: string;
   position: string;
   avg_ppg: number;
+  team_id: string;
   team_name: string;
+  team_short_name: string | null;
+  team_region: string;
   team_seed: number;
 }
 
@@ -244,11 +248,21 @@ export default function MockDraftPage() {
       .then((data) => {
         const players: Player[] = (data.players ?? []).map((p: {
           id: string; name: string; position: string; avg_ppg: number;
-          teams?: { name: string; seed: number } | { name: string; seed: number }[] | null;
+          teams?: { id: string; name: string; short_name: string | null; seed: number; region: string } | { id: string; name: string; short_name: string | null; seed: number; region: string }[] | null;
         }) => {
           const t = Array.isArray(p.teams) ? p.teams[0] : p.teams;
-          return { id: p.id, name: p.name, position: p.position, avg_ppg: p.avg_ppg, team_name: t?.name ?? '—', team_seed: t?.seed ?? 0 };
-        });
+          return {
+            id: p.id, name: p.name, position: p.position, avg_ppg: p.avg_ppg,
+            team_id: t?.id ?? '', team_name: t?.name ?? '—', team_short_name: t?.short_name ?? null,
+            team_region: t?.region ?? '', team_seed: t?.seed ?? 0,
+          };
+        })
+          // Scope the draft pool to the REAL 2026 tournament (the four bracket
+          // regions). The shared season row set also carries an imported
+          // "Historical" family-league — those players have no real bracket seat
+          // and no espn_api game_scores, so they'd never meaningfully score in the
+          // post-draft reveal. Same real-tournament scoping the demo-league seed uses.
+          .filter((p: Player) => REGION_ORDER.includes(p.team_region));
         setAllPlayers(players);
         setLoadingPlayers(false);
       })
@@ -862,7 +876,7 @@ function LineupEditor({ team, onConfirm }: { team: Team; onConfirm: (roster: Ros
           onClick={() => onConfirm(roster)}
           className="rounded bg-yellow-400 px-4 py-2 text-sm font-black uppercase tracking-wide text-black hover:bg-yellow-300"
         >
-          Confirm Lineup — Simulate the Season →
+          Confirm Lineup — Reveal the 2026 Season →
         </button>
       </div>
     </div>
@@ -870,14 +884,21 @@ function LineupEditor({ team, onConfirm }: { team: Team; onConfirm: (roster: Ros
 }
 
 // ── Season Simulator ────────────────────────────────────────────────────
-// Mock post-draft scoring walkthrough (client-side only, no DB writes).
-// A real single-elimination bracket (src/lib/utils/bracketSim.ts) drives which
-// teams survive each round; fantasy scoring and the bracket visual both read
-// off that one source of truth. Roster bookkeeping mirrors the real
-// roster_slots model (see RosterActivationService): each player's stint in a
-// slot is its own "assignment" with an acquired/released round, so the exact
-// same getRoundCell()/RoundCellBadge used on the leaderboard and roster pages
-// works here unchanged.
+// Post-draft REAL-RESULTS reveal (client-side only, no DB writes). Every
+// outcome here is the actual 2026 tournament — nothing is simulated/random:
+//   • Eliminations come from teams.is_eliminated / eliminated_in_round_stage
+//     (the same real-derived truth /demo/league and the leaderboard read).
+//   • Player scoring comes from the real per-round game_scores rows
+//     (source='espn_api'), joined by player_id.
+//   • Bench promotions reuse the exact position-eligibility + highest-avg_ppg-
+//     among-still-alive rule from seedDemoData.ts's simulateUserRoster.
+// Roster bookkeeping mirrors the real roster_slots model (see
+// RosterActivationService): each player's stint in a slot is its own
+// "assignment" with an acquired/released round stage, so the exact same
+// getRoundCell()/RoundCellBadge/PlayerNameCell used on the leaderboard and
+// roster pages render here unchanged. Because all results are known up front,
+// the round-by-round UX is a progressive *reveal* (gated on roundIdx), not a
+// simulation.
 
 const SCORING_ROUNDS: { stage: RoundStage; label: string; short: string }[] = [
   { stage: 'r64', label: 'Round of 64', short: 'R64' },
@@ -887,34 +908,59 @@ const SCORING_ROUNDS: { stage: RoundStage; label: string; short: string }[] = [
   { stage: 'f4', label: 'Final Four', short: 'F4' },
   { stage: 'championship', label: 'Championship', short: 'CHAMP' },
 ];
-
-// Real box-score points are always whole numbers (2pt/3pt field goals, 1pt free throws).
-function rollScore(avgPpg: number): number {
-  return Math.round(avgPpg * (0.6 + Math.random() * 0.8));
+// Just the stage codes, in reveal order (r64…championship). Index into this =
+// the 0-based "visible round" used for reveal/scrub gating.
+const SCORING_STAGES = SCORING_ROUNDS.map((r) => r.stage);
+const N_SCORING = SCORING_STAGES.length;
+// Visible-round index of a stage, or -1 for anything before r64 ('draft',
+// 'play_in') or an unknown/null stage.
+function scoreIdxOf(stage: RoundStage | null | undefined): number {
+  return stage ? SCORING_STAGES.indexOf(stage) : -1;
 }
 
-function requiredPosForSlot(slot_key: string): 'G' | 'F' | 'C' | null {
-  return SLOT_SEQUENCE.find((s) => s.key === slot_key)?.pos ?? null;
-}
+// Standard NCAA per-region seeding order (adjacent pairs meet in R64). Mirrors
+// bracketSim.ts's SEED_ORDER — kept local so the reveal bracket can be built
+// from real elimination data without the random simulateBracketRound path.
+const SEED_ORDER = [1, 16, 8, 9, 5, 12, 4, 13, 6, 11, 3, 14, 7, 10, 2, 15];
 
-function stageForRoundIdx(idx: number | null): RoundStage | null {
-  if (idx === null) return null;
-  return SCORING_ROUNDS[idx]?.stage ?? null;
+const STARTER_SLOTS = SLOT_SEQUENCE.filter((s) => !s.bench) as { key: string; pos: 'G' | 'F' | 'C'; bench: boolean; label: string }[];
+const BENCH_SLOT_KEYS = SLOT_SEQUENCE.filter((s) => s.bench).map((s) => s.key);
+
+// League default sub-eligibility (matches seedDemoData / the demo league
+// settings default): a Guard/Forward slot can be covered by a G or an F; a
+// Center slot only by a C.
+const SUB_ELIGIBILITY: Record<'G' | 'F' | 'C', ('G' | 'F' | 'C')[]> = {
+  G: ['G', 'F'], F: ['G', 'F'], C: ['C'],
+};
+
+interface RealTeam {
+  id: string;
+  name: string;
+  short_name: string | null;
+  seed: number;
+  region: string;
+  /** Real elimination round (the round they lost), or null if they won it all. */
+  elim: RoundStage | null;
 }
 
 // One player's stint in one physical slot — mirrors a roster_slots row.
-// A promotion ends the bench stint (releasedIdx set, reason 'promoted_out')
-// and opens a brand new assignment for the same slot_key with the promoted
-// player, exactly like RosterActivationService creating a new row instead of
-// mutating the old one.
+// A promotion ends the bench stint (release_reason 'substituted' — the player
+// continues as a starter in a separate row) and opens a brand-new assignment
+// for the same slot_key with the promoted player, exactly like
+// RosterActivationService creating a new row instead of mutating the old one.
 interface SimAssignment {
   key: string;
   slot_key: string;
   is_bench: boolean;
   player: Player;
-  acquiredIdx: number;
-  releasedIdx: number | null;
-  releaseReason: 'eliminated' | 'promoted_out' | null;
+  acquiredStage: RoundStage;
+  releasedStage: RoundStage | null;
+  releaseReason: 'eliminated' | 'substituted' | null;
+  /** First visible round (0..N-1) this stint occupies its slot. */
+  startVisibleIdx: number;
+  /** Last visible round this stint occupies its slot (inclusive); -1 if it never
+   *  occupies a visible round (e.g. a starter whose team lost in the First Four). */
+  endVisibleIdx: number;
   countedPts: Partial<Record<RoundStage, number>>;
   rawPts: Partial<Record<RoundStage, number>>;
 }
@@ -924,6 +970,13 @@ interface SimTeam {
   name: string;
   isHuman: boolean;
   assignments: SimAssignment[];
+}
+
+interface PromotionLog {
+  round: RoundStage;
+  in_player: string;
+  out_player: string;
+  slot_key: string;
 }
 
 interface RoundRecapPerTeam {
@@ -942,179 +995,360 @@ interface RoundRecap {
   leftOnBench: { team_name: string; isHuman: boolean; points: number; players: string[] } | null;
 }
 
-function buildInitialSimTeams(teams: Team[]): SimTeam[] {
-  return teams.map((t) => ({
-    id: t.id,
-    name: t.name,
-    isHuman: t.isHuman,
-    assignments: t.roster.map((r) => ({
-      key: `${r.slot_key}#0`,
-      slot_key: r.slot_key,
-      is_bench: r.is_bench,
-      player: r.player,
-      acquiredIdx: 0,
-      releasedIdx: null,
-      releaseReason: null,
-      countedPts: {},
-      rawPts: {},
-    })),
-  }));
+// Read the real per-round game_scores for a set of drafted players. Pinned to
+// source='espn_api' (the authoritative feed) exactly like seedDemoData, so any
+// leftover 'manual' test-fixture rows on the shared season are ignored. Chunked
+// to keep each `.in()` list small; ~40 drafted players = a single round-trip.
+async function fetchGameScores(playerIds: string[]): Promise<{ player_id: string; round_stage: string; points: number }[]> {
+  const out: { player_id: string; round_stage: string; points: number }[] = [];
+  for (let i = 0; i < playerIds.length; i += 100) {
+    const { data, error } = await supabase
+      .from('game_scores')
+      .select('player_id, round_stage, points')
+      .eq('season', 2026)
+      .eq('source', 'espn_api')
+      .in('player_id', playerIds.slice(i, i + 100));
+    if (error) throw error;
+    if (data) out.push(...(data as { player_id: string; round_stage: string; points: number }[]));
+  }
+  return out;
 }
 
-// Pure: plays one fantasy scoring round given the bracket field that entered
-// it and which teams lost. Returns updated teams plus a recap.
-function simulateFantasyRound(
-  teams: SimTeam[],
-  fieldBefore: BracketTeam[],
-  eliminatedNames: Set<string>,
-  roundIdx: number,
-): { teams: SimTeam[]; recap: RoundRecap } {
-  const { stage, label } = SCORING_ROUNDS[roundIdx];
-  const fieldNames = new Set(fieldBefore.map((t) => t.name));
-  const perTeamRecap: RoundRecapPerTeam[] = [];
-  let topPerformer: RoundRecap['topPerformer'] = null;
-  const benchTotals = new Map<string, { isHuman: boolean; points: number; players: string[] }>();
-
-  const nextTeams = teams.map((team) => {
-    const assignments = team.assignments.map((a) => ({ ...a, countedPts: { ...a.countedPts }, rawPts: { ...a.rawPts } }));
-
-    // 1. Roll a raw score for every still-ongoing assignment whose team played this round.
-    for (const a of assignments) {
-      if (a.releasedIdx !== null || !fieldNames.has(a.player.team_name)) continue;
-      const pts = rollScore(a.player.avg_ppg);
-      a.rawPts[stage] = pts;
-      if (!a.is_bench) {
-        a.countedPts[stage] = pts;
-        if (topPerformer === null || pts > topPerformer.points) {
-          topPerformer = { team_name: team.name, isHuman: team.isHuman, player_name: a.player.name, team_name_played: a.player.team_name, points: pts };
-        }
-      } else {
-        const bucket = benchTotals.get(team.name) ?? { isHuman: team.isHuman, points: 0, players: [] };
-        bucket.points += pts;
-        bucket.players.push(a.player.name);
-        benchTotals.set(team.name, bucket);
+// Build one assignment, deriving its counted/raw per-round points from the
+// player's real game_scores. Crediting mirrors ScoreAccumulator / seedDemoData:
+// a starter credits a game when acqIdx <= gameIdx <= relIdx (INCLUSIVE of the
+// elimination round — the loss game still scores); bench and 'substituted' rows
+// never credit toward the total. getRoundCell() then reads the same window to
+// render the cell, so the summed 'counted' cells equal the displayed total.
+function buildAssignment(
+  slot_key: string,
+  is_bench: boolean,
+  player: Player,
+  acquiredStage: RoundStage,
+  releasedStage: RoundStage | null,
+  releaseReason: SimAssignment['releaseReason'],
+  gsByPlayer: Map<string, Map<RoundStage, number>>,
+): SimAssignment {
+  const rawPts: Partial<Record<RoundStage, number>> = {};
+  const countedPts: Partial<Record<RoundStage, number>> = {};
+  const games = gsByPlayer.get(player.id);
+  const acqGlobal = ROUND_STAGE_ORDER.indexOf(acquiredStage);
+  const relGlobal = releasedStage
+    ? (ROUND_STAGE_ORDER.indexOf(releasedStage) === -1 ? 0 : ROUND_STAGE_ORDER.indexOf(releasedStage))
+    : ROUND_STAGE_ORDER.length;
+  if (games) {
+    for (const [stage, pts] of games) {
+      rawPts[stage] = pts;
+      if (!is_bench && releaseReason !== 'substituted') {
+        const gi = ROUND_STAGE_ORDER.indexOf(stage);
+        if (gi !== -1 && acqGlobal <= gi && gi <= relGlobal) countedPts[stage] = pts;
       }
-    }
-
-    // 2. Bench stints whose OWN team just went out end here too (never activated).
-    for (const a of assignments) {
-      if (a.releasedIdx !== null || !a.is_bench) continue;
-      if (eliminatedNames.has(a.player.team_name)) {
-        a.releasedIdx = roundIdx;
-        a.releaseReason = 'eliminated';
-      }
-    }
-
-    // 3. Starter stints whose team was eliminated end here; try to promote a
-    // same-position bench player whose team is still alive.
-    const promotions: RoundRecapPerTeam['promotions'] = [];
-    for (const a of assignments) {
-      if (a.releasedIdx !== null || a.is_bench) continue;
-      if (!eliminatedNames.has(a.player.team_name)) continue;
-      a.releasedIdx = roundIdx;
-      a.releaseReason = 'eliminated';
-
-      const requiredPos = requiredPosForSlot(a.slot_key);
-      // A bench player can only be promoted if their own team is still alive
-      // going into next round — no point activating someone whose team also
-      // just lost.
-      const candidates = assignments
-        .filter(
-          (b) =>
-            b.is_bench &&
-            b.releasedIdx === null &&
-            b.player.position === requiredPos &&
-            !eliminatedNames.has(b.player.team_name)
-        )
-        .sort((x, y) => y.player.avg_ppg - x.player.avg_ppg);
-
-      if (candidates.length > 0) {
-        const promoted = candidates[0];
-        promoted.releasedIdx = roundIdx;
-        promoted.releaseReason = 'promoted_out';
-        const slotLabel = SLOT_SEQUENCE.find((s) => s.key === a.slot_key)?.label ?? a.slot_key;
-        promotions.push({ in_player: promoted.player.name, out_player: a.player.name, slot_label: slotLabel });
-        assignments.push({
-          key: `${a.slot_key}#${roundIdx + 1}`,
-          slot_key: a.slot_key,
-          is_bench: false,
-          player: promoted.player,
-          acquiredIdx: roundIdx + 1,
-          releasedIdx: null,
-          releaseReason: null,
-          countedPts: {},
-          rawPts: {},
-        });
-      }
-    }
-
-    const eliminatedPlayers = assignments
-      .filter((a) => a.releasedIdx === roundIdx && a.releaseReason === 'eliminated')
-      .map((a) => ({ name: a.player.name, team_name: a.player.team_name, team_seed: a.player.team_seed }));
-
-    if (eliminatedPlayers.length > 0 || promotions.length > 0) {
-      perTeamRecap.push({ team_name: team.name, isHuman: team.isHuman, eliminatedPlayers, promotions });
-    }
-
-    return { ...team, assignments };
-  });
-
-  let leftOnBench: RoundRecap['leftOnBench'] = null;
-  for (const [team_name, bucket] of benchTotals) {
-    if (bucket.points > 0 && (!leftOnBench || bucket.points > leftOnBench.points)) {
-      leftOnBench = { team_name, isHuman: bucket.isHuman, points: bucket.points, players: bucket.players };
     }
   }
 
+  const startVisibleIdx = Math.max(0, scoreIdxOf(acquiredStage)); // 'draft'/'play_in' → 0 (from r64)
+  let endVisibleIdx: number;
+  if (releasedStage === null) {
+    endVisibleIdx = N_SCORING - 1; // never released within the season
+  } else if (releaseReason === 'substituted') {
+    // A promoted bench stint owns only the rounds STRICTLY before the promotion.
+    endVisibleIdx = scoreIdxOf(releasedStage) - 1;
+  } else {
+    // Team-elimination: occupies through the (inclusive) loss round; -1 if the
+    // team was out before r64 (First Four loss) so it never occupies a column.
+    endVisibleIdx = scoreIdxOf(releasedStage);
+  }
+
   return {
-    teams: nextTeams,
-    recap: {
-      stage,
-      label,
-      eliminatedTeams: [...eliminatedNames].map((name) => ({
-        team_name: name,
-        team_seed: fieldBefore.find((t) => t.name === name)?.seed ?? 0,
-      })),
-      perTeam: perTeamRecap,
-      topPerformer,
-      leftOnBench,
-    },
+    key: `${slot_key}#${acquiredStage}`,
+    slot_key, is_bench, player,
+    acquiredStage, releasedStage, releaseReason,
+    startVisibleIdx, endVisibleIdx,
+    countedPts, rawPts,
   };
 }
 
+// Build one user's full set of stints from real data. Direct port of
+// seedDemoData.ts's simulateUserRoster: starters run draft→their team's real
+// elimination; when a starter's team goes out, the highest-avg_ppg bench player
+// who is (a) position-eligible for that slot and (b) still alive AT the takeover
+// round is promoted (release_reason 'substituted'), which can cascade. Returns
+// the stints plus a promotion log for the round recaps.
+function buildSimTeam(
+  team: Team,
+  teamElim: Map<string, RoundStage | null>,
+  gsByPlayer: Map<string, Map<RoundStage, number>>,
+): { simTeam: SimTeam; promotions: PromotionLog[] } {
+  const rosterByKey = new Map(team.roster.map((r) => [r.slot_key, r]));
+  const assignments: SimAssignment[] = [];
+  const promotions: PromotionLog[] = [];
+
+  const benchPool = new Map<string, Player>();
+  for (const k of BENCH_SLOT_KEYS) {
+    const r = rosterByKey.get(k);
+    if (r) benchPool.set(r.player.id, r.player);
+  }
+  const benchPromotedAt = new Map<string, RoundStage>();
+
+  type Vacancy = { slot_key: string; position: 'G' | 'F' | 'C'; round: RoundStage; out_player: string };
+  const pending: Vacancy[] = [];
+
+  // Starters: run from the draft through their team's real elimination.
+  for (const slot of STARTER_SLOTS) {
+    const r = rosterByKey.get(slot.key);
+    if (!r) continue;
+    const player = r.player;
+    const elim = teamElim.get(player.team_id) ?? null;
+    assignments.push(buildAssignment(slot.key, false, player, 'draft', elim, elim ? 'eliminated' : null, gsByPlayer));
+    const takeover = elim ? getNextRoundStage(elim) : null;
+    if (takeover) pending.push({ slot_key: slot.key, position: slot.pos, round: takeover, out_player: player.name });
+  }
+
+  // Resolve vacancies in chronological order; a promoted sub can later be
+  // eliminated too, re-opening the slot (cascade).
+  while (pending.length > 0) {
+    pending.sort((a, b) => ROUND_STAGE_ORDER.indexOf(a.round) - ROUND_STAGE_ORDER.indexOf(b.round));
+    const vac = pending.shift()!; // vac.round = the round the sub comes online
+    const eligible = SUB_ELIGIBILITY[vac.position] ?? [vac.position];
+    const candidates = [...benchPool.values()]
+      .filter((p) => eligible.includes(p.position as 'G' | 'F' | 'C'))
+      .filter((p) => {
+        const pe = teamElim.get(p.team_id) ?? null;
+        if (!pe) return true; // never eliminated — always eligible
+        // Must still be alive AT the takeover round (inclusive — a player
+        // eliminated exactly that round still played and lost it).
+        return ROUND_STAGE_ORDER.indexOf(pe) >= ROUND_STAGE_ORDER.indexOf(vac.round);
+      })
+      .sort((a, b) => b.avg_ppg - a.avg_ppg);
+    if (candidates.length === 0) continue; // no eligible sub — slot stays vacant
+
+    const chosen = candidates[0];
+    benchPool.delete(chosen.id);
+    benchPromotedAt.set(chosen.id, vac.round);
+    const chosenElim = teamElim.get(chosen.team_id) ?? null;
+    assignments.push(buildAssignment(vac.slot_key, false, chosen, vac.round, chosenElim, chosenElim ? 'eliminated' : null, gsByPlayer));
+    promotions.push({ round: vac.round, in_player: chosen.name, out_player: vac.out_player, slot_key: vac.slot_key });
+    const cascade = chosenElim ? getNextRoundStage(chosenElim) : null;
+    if (cascade) pending.push({ slot_key: vac.slot_key, position: vac.position, round: cascade, out_player: chosen.name });
+  }
+
+  // Bench rows: released when promoted off the bench ('substituted', continues
+  // as a starter in a separate row) OR when their own team is eliminated,
+  // whichever comes first.
+  for (const k of BENCH_SLOT_KEYS) {
+    const r = rosterByKey.get(k);
+    if (!r) continue;
+    const player = r.player;
+    const ownElim = teamElim.get(player.team_id) ?? null;
+    const promotedAt = benchPromotedAt.get(player.id) ?? null;
+    const released = promotedAt ?? ownElim;
+    const reason: SimAssignment['releaseReason'] = promotedAt ? 'substituted' : ownElim ? 'eliminated' : null;
+    assignments.push(buildAssignment(k, true, player, 'draft', released, reason, gsByPlayer));
+  }
+
+  return { simTeam: { id: team.id, name: team.name, isHuman: team.isHuman, assignments }, promotions };
+}
+
+// Precompute a per-round recap for every scoring round from the finished stints.
+// eliminatedTeams is scoped to ROSTERED teams (the noise of listing all 32 R64
+// losers isn't useful); top scorer / left-on-bench read the same getRoundCell
+// cells the tables render, so recap numbers always agree with the grid.
+function buildRecaps(simTeams: SimTeam[], promoByTeamId: Map<number, PromotionLog[]>): RoundRecap[] {
+  return SCORING_ROUNDS.map((rr, r) => {
+    const S = rr.stage;
+    const perTeam: RoundRecapPerTeam[] = [];
+    let topPerformer: RoundRecap['topPerformer'] = null;
+    let leftOnBench: RoundRecap['leftOnBench'] = null;
+    const elimTeamSeed = new Map<string, number>();
+
+    for (const team of simTeams) {
+      const eliminatedPlayers: RoundRecapPerTeam['eliminatedPlayers'] = [];
+      for (const a of team.assignments) {
+        if (a.releaseReason === 'eliminated' && a.releasedStage && scoreIdxOf(a.releasedStage) === r) {
+          const tn = a.player.team_short_name ?? a.player.team_name;
+          eliminatedPlayers.push({ name: a.player.name, team_name: tn, team_seed: a.player.team_seed });
+          elimTeamSeed.set(tn, a.player.team_seed);
+        }
+      }
+      const promos = (promoByTeamId.get(team.id) ?? [])
+        .filter((p) => p.round === S)
+        .map((p) => ({
+          in_player: p.in_player,
+          out_player: p.out_player,
+          slot_label: SLOT_SEQUENCE.find((s) => s.key === p.slot_key)?.label ?? p.slot_key,
+        }));
+      if (eliminatedPlayers.length > 0 || promos.length > 0) {
+        perTeam.push({ team_name: team.name, isHuman: team.isHuman, eliminatedPlayers, promotions: promos });
+      }
+
+      let benchPts = 0;
+      const benchPlayers: string[] = [];
+      for (const a of team.assignments) {
+        const cell = getRoundCell(S, a.countedPts, a.rawPts, {
+          is_bench: a.is_bench,
+          acquired_at_round_stage: a.acquiredStage,
+          released_at_round_stage: a.releasedStage,
+          release_reason: a.releaseReason,
+        });
+        if (!cell) continue;
+        if (cell.kind === 'counted') {
+          if (topPerformer === null || cell.value > topPerformer.points) {
+            topPerformer = {
+              team_name: team.name, isHuman: team.isHuman,
+              player_name: a.player.name,
+              team_name_played: a.player.team_short_name ?? a.player.team_name,
+              points: cell.value,
+            };
+          }
+        } else if (cell.kind === 'raw') {
+          benchPts += cell.value;
+          benchPlayers.push(a.player.name);
+        }
+      }
+      if (benchPts > 0 && (!leftOnBench || benchPts > leftOnBench.points)) {
+        leftOnBench = { team_name: team.name, isHuman: team.isHuman, points: benchPts, players: benchPlayers };
+      }
+    }
+
+    const eliminatedTeams = [...elimTeamSeed.entries()]
+      .map(([team_name, team_seed]) => ({ team_name, team_seed }))
+      .sort((a, b) => a.team_seed - b.team_seed);
+
+    return { stage: S, label: rr.label, eliminatedTeams, perTeam, topPerformer, leftOnBench };
+  });
+}
+
+// Build the visual bracket's "still alive entering round k" snapshots straight
+// from real elimination data — no random simulation. Index 0 = the 64-team
+// field (First Four already resolved to the REAL play-in winner), index 4 = the
+// four regional champions, index 6 = the national champion. A team appears in
+// snapshot k iff it was NOT eliminated before round k (champion = ∞).
+function buildRoundsHistory(realTeams: RealTeam[]): BracketTeam[][] {
+  const fieldWithElim: { bt: BracketTeam; e: number }[] = [];
+  for (const region of REGION_ORDER) {
+    const regionTeams = realTeams.filter((t) => t.region === region);
+    const bySeed = new Map<number, RealTeam[]>();
+    for (const t of regionTeams) {
+      const arr = bySeed.get(t.seed);
+      if (arr) arr.push(t);
+      else bySeed.set(t.seed, [t]);
+    }
+    for (const seed of SEED_ORDER) {
+      const cands = bySeed.get(seed) ?? [];
+      let chosen: RealTeam | null = null;
+      if (cands.length === 1) chosen = cands[0];
+      else if (cands.length > 1) chosen = cands.find((c) => c.elim !== 'play_in') ?? cands[0]; // real First Four winner
+      const bt: BracketTeam = chosen
+        ? { name: chosen.short_name ?? chosen.name, seed, region }
+        : { name: `TBD #${seed}`, seed, region };
+      const e = chosen && chosen.elim ? scoreIdxOf(chosen.elim) : Number.POSITIVE_INFINITY; // -1 handled below
+      fieldWithElim.push({ bt, e: e < 0 ? Number.POSITIVE_INFINITY : e });
+    }
+  }
+  const snapshots: BracketTeam[][] = [fieldWithElim.map((x) => x.bt)];
+  for (let k = 1; k <= N_SCORING; k++) {
+    snapshots.push(fieldWithElim.filter((x) => x.e >= k).map((x) => x.bt));
+  }
+  return snapshots;
+}
+
 function SeasonSimulator({ teams }: { teams: Team[] }) {
-  const [simTeams, setSimTeams] = useState<SimTeam[]>(() => buildInitialSimTeams(teams));
-  const [roundsHistory, setRoundsHistory] = useState<BracketTeam[][]>([]);
-  const [loadingBracket, setLoadingBracket] = useState(true);
+  const [built, setBuilt] = useState<
+    | null
+    | { simTeams: SimTeam[]; recaps: RoundRecap[]; roundsHistory: BracketTeam[][]; rosteredTeamNames: Set<string> }
+  >(null);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
   const [roundIdx, setRoundIdx] = useState(0);
-  // Which round is currently being VIEWED — lets you scrub back through already-played
-  // rounds without losing simulation progress. Always jumps to the latest round the
-  // moment you actually simulate one (see the effect below), so "Simulate Next Round"
-  // still feels immediate.
+  // Which round is currently being VIEWED — lets you scrub back through already-revealed
+  // rounds without losing progress. Snaps to the latest round the moment you reveal one
+  // (see the setState-during-render below), so "Reveal Next Round" still feels immediate.
   const [viewRoundIdx, setViewRoundIdx] = useState(0);
-  const [recaps, setRecaps] = useState<RoundRecap[]>([]);
   const [expandedTeamIds, setExpandedTeamIds] = useState<Set<number>>(new Set());
 
+  // Fetch REAL 2026 data once (teams' eliminations + drafted players' game_scores),
+  // both publicly readable, then precompute every stint/recap/bracket snapshot up
+  // front. There's nothing random to "simulate": the reveal below just gates how much
+  // of this already-known truth is shown. Re-runs only if the final rosters change.
   useEffect(() => {
-    fetch('/api/teams')
-      .then((r) => r.json())
-      .then((data) => {
-        const raw = (data.teams ?? []) as { name: string; seed: number; region: string }[];
-        setRoundsHistory([buildInitialField(raw)]);
-      })
-      .finally(() => setLoadingBracket(false));
-  }, []);
+    let cancelled = false;
+    (async () => {
+      try {
+        const draftedIds = [...new Set(teams.flatMap((t) => t.roster.map((r) => r.player.id)))];
+        const [teamsRes, gsRows] = await Promise.all([
+          supabase
+            .from('teams')
+            .select('id, name, short_name, seed, region, is_eliminated, eliminated_in_round_stage, espn_team_id')
+            .eq('season', 2026),
+          fetchGameScores(draftedIds),
+        ]);
+        if (teamsRes.error) throw teamsRes.error;
+
+        const teamElim = new Map<string, RoundStage | null>();
+        const realTeams: RealTeam[] = [];
+        for (const t of (teamsRes.data ?? []) as {
+          id: string; name: string; short_name: string | null; seed: number; region: string;
+          is_eliminated: boolean; eliminated_in_round_stage: string | null; espn_team_id: string | null;
+        }[]) {
+          const elim = t.is_eliminated && t.eliminated_in_round_stage ? (t.eliminated_in_round_stage as RoundStage) : null;
+          teamElim.set(t.id, elim);
+          // Only the real ESPN-fetched tournament teams get a bracket seat.
+          if (t.espn_team_id != null) {
+            realTeams.push({ id: t.id, name: t.name, short_name: t.short_name, seed: t.seed, region: t.region, elim });
+          }
+        }
+
+        const gsByPlayer = new Map<string, Map<RoundStage, number>>();
+        for (const g of gsRows) {
+          const m = gsByPlayer.get(g.player_id) ?? new Map<RoundStage, number>();
+          m.set(g.round_stage as RoundStage, g.points);
+          gsByPlayer.set(g.player_id, m);
+        }
+
+        const simTeams: SimTeam[] = [];
+        const promoByTeamId = new Map<number, PromotionLog[]>();
+        for (const t of teams) {
+          const { simTeam, promotions } = buildSimTeam(t, teamElim, gsByPlayer);
+          simTeams.push(simTeam);
+          promoByTeamId.set(t.id, promotions);
+        }
+        const recaps = buildRecaps(simTeams, promoByTeamId);
+        const roundsHistory = buildRoundsHistory(realTeams);
+        const rosteredTeamNames = new Set<string>();
+        for (const st of simTeams) for (const a of st.assignments) rosteredTeamNames.add(a.player.team_short_name ?? a.player.team_name);
+
+        if (!cancelled) setBuilt({ simTeams, recaps, roundsHistory, rosteredTeamNames });
+      } catch (e) {
+        console.error('[SeasonSimulator] failed to load real 2026 results:', e);
+        if (!cancelled) setLoadErr('Could not load the 2026 tournament results. Please refresh to try again.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [teams]);
 
   // "setState during render" pattern (same technique used for the draft pick timer
-  // above): whenever roundIdx moves forward (a round was actually simulated), snap the
-  // view to it in the same render pass — no extra effect/paint needed.
+  // above): whenever roundIdx moves forward (a round was revealed), snap the view to it
+  // in the same render pass — no extra effect/paint needed.
   const [prevRoundIdxForView, setPrevRoundIdxForView] = useState(roundIdx);
   if (roundIdx !== prevRoundIdxForView) {
     setPrevRoundIdxForView(roundIdx);
     setViewRoundIdx(roundIdx);
   }
 
-  const isComplete = roundIdx >= SCORING_ROUNDS.length;
+  if (loadErr) {
+    return (
+      <div className="mt-6 rounded-lg border border-red-900/40 bg-red-950/20 p-5 text-sm text-red-300">{loadErr}</div>
+    );
+  }
+  if (!built) {
+    return (
+      <div className="mt-6 rounded-lg border border-neutral-800 bg-[#0d0d0d] p-5 text-sm text-neutral-500">
+        Loading the real 2026 tournament results…
+      </div>
+    );
+  }
+
+  const { simTeams, recaps, roundsHistory, rosteredTeamNames } = built;
+  const isComplete = roundIdx >= N_SCORING;
 
   function toggleExpand(id: number) {
     setExpandedTeamIds((prev) => {
@@ -1125,55 +1359,36 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
     });
   }
 
-  function playOneRound(history: BracketTeam[][], curTeams: SimTeam[], idx: number): { history: BracketTeam[][]; teams: SimTeam[]; recap: RoundRecap } | null {
-    const current = history[history.length - 1];
-    if (!current || current.length <= 1) return null;
-    const { winners, matchups } = simulateBracketRound(current);
-    const eliminatedNames = new Set(matchups.map((m) => m.loser.name));
-    const { teams: nextTeams, recap } = simulateFantasyRound(curTeams, current, eliminatedNames, idx);
-    return { history: [...history, winners], teams: nextTeams, recap };
-  }
-
+  // All outcomes are already known — advancing/completing just reveals more columns.
   function advanceRound() {
-    if (isComplete) return;
-    const result = playOneRound(roundsHistory, simTeams, roundIdx);
-    if (!result) return;
-    setRoundsHistory(result.history);
-    setSimTeams(result.teams);
-    setRecaps((prev) => [...prev, result.recap]);
-    setRoundIdx((n) => n + 1);
+    setRoundIdx((n) => Math.min(n + 1, N_SCORING));
   }
-
   function autoComplete() {
-    let curHistory = roundsHistory;
-    let curTeams = simTeams;
-    const newRecaps: RoundRecap[] = [];
-    let i = roundIdx;
-    for (; i < SCORING_ROUNDS.length; i++) {
-      const result = playOneRound(curHistory, curTeams, i);
-      if (!result) break;
-      curHistory = result.history;
-      curTeams = result.teams;
-      newRecaps.push(result.recap);
-    }
-    setRoundsHistory(curHistory);
-    setSimTeams(curTeams);
-    setRecaps((prev) => [...prev, ...newRecaps]);
-    setRoundIdx(i);
+    setRoundIdx(N_SCORING);
   }
-
   function reset() {
-    setSimTeams(buildInitialSimTeams(teams));
-    setRoundsHistory((prev) => (prev.length > 0 ? [prev[0]] : prev));
-    setRecaps([]);
     setRoundIdx(0);
     setViewRoundIdx(0);
     setExpandedTeamIds(new Set());
   }
 
-  // Totals/standings as of the round being VIEWED, not necessarily the latest simulated
-  // round — this is what makes "step back through the season" actually show the
-  // standings as they stood at that point instead of always the final numbers.
+  // Team object for PlayerNameCell (mascot-free short_name, seed).
+  const teamOf = (p: Player) => ({ short_name: p.team_short_name, name: p.team_name, seed: p.team_seed });
+  // A player NAME's status cell as of the latest revealed round — drives the
+  // green/white+B/grey+Elim coloring, exactly like the leaderboard/roster pages.
+  function nameCellFor(a: SimAssignment): RoundCell {
+    if (viewRoundIdx <= 0) return null;
+    return getRoundCell(SCORING_STAGES[viewRoundIdx - 1], a.countedPts, a.rawPts, {
+      is_bench: a.is_bench,
+      acquired_at_round_stage: a.acquiredStage,
+      released_at_round_stage: a.releasedStage,
+      release_reason: a.releaseReason,
+    });
+  }
+
+  // Totals/standings as of the round being VIEWED, not necessarily the latest revealed
+  // round — this is what makes "step back through the season" show the standings as they
+  // stood at that point instead of always the final numbers.
   const totals = simTeams
     .map((t) => {
       const perRound: Partial<Record<RoundStage, number>> = {};
@@ -1185,12 +1400,6 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
     })
     .sort((a, b) => b.total - a.total);
 
-  const rosteredTeamNames = useMemo(() => {
-    const s = new Set<string>();
-    for (const t of simTeams) for (const a of t.assignments) s.add(a.player.team_name);
-    return s;
-  }, [simTeams]);
-
   const humanTeam = simTeams.find((t) => t.isHuman);
 
   // "As of the round being viewed" — not just the latest state — so scrubbing back
@@ -1198,15 +1407,15 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
   function occupantAsOf(slot_key: string, asOfRoundIdx: number) {
     return (
       humanTeam?.assignments.find(
-        (a) => a.slot_key === slot_key && a.acquiredIdx <= asOfRoundIdx && (a.releasedIdx === null || a.releasedIdx >= asOfRoundIdx)
+        (a) => a.slot_key === slot_key && a.startVisibleIdx <= asOfRoundIdx && a.endVisibleIdx >= asOfRoundIdx
       ) ?? null
     );
   }
   function lastEndedAsOf(slot_key: string, asOfRoundIdx: number) {
     return (
       [...(humanTeam?.assignments ?? [])]
-        .filter((a) => a.slot_key === slot_key && a.releasedIdx !== null && a.releasedIdx < asOfRoundIdx)
-        .sort((a, b) => (b.releasedIdx ?? -1) - (a.releasedIdx ?? -1))[0] ?? null
+        .filter((a) => a.slot_key === slot_key && a.endVisibleIdx < asOfRoundIdx)
+        .sort((a, b) => b.endVisibleIdx - a.endVisibleIdx)[0] ?? null
     );
   }
 
@@ -1214,23 +1423,24 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
     <div className="mt-6 rounded-lg border border-neutral-800 bg-[#0d0d0d] p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-yellow-400">Season Simulator</p>
-          <h3 className="text-lg font-black uppercase text-white">Watch the Scoring Logic Play Out</h3>
+          <p className="text-xs font-bold uppercase tracking-widest text-yellow-400">2026 Season Results</p>
+          <h3 className="text-lg font-black uppercase text-white">How Your Roster Really Scored</h3>
+          <p className="mt-1 text-[11px] text-neutral-500">Real 2026 tournament outcomes — actual eliminations and box-score points for every player you drafted.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={advanceRound}
-            disabled={isComplete || loadingBracket}
+            disabled={isComplete}
             className="rounded bg-yellow-400 px-3 py-1.5 text-xs font-bold uppercase text-black hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Simulate Next Round →
+            Reveal Next Round →
           </button>
           <button
             onClick={autoComplete}
-            disabled={isComplete || loadingBracket}
+            disabled={isComplete}
             className="rounded border border-neutral-700 px-3 py-1.5 text-xs font-bold uppercase text-neutral-300 hover:border-yellow-400/50 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Auto-Complete Season
+            Reveal Full Season
           </button>
           {roundIdx > 0 && (
             <button onClick={reset} className="rounded border border-neutral-800 px-3 py-1.5 text-xs font-bold uppercase text-neutral-500 hover:text-white">
@@ -1240,8 +1450,8 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
         </div>
       </div>
 
-      {/* Round stepper — click any already-simulated round to review it, or use the
-          arrows. Viewing the past doesn't affect simulation progress. */}
+      {/* Round stepper — click any already-revealed round to review it, or use the
+          arrows. Viewing the past doesn't affect reveal progress. */}
       <div className="mb-4 flex flex-wrap items-center gap-1.5">
         <button
           onClick={() => setViewRoundIdx((v) => Math.max(0, v - 1))}
@@ -1288,7 +1498,7 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
       </div>
       {viewRoundIdx < roundIdx && (
         <p className="mb-3 text-[11px] text-neutral-500">
-          Viewing standings as of {viewRoundIdx === 0 ? 'before the season started' : `after ${SCORING_ROUNDS[viewRoundIdx - 1].label}`} — {roundIdx - viewRoundIdx} more round{roundIdx - viewRoundIdx === 1 ? '' : 's'} already simulated ahead of here.
+          Viewing standings as of {viewRoundIdx === 0 ? 'before the tournament started' : `after ${SCORING_ROUNDS[viewRoundIdx - 1].label}`} — {roundIdx - viewRoundIdx} more round{roundIdx - viewRoundIdx === 1 ? '' : 's'} already revealed ahead of here.
         </p>
       )}
 
@@ -1310,7 +1520,9 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
               const team = simTeams.find((st) => st.id === t.id)!;
               const expanded = expandedTeamIds.has(t.id);
               const sortedAssignments = [...team.assignments].sort(
-                (a, b) => a.acquiredIdx - b.acquiredIdx || a.slot_key.localeCompare(b.slot_key)
+                (a, b) =>
+                  ROUND_STAGE_ORDER.indexOf(a.acquiredStage) - ROUND_STAGE_ORDER.indexOf(b.acquiredStage) ||
+                  a.slot_key.localeCompare(b.slot_key)
               );
               return (
                 <Fragment key={t.id}>
@@ -1344,18 +1556,12 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                           </thead>
                           <tbody>
                             {sortedAssignments.map((a) => {
-                              const acquired_at_round_stage = stageForRoundIdx(a.acquiredIdx) ?? 'r64';
-                              const released_at_round_stage = stageForRoundIdx(a.releasedIdx);
                               const rowTotal = SCORING_ROUNDS.slice(0, viewRoundIdx).reduce((s, r) => s + (a.countedPts[r.stage] ?? 0), 0);
                               return (
                                 <tr key={a.key} className="border-b border-neutral-900 last:border-0">
                                   <td className="py-1.5 pl-8 pr-2">
-                                    <span className={a.releasedIdx === null && !a.is_bench ? 'font-medium text-neutral-200' : 'font-medium text-neutral-500'}>
-                                      {a.player.name}
-                                    </span>
-                                    <span className="ml-1 text-neutral-600">{a.player.team_name} #{a.player.team_seed}</span>
-                                    {a.is_bench && <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>}
-                                    {a.releaseReason === 'promoted_out' && (
+                                    <PlayerNameCell name={a.player.name} position={a.player.position} team={teamOf(a.player)} cell={nameCellFor(a)} />
+                                    {a.releaseReason === 'substituted' && (
                                       <span className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500">promoted out</span>
                                     )}
                                   </td>
@@ -1363,8 +1569,9 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                                     const cell = i < viewRoundIdx
                                       ? getRoundCell(r.stage, a.countedPts, a.rawPts, {
                                           is_bench: a.is_bench,
-                                          acquired_at_round_stage,
-                                          released_at_round_stage,
+                                          acquired_at_round_stage: a.acquiredStage,
+                                          released_at_round_stage: a.releasedStage,
+                                          release_reason: a.releaseReason,
                                         })
                                       : null;
                                     return (
@@ -1393,7 +1600,7 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
 
       {/* Round recaps — eliminated teams, per-user roster impact, and a couple of fun stats.
           Sliced to the round being viewed so scrubbing back doesn't spoil later rounds. */}
-      {recaps.length > 0 && (
+      {viewRoundIdx > 0 && (
         <div className="mb-4 max-h-64 space-y-3 overflow-y-auto rounded-lg border border-neutral-800 bg-black/40 p-3">
           {[...recaps.slice(0, viewRoundIdx)].reverse().map((recap) => (
             <div key={recap.stage} className="text-xs">
@@ -1432,9 +1639,9 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
         </div>
       )}
 
-      {/* Visual bracket — same round-by-round data driving the scoring above, truncated
-          to whatever round is currently being viewed */}
-      {!loadingBracket && roundsHistory.length > 0 && (
+      {/* Visual bracket — real elimination data, truncated to whatever round is
+          currently being viewed */}
+      {roundsHistory.length > 0 && (
         <div className="mb-4">
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-yellow-400">Tournament Bracket</p>
           <NcaaBracketView
@@ -1453,7 +1660,7 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {SLOT_SEQUENCE.map((slot) => {
             const occupant = occupantAsOf(slot.key, viewRoundIdx);
-            const justChanged = viewRoundIdx > 0 && occupant?.acquiredIdx === viewRoundIdx;
+            const justChanged = viewRoundIdx > 0 && occupant?.startVisibleIdx === viewRoundIdx;
             const ended = !occupant ? lastEndedAsOf(slot.key, viewRoundIdx) : null;
 
             return (
@@ -1477,15 +1684,17 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                 </p>
                 {occupant ? (
                   <>
-                    <p className="mt-0.5 truncate text-sm font-bold text-white">{occupant.player.name}</p>
-                    <p className="text-xs text-neutral-500">{occupant.player.team_name} #{occupant.player.team_seed}</p>
+                    <div className="mt-0.5">
+                      <PlayerNameCell name={occupant.player.name} position={occupant.player.position} team={teamOf(occupant.player)} cell={nameCellFor(occupant)} />
+                    </div>
                     {viewRoundIdx > 0 && (
                       <p className="mt-1 flex flex-wrap gap-1.5 text-[10px]">
                         {SCORING_ROUNDS.slice(0, viewRoundIdx).map((r) => {
                           const cell = getRoundCell(r.stage, occupant.countedPts, occupant.rawPts, {
                             is_bench: occupant.is_bench,
-                            acquired_at_round_stage: stageForRoundIdx(occupant.acquiredIdx) ?? 'r64',
-                            released_at_round_stage: stageForRoundIdx(occupant.releasedIdx),
+                            acquired_at_round_stage: occupant.acquiredStage,
+                            released_at_round_stage: occupant.releasedStage,
+                            release_reason: occupant.releaseReason,
                           });
                           if (cell === null) return null;
                           return (
@@ -1502,9 +1711,11 @@ function SeasonSimulator({ teams }: { teams: Team[] }) {
                   </>
                 ) : (
                   <p className="text-xs text-neutral-500">
-                    {ended
-                      ? `${ended.player.name} (${ended.player.team_name} #${ended.player.team_seed}) eliminated — no eligible bench sub`
-                      : 'Empty bench slot'}
+                    {ended && ended.releaseReason === 'eliminated'
+                      ? `${ended.player.name} (${ended.player.team_short_name ?? ended.player.team_name} #${ended.player.team_seed}) eliminated — no eligible bench sub`
+                      : ended && ended.releaseReason === 'substituted'
+                        ? `${ended.player.name} promoted into the starting lineup`
+                        : 'Empty bench slot'}
                   </p>
                 )}
               </div>
