@@ -20,6 +20,8 @@ export interface Team {
   id: string;
   season: number;
   name: string;
+  /** Mascot-free school name (e.g. "Duke" not "Duke Blue Devils"). Null for the 12 "Historical" region teams. */
+  short_name: string | null;
   seed: number;
   region: string;
   is_eliminated: boolean;
@@ -48,7 +50,7 @@ export interface Player {
   created_at: string;
   updated_at: string;
   // Present when fetched with a join to teams (e.g. GET /api/players)
-  teams?: Pick<Team, 'id' | 'name' | 'seed' | 'region'> | null;
+  teams?: Pick<Team, 'id' | 'name' | 'short_name' | 'seed' | 'region'> | null;
 }
 
 // ===== LEAGUES =====

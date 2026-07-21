@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { GripVertical } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Button } from '@/components/ui/button';
+import { PlayerTeamLabel } from '@/components/PlayerTeamLabel';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase/client';
 import { formatCountdown } from '@/lib/utils/formatCountdown';
@@ -249,10 +250,9 @@ export default function BenchOrderPage() {
                         {index + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-white">{player?.name ?? 'Unknown player'}</p>
+                        <PlayerTeamLabel name={player?.name ?? 'Unknown player'} team={team ?? null} />
                         <p className="truncate text-xs text-neutral-500">
                           {player?.position}
-                          {team && ` · ${team.name} (#${team.seed})`}
                           {player && ` · ${player.avg_ppg.toFixed(1)} PPG`}
                         </p>
                       </div>

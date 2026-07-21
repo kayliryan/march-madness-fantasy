@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     // participant's queue private from the rest of the league
     const { data: queue, error } = await supabase
       .from('draft_queues')
-      .select('*, players(*, teams(id, name, seed, region))')
+      .select('*, players(*, teams(id, name, short_name, seed, region))')
       .eq('user_id', user.id)
       .eq('draft_session_id', sessionId)
       .is('removed_at', null)
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
     // Fetch updated queue
     const { data: updatedQueue, error: fetchError } = await supabase
       .from('draft_queues')
-      .select('*, players(*, teams(id, name, seed, region))')
+      .select('*, players(*, teams(id, name, short_name, seed, region))')
       .eq('user_id', user.id)
       .eq('draft_session_id', body.draft_session_id)
       .is('removed_at', null)

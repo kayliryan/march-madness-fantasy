@@ -8,6 +8,7 @@ import { ROUND_LABELS } from '@/lib/constants/rounds';
 import { groupAndMergeSlots } from '@/lib/utils/mergePlayerRounds';
 import { playedRoundStages } from '@/lib/utils/roundVisibility';
 import { RoundCellBadge } from '@/components/RoundCellBadge';
+import { PlayerNameCell } from '@/components/PlayerNameCell';
 import { InjuryBadge } from '@/components/InjuryBadge';
 
 const DEMO_LEAGUE_ID = process.env.NEXT_PUBLIC_DEMO_LEAGUE_ID ?? '00000000-0000-0000-0000-000000000001';
@@ -28,6 +29,7 @@ interface SlotDetail {
   is_active: boolean;
   player_name: string;
   team_name: string;
+  team_short_name: string | null;
   team_seed: number;
   injury_status: 'active' | 'day_to_day' | 'out' | null;
   injury_note: string | null;
@@ -50,7 +52,6 @@ function getRankLabel(rank: number): string {
 export default function DemoLeaguePage() {
   const [standings, setStandings] = useState<Standing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'standings' | 'rounds'>('standings');
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [slotCache, setSlotCache] = useState<Map<string, SlotDetail[]>>(new Map());
   const [slotLoading, setSlotLoading] = useState<Set<string>>(new Set());
@@ -171,12 +172,12 @@ export default function DemoLeaguePage() {
           injury_status: 'active' | 'day_to_day' | 'out' | null;
           injury_note: string | null;
           injury_updated_at: string | null;
-          teams: { name: string; seed: number } | { name: string; seed: number }[] | null;
+          teams: { name: string; short_name: string | null; seed: number } | { name: string; short_name: string | null; seed: number }[] | null;
         } | null;
       };
       const { data: slots } = await supabase
         .from('roster_slots')
-        .select('id, slot_key, slot_position, is_bench, is_active, player_id, acquired_at_round_stage, released_at_round_stage, players(name, injury_status, injury_note, injury_updated_at, teams(name, seed))')
+        .select('id, slot_key, slot_position, is_bench, is_active, player_id, acquired_at_round_stage, released_at_round_stage, players(name, injury_status, injury_note, injury_updated_at, teams(name, short_name, seed))')
         .eq('league_id', DEMO_LEAGUE_ID)
         .eq('user_id', user_id)
         .order('is_bench')
@@ -245,6 +246,7 @@ export default function DemoLeaguePage() {
           is_active: s.is_active,
           player_name: p?.name ?? '—',
           team_name: team?.name ?? '—',
+          team_short_name: team?.short_name ?? null,
           team_seed: team?.seed ?? 0,
           injury_status: p?.injury_status ?? null,
           injury_note: p?.injury_note ?? null,
@@ -345,176 +347,139 @@ export default function DemoLeaguePage() {
           </div>
         ) : (
           <>
-            <div className="mb-4 flex gap-2">
-              {(['standings', 'rounds'] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setView(v)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                    view === v
-                      ? 'bg-yellow-400 text-black'
-                      : 'border border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400'
-                  }`}
-                >
-                  {v === 'standings' ? 'Standings' : 'Round by Round'}
-                </button>
-              ))}
-            </div>
-
-            {view === 'standings' ? (
-              <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-neutral-800 bg-black">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Rank</th>
-                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Manager</th>
-                      <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-800">
-                    {standings.map((entry, i) => {
-                      const rank = i + 1;
-                      return (
-                        <tr key={entry.user_id} className={rank === 1 ? 'bg-yellow-400/10' : ''}>
+            {/* One consolidated table: Rank, Manager, [round columns], Total.
+                Expand a manager to see their per-player round-by-round breakdown. */}
+            <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
+              <table className="w-full text-sm">
+                <thead className="border-b border-neutral-800 bg-black">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-300">Rank</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-300">Manager</th>
+                    {visibleRounds.map((r) => (
+                      <th key={r} className="px-3 py-3 text-right font-medium text-neutral-300 whitespace-nowrap">
+                        {ROUND_LABELS[r] ?? r}
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800">
+                  {standings.map((entry, i) => {
+                    const rank = i + 1;
+                    const isExpanded = expandedUsers.has(entry.user_id);
+                    const isLoadingSlots = slotLoading.has(entry.user_id);
+                    const slots = slotCache.get(entry.user_id) ?? [];
+                    // Name status reflects the latest played round (final season snapshot).
+                    const currentStage = visibleRounds[visibleRounds.length - 1] ?? null;
+                    return (
+                      <Fragment key={entry.user_id}>
+                        <tr className={rank === 1 ? 'bg-yellow-400/10' : ''}>
                           <td className="px-4 py-3 font-medium text-neutral-300">{getRankLabel(rank)}</td>
-                          <td className="px-4 py-3 font-medium text-white">{entry.display_name}</td>
+                          <td className="px-4 py-3">
+                            <button
+                              type="button"
+                              onClick={() => toggleExpand(entry.user_id)}
+                              className="flex items-center gap-1.5 text-left font-medium text-yellow-400 hover:underline"
+                            >
+                              <span className="w-2 shrink-0 text-xs text-neutral-500">
+                                {isExpanded ? '▼' : '▶'}
+                              </span>
+                              {entry.display_name}
+                            </button>
+                          </td>
+                          {visibleRounds.map((r) => (
+                            <td key={r} className="px-3 py-3 text-right text-neutral-300 tabular-nums">
+                              {Math.round(entry.per_round[r] ?? 0)}
+                            </td>
+                          ))}
                           <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
                             {Math.round(entry.total_points)}
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-neutral-800 bg-black">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Manager</th>
-                      {visibleRounds.map((r) => (
-                        <th key={r} className="px-3 py-3 text-right font-medium text-neutral-300 whitespace-nowrap">
-                          {ROUND_LABELS[r] ?? r}
-                        </th>
-                      ))}
-                      <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-800">
-                    {standings.map((entry, i) => {
-                      const rank = i + 1;
-                      const isExpanded = expandedUsers.has(entry.user_id);
-                      const isLoadingSlots = slotLoading.has(entry.user_id);
-                      const slots = slotCache.get(entry.user_id) ?? [];
-                      return (
-                        <Fragment key={entry.user_id}>
-                          <tr className={rank === 1 ? 'bg-yellow-400/10' : ''}>
-                            <td className="px-4 py-3">
-                              <button
-                                type="button"
-                                onClick={() => toggleExpand(entry.user_id)}
-                                className="flex items-center gap-1.5 text-left font-medium text-yellow-400 hover:underline"
-                              >
-                                <span className="w-2 shrink-0 text-xs text-neutral-500">
-                                  {isExpanded ? '▼' : '▶'}
-                                </span>
-                                {entry.display_name}
-                              </button>
-                            </td>
-                            {visibleRounds.map((r) => (
-                              <td key={r} className="px-3 py-3 text-right text-neutral-300 tabular-nums">
-                                {Math.round(entry.per_round[r] ?? 0)}
-                              </td>
-                            ))}
-                            <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
-                              {Math.round(entry.total_points)}
+
+                        {isExpanded && isLoadingSlots && (
+                          <tr className="bg-neutral-950">
+                            <td
+                              colSpan={visibleRounds.length + 3}
+                              className="px-10 py-2 text-xs italic text-neutral-500"
+                            >
+                              Loading players…
                             </td>
                           </tr>
+                        )}
 
-                          {isExpanded && isLoadingSlots && (
-                            <tr className="bg-neutral-950">
-                              <td
-                                colSpan={visibleRounds.length + 2}
-                                className="px-10 py-2 text-xs italic text-neutral-500"
-                              >
-                                Loading players…
-                              </td>
-                            </tr>
-                          )}
-
-                          {isExpanded && !isLoadingSlots && slots.length > 0 && (
-                            <tr className="bg-neutral-950">
-                              <td colSpan={visibleRounds.length + 2} className="px-0 pb-2">
-                                <table className="w-full text-xs">
-                                  <thead>
-                                    <tr className="border-b border-neutral-800">
-                                      <th className="py-2 pl-10 pr-3 text-left font-bold text-white">Player</th>
-                                      {visibleRounds.map((r) => (
-                                        <th key={r} className="px-2 py-2 text-right font-bold text-white whitespace-nowrap">
-                                          {ROUND_LABELS[r] ?? r}
-                                        </th>
-                                      ))}
-                                      <th className="py-2 pl-3 pr-4 text-right font-bold text-white">Total</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {/* One merged row per player — a bench-promoted player has two
-                                        historical roster_slots rows (released bench stint + starter
-                                        stint); groupAndMergeSlots collapses them, preferring
-                                        counted > raw > elim > null per round. */}
-                                    {groupAndMergeSlots(slots, visibleRounds).map((row) => (
-                                      <tr key={row.player_id} className="border-b border-neutral-900 last:border-0">
-                                        <td className="py-2 pl-10 pr-3">
-                                          <span className={row.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
-                                            {row.latest.player_name}
-                                          </span>
-                                          <span className="ml-1 text-neutral-500">- {row.latest.team_name}</span>
-                                          <span className="ml-1.5 text-neutral-600">{row.latest.slot_position}</span>
-                                          {row.is_bench && (
-                                            <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
-                                          )}
-                                          {row.promoted_at_round_stage && (
-                                            <span
-                                              className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500/90"
-                                              title="Promoted from the bench when a starter's team was eliminated"
-                                            >
-                                              ↑ {ROUND_LABELS[row.promoted_at_round_stage] ?? row.promoted_at_round_stage}
-                                            </span>
-                                          )}
-                                          {row.is_active && (
-                                            <span className="ml-1.5 inline-block align-middle">
-                                              <InjuryBadge
-                                                status={row.latest.injury_status}
-                                                note={row.latest.injury_note}
-                                                updatedAt={row.latest.injury_updated_at}
-                                              />
-                                            </span>
-                                          )}
-                                        </td>
-                                        {visibleRounds.map((stage) => (
-                                          <td key={stage} className="px-2 py-2 text-right tabular-nums">
-                                            <RoundCellBadge cell={row.cells[stage] ?? null} />
-                                          </td>
-                                        ))}
-                                        <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
-                                          {Math.round(row.total)}
-                                        </td>
-                                      </tr>
+                        {isExpanded && !isLoadingSlots && slots.length > 0 && (
+                          <tr className="bg-neutral-950">
+                            <td colSpan={visibleRounds.length + 3} className="px-0 pb-2">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="border-b border-neutral-800">
+                                    <th className="py-2 pl-10 pr-3 text-left font-bold text-white">Player</th>
+                                    {visibleRounds.map((r) => (
+                                      <th key={r} className="px-2 py-2 text-right font-bold text-white whitespace-nowrap">
+                                        {ROUND_LABELS[r] ?? r}
+                                      </th>
                                     ))}
-                                  </tbody>
-                                </table>
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                                    <th className="py-2 pl-3 pr-4 text-right font-bold text-white">Total</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {/* One merged row per player — a bench-promoted player has two
+                                      historical roster_slots rows (released bench stint + starter
+                                      stint); groupAndMergeSlots collapses them, preferring
+                                      counted > raw > elim > null per round. */}
+                                  {groupAndMergeSlots(slots, visibleRounds).map((row) => (
+                                    <tr key={row.player_id} className="border-b border-neutral-900 last:border-0">
+                                      <td className="py-2 pl-10 pr-3">
+                                        <PlayerNameCell
+                                          name={row.latest.player_name}
+                                          position={row.latest.slot_position}
+                                          team={{
+                                            short_name: row.latest.team_short_name,
+                                            name: row.latest.team_name,
+                                            seed: row.latest.team_seed,
+                                          }}
+                                          cell={currentStage ? row.cells[currentStage] ?? null : null}
+                                        />
+                                        {row.promoted_at_round_stage && (
+                                          <span
+                                            className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500/90"
+                                            title="Promoted from the bench when a starter's team was eliminated"
+                                          >
+                                            ↑ {ROUND_LABELS[row.promoted_at_round_stage] ?? row.promoted_at_round_stage}
+                                          </span>
+                                        )}
+                                        {row.is_active && (
+                                          <span className="ml-1.5 inline-block align-middle">
+                                            <InjuryBadge
+                                              status={row.latest.injury_status}
+                                              note={row.latest.injury_note}
+                                              updatedAt={row.latest.injury_updated_at}
+                                            />
+                                          </span>
+                                        )}
+                                      </td>
+                                      {visibleRounds.map((stage) => (
+                                        <td key={stage} className="px-2 py-2 text-right tabular-nums">
+                                          <RoundCellBadge cell={row.cells[stage] ?? null} />
+                                        </td>
+                                      ))}
+                                      <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
+                                        {Math.round(row.total)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
 

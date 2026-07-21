@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { PlayerTeamLabel } from '@/components/PlayerTeamLabel';
 import type { Player } from '@/lib/types';
 
 interface PlayerPositionOverrideProps {
@@ -97,13 +98,9 @@ export function PlayerPositionOverride({
                       setPosition(p.position);
                       setSearch('');
                     }}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-800"
+                    className="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-neutral-800"
                   >
-                    <span className="text-white">{p.name}</span>
-                    <span className="text-neutral-500">
-                      {p.position}
-                      {p.teams ? ` · ${p.teams.name}` : ''}
-                    </span>
+                    <PlayerTeamLabel name={p.name} position={p.position} team={p.teams ?? null} />
                   </button>
                 </li>
               ))}

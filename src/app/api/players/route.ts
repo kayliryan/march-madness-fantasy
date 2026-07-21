@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('players')
-      .select('*, teams(id, name, seed, region)')
+      .select('*, teams(id, name, short_name, seed, region)')
       .eq('season', 2026);
 
     // Position filtering is applied in JS below (after league overrides are merged

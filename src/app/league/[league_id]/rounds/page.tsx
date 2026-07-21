@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
-import { TeamBadge } from '@/components/TeamBadge';
 import { ROUND_LABELS } from '@/lib/constants/rounds';
 import type { RoundCell } from '@/lib/utils/roundBreakdown';
 import { RoundCellBadge } from '@/components/RoundCellBadge';
+import { PlayerNameCell } from '@/components/PlayerNameCell';
 
 interface RoundEntry {
   user_id: string;
@@ -15,6 +15,7 @@ interface RoundEntry {
   player_id: string;
   player_name: string;
   team_name: string | null;
+  team_short_name: string | null;
   team_seed: number | null;
   position: string;
   is_bench: boolean;
@@ -142,7 +143,6 @@ export default function RoundsPage() {
                   <thead className="border-b border-neutral-800">
                     <tr>
                       <th className="px-4 py-2 text-left font-medium text-neutral-300">Player</th>
-                      <th className="px-4 py-2 text-left font-medium text-neutral-300 hidden sm:table-cell">Team</th>
                       <th className="px-4 py-2 text-left font-medium text-neutral-300">Owner</th>
                       <th className="px-4 py-2 text-right font-medium text-neutral-300">Points</th>
                     </tr>
@@ -151,15 +151,16 @@ export default function RoundsPage() {
                     {round.entries.map((entry) => (
                       <tr key={`${entry.user_id}-${entry.player_id}`}>
                         <td className="px-4 py-2">
-                          <span className="font-medium text-white">{entry.player_name}</span>
-                          <span className="ml-1 text-xs text-neutral-500">{entry.position}</span>
-                        </td>
-                        <td className="px-4 py-2 hidden sm:table-cell">
-                          {entry.team_name && entry.team_seed !== null ? (
-                            <TeamBadge team={{ id: '', name: entry.team_name, seed: entry.team_seed, region: '' }} />
-                          ) : (
-                            <span className="text-neutral-500">—</span>
-                          )}
+                          <PlayerNameCell
+                            name={entry.player_name}
+                            position={entry.position}
+                            team={
+                              entry.team_name && entry.team_seed !== null
+                                ? { short_name: entry.team_short_name, name: entry.team_name, seed: entry.team_seed }
+                                : null
+                            }
+                            cell={entry.cell}
+                          />
                         </td>
                         <td className="px-4 py-2">
                           <Link href={`/league/${league_id}/roster/${entry.user_id}`} className="text-yellow-400 hover:underline">

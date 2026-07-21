@@ -54,7 +54,7 @@ export async function PATCH(
 
     const { data: updatedQueue, error: fetchError } = await supabase
       .from('draft_queues')
-      .select('*, players(*, teams(id, name, seed, region))')
+      .select('*, players(*, teams(id, name, short_name, seed, region))')
       .eq('user_id', user.id)
       .eq('draft_session_id', session_id)
       .is('removed_at', null)
@@ -134,7 +134,7 @@ export async function DELETE(
     // Fetch updated queue
     const { data: updatedQueue, error: fetchError } = await supabase
       .from('draft_queues')
-      .select('*, players(*, teams(id, name, seed, region))')
+      .select('*, players(*, teams(id, name, short_name, seed, region))')
       .eq('user_id', user.id)
       .eq('draft_session_id', session_id)
       .is('removed_at', null)

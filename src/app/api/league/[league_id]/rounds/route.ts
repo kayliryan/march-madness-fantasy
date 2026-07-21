@@ -13,6 +13,7 @@ interface RoundEntry {
   player_id: string;
   player_name: string;
   team_name: string | null;
+  team_short_name: string | null;
   team_seed: number | null;
   position: string;
   is_bench: boolean;
@@ -102,7 +103,7 @@ export async function GET(
       playerIds.length > 0
         ? supabaseAdmin
             .from('players')
-            .select('id, name, position, teams ( name, seed )')
+            .select('id, name, position, teams ( name, short_name, seed )')
             .in('id', playerIds)
         : Promise.resolve({ data: [] as unknown[] }),
       playerIds.length > 0
@@ -121,13 +122,14 @@ export async function GET(
         id: string;
         name: string;
         position: 'G' | 'F' | 'C';
-        teams: { name: string; seed: number } | null;
+        teams: { name: string; short_name: string | null; seed: number } | null;
       }[]).map((p) => [
         p.id,
         {
           name: p.name,
           position: resolvePosition(p.id, p.position, positionOverrides),
           team_name: p.teams?.name ?? null,
+          team_short_name: p.teams?.short_name ?? null,
           team_seed: p.teams?.seed ?? null,
         },
       ])
@@ -156,6 +158,7 @@ export async function GET(
           player_id: row.player_id,
           player_name: player?.name ?? row.player_id.slice(0, 8),
           team_name: player?.team_name ?? null,
+          team_short_name: player?.team_short_name ?? null,
           team_seed: player?.team_seed ?? null,
           position: player?.position ?? '',
           is_bench: row.is_bench,

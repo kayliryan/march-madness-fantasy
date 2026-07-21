@@ -89,7 +89,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data: player, error } = await supabaseAdmin
       .from('players')
-      .select('*, teams(id, name, seed, region)')
+      .select('*, teams(id, name, short_name, seed, region)')
       .eq('id', body.player_id)
       .single();
 

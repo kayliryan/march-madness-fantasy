@@ -4,9 +4,11 @@ import type { Player, RosterSlot, Team } from '@/lib/types';
 import { InjuryBadge } from '@/components/InjuryBadge';
 import { getRoundCell, toRoundPointsMap } from '@/lib/utils/roundBreakdown';
 import { RoundCellBadge } from '@/components/RoundCellBadge';
+import { PlayerNameCell } from '@/components/PlayerNameCell';
+import { PlayerTeamLabel } from '@/components/PlayerTeamLabel';
 
 export interface RosterSlotEnriched extends RosterSlot {
-  player: (Player & { teams?: Pick<Team, 'id' | 'name' | 'seed' | 'region' | 'is_eliminated'> | null }) | null;
+  player: (Player & { teams?: Pick<Team, 'id' | 'name' | 'short_name' | 'seed' | 'region' | 'is_eliminated'> | null }) | null;
   per_round: { round_stage: string; points: number }[];
   raw_round: { round_stage: string; points: number }[];
   total_points: number;
@@ -34,20 +36,26 @@ export function SlotRow({
   const countedPts = toRoundPointsMap(slot.per_round);
   const rawPts = toRoundPointsMap(slot.raw_round);
 
+  // Name status reflects the latest round we have data for. When no rounds have
+  // been played yet (pre-tournament roster), there's no round concept — fall
+  // back to the plain, status-free PlayerTeamLabel.
+  const nameNode = (() => {
+    const playerName = slot.player?.name ?? slot.player_id.slice(0, 8);
+    const team = slot.player?.teams ?? null;
+    const position = slot.player?.position ?? null;
+    if (visibleRounds.length > 0) {
+      const cell = getRoundCell(visibleRounds[visibleRounds.length - 1], countedPts, rawPts, slot);
+      return <PlayerNameCell name={playerName} position={position} team={team} cell={cell} />;
+    }
+    return <PlayerTeamLabel name={playerName} position={position} team={team} />;
+  })();
+
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5 px-1">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           {!historical && <span className="text-xs font-mono text-neutral-500 w-8">{slot.slot_key}</span>}
-          <span className="font-medium text-white">
-            {slot.player?.name ?? slot.player_id.slice(0, 8)}
-          </span>
-          <span className="text-xs text-neutral-500">{slot.player?.position}</span>
-          {slot.player?.teams && (
-            <span className="text-xs text-neutral-500">
-              {slot.player.teams.name} ({slot.player.teams.seed})
-            </span>
-          )}
+          {nameNode}
           {!historical && !slot.is_active && (
             <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-400">
               {slot.release_reason ?? 'released'}

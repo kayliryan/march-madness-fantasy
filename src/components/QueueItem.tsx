@@ -2,6 +2,7 @@
 
 import { GripVertical, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PlayerTeamLabel } from '@/components/PlayerTeamLabel';
 import type { DraftQueue } from '@/lib/types';
 
 interface QueueItemProps {
@@ -67,12 +68,9 @@ export function QueueItem({
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-white">
-          {player?.name ?? 'Unknown player'}
-        </p>
+        <PlayerTeamLabel name={player?.name ?? 'Unknown player'} team={team ?? null} />
         <p className="truncate text-xs text-neutral-500">
           {player && (POSITION_LABELS[player.position] ?? player.position)}
-          {team && ` · ${team.name}`}
           {player && ` · ${player.avg_ppg.toFixed(1)} PPG`}
         </p>
       </div>

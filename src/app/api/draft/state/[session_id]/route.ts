@@ -121,7 +121,7 @@ export async function GET(
 
     const { data: allPlayers } = await supabaseAdmin
       .from('players')
-      .select('*, teams(id, name, seed, region)')
+      .select('*, teams(id, name, short_name, seed, region)')
       .eq('season', session.season)
       .order('avg_ppg', { ascending: false });
 

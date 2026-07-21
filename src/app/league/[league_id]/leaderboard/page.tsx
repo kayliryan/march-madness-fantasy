@@ -9,6 +9,7 @@ import type { RoundStage } from '@/lib/constants/rounds';
 import { toRoundPointsMap } from '@/lib/utils/roundBreakdown';
 import { groupAndMergeSlots } from '@/lib/utils/mergePlayerRounds';
 import { RoundCellBadge } from '@/components/RoundCellBadge';
+import { PlayerNameCell } from '@/components/PlayerNameCell';
 
 interface StandingEntry {
   user_id: string;
@@ -27,7 +28,7 @@ interface LeaderboardResponse {
 interface RosterSlotForRounds {
   id: string;
   player_id: string;
-  player: { name: string; position: string; teams: { name: string; seed: number } | null } | null;
+  player: { name: string; position: string; teams: { name: string; short_name: string | null; seed: number } | null } | null;
   per_round: { round_stage: string; points: number }[];
   total_points: number;
   is_bench: boolean;
@@ -58,7 +59,6 @@ export default function LeaderboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [narrative, setNarrative] = useState<string | null>(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
-  const [view, setView] = useState<'standings' | 'rounds'>('standings');
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   // Index into activeColumns — lets you step back through the season and see the
   // leaderboard/breakdown exactly as it stood after an earlier round, without
@@ -166,6 +166,10 @@ export default function LeaderboardPage() {
   }
   const asOfIdx = viewAsOfIdx ?? lastIdx;
   const visibleColumns = activeColumns.slice(0, asOfIdx + 1);
+  // The round currently being "viewed" (last visible column) — drives each
+  // player-name's status color/badges in the expand breakdown, so scrubbing the
+  // stepper recolors names to their status as of that round.
+  const currentStage = visibleColumns[visibleColumns.length - 1] ?? null;
 
   function asOfTotal(per_round: { round_stage: string; points: number }[]): number {
     const pts = roundPointsMap(per_round);
@@ -248,31 +252,6 @@ export default function LeaderboardPage() {
           </div>
         ) : (
           <>
-            <div className="mb-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setView('standings')}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                  view === 'standings'
-                    ? 'bg-yellow-400 text-black'
-                    : 'border border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400'
-                }`}
-              >
-                Standings
-              </button>
-              <button
-                type="button"
-                onClick={() => setView('rounds')}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                  view === 'rounds'
-                    ? 'bg-yellow-400 text-black'
-                    : 'border border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-yellow-400/40 hover:text-yellow-400'
-                }`}
-              >
-                Round by Round
-              </button>
-            </div>
-
             {activeColumns.length > 0 && (
               <div className="mb-4 flex flex-wrap items-center gap-1.5">
                 <button
@@ -315,215 +294,122 @@ export default function LeaderboardPage() {
               </div>
             )}
 
-            {view === 'standings' ? (
-              <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-neutral-800 bg-black">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Rank</th>
-                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Team</th>
-                      <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
-                      <th className="px-4 py-3 text-right font-medium text-neutral-300 hidden sm:table-cell">Active</th>
-                      <th className="px-4 py-3 text-right font-medium text-neutral-300 hidden md:table-cell">Best Game</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-800">
-                    {[...data.standings]
-                      .sort((a, b) => asOfTotal(b.per_round) - asOfTotal(a.per_round))
-                      .map((entry, i) => {
-                      const rank = i + 1;
-                      const isExpanded = expandedUsers.has(entry.user_id);
-                      const isLoadingRoster = rosterLoading.has(entry.user_id);
-                      const slots = rosterCache.get(entry.user_id) ?? [];
-                      return (
-                        <Fragment key={entry.user_id}>
-                          <tr className={rank === 1 ? 'bg-yellow-400/10' : ''}>
-                            <td className="px-4 py-3 font-medium text-neutral-300">
-                              {getRankLabel(rank)}
+            {/* One consolidated table: Rank, Team, [round columns from the stepper],
+                Total. The stepper controls both the visible round columns and the
+                "as of" totals. Expand a team to see its per-player breakdown. */}
+            <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
+              <table className="w-full text-sm">
+                <thead className="border-b border-neutral-800 bg-black">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-300">Rank</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-300">Team</th>
+                    {visibleColumns.map((stage) => (
+                      <th key={stage} className="px-3 py-3 text-right font-medium text-neutral-300 whitespace-nowrap">
+                        {ROUND_LABELS[stage] ?? stage}
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800">
+                  {[...data.standings]
+                    .sort((a, b) => asOfTotal(b.per_round) - asOfTotal(a.per_round))
+                    .map((entry, i) => {
+                    const rank = i + 1;
+                    const points = roundPointsMap(entry.per_round);
+                    const isExpanded = expandedUsers.has(entry.user_id);
+                    const isLoadingRoster = rosterLoading.has(entry.user_id);
+                    const slots = rosterCache.get(entry.user_id) ?? [];
+                    return (
+                      <Fragment key={entry.user_id}>
+                        <tr className={rank === 1 ? 'bg-yellow-400/10' : ''}>
+                          <td className="px-4 py-3 font-medium text-neutral-300">
+                            {getRankLabel(rank)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              type="button"
+                              onClick={() => toggleExpand(entry.user_id)}
+                              className="flex items-center gap-1.5 text-left font-medium text-yellow-400 hover:underline"
+                            >
+                              <span className="w-2 shrink-0 text-xs text-neutral-500">
+                                {isExpanded ? '▼' : '▶'}
+                              </span>
+                              {entry.display_name}
+                            </button>
+                          </td>
+                          {visibleColumns.map((stage) => (
+                            <td key={stage} className="px-3 py-3 text-right text-neutral-300 tabular-nums">
+                              {points.get(stage) ?? 0}
                             </td>
-                            <td className="px-4 py-3">
-                              <button
-                                type="button"
-                                onClick={() => toggleExpand(entry.user_id)}
-                                className="flex items-center gap-1.5 text-left font-medium text-yellow-400 hover:underline"
-                              >
-                                <span className="w-2 shrink-0 text-xs text-neutral-500">
-                                  {isExpanded ? '▼' : '▶'}
-                                </span>
-                                {entry.display_name}
-                              </button>
-                            </td>
-                            <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
-                              {asOfTotal(entry.per_round)}
-                            </td>
-                            <td className="px-4 py-3 text-right text-neutral-300 tabular-nums hidden sm:table-cell">
-                              {entry.active_player_count}
-                            </td>
-                            <td className="px-4 py-3 text-right text-neutral-300 tabular-nums hidden md:table-cell">
-                              {entry.highest_single_game_points}
-                            </td>
-                          </tr>
-                          {isExpanded && isLoadingRoster && (
-                            <tr className="bg-neutral-950">
-                              <td colSpan={5} className="px-10 py-2 text-xs italic text-neutral-500">
-                                Loading players…
-                              </td>
-                            </tr>
-                          )}
-                          {isExpanded && !isLoadingRoster && slots.length > 0 && (
-                            <tr className="border-b border-neutral-800 bg-neutral-950">
-                              <td />
-                              <td colSpan={4} className="px-0 pb-2">
-                                <table className="w-full text-xs">
-                                  <thead>
-                                    <tr className="border-b border-neutral-800">
-                                      <th className="py-2 pl-10 pr-3 text-left font-bold text-white">Player</th>
-                                      {visibleColumns.map((stage) => (
-                                        <th key={stage} className="px-2 py-2 text-right font-bold text-white whitespace-nowrap">
-                                          {ROUND_LABELS[stage as RoundStage] ?? stage}
-                                        </th>
-                                      ))}
-                                      <th className="py-2 pl-3 pr-4 text-right font-bold text-white">Total</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {mergedRosterRows(entry.user_id).map((row) => (
-                                      <tr key={row.player_id} className="border-b border-neutral-900 last:border-0">
-                                        <td className="py-2 pl-10 pr-3">
-                                          <span className={row.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
-                                            {row.latest.player?.name ?? '—'}
-                                            {row.latest.player?.teams && (
-                                              <span className="ml-1 font-normal text-neutral-500">
-                                                - {row.latest.player.teams.name}
-                                              </span>
-                                            )}
-                                          </span>
-                                          <span className="ml-1.5 text-neutral-600">{row.latest.player?.position}</span>
-                                          {row.is_bench && (
-                                            <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
-                                          )}
-                                          {row.promoted_at_round_stage && (
-                                            <span
-                                              className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500/90"
-                                              title="Promoted from the bench when a starter's team was eliminated"
-                                            >
-                                              ↑ {ROUND_LABELS[row.promoted_at_round_stage] ?? row.promoted_at_round_stage}
-                                            </span>
-                                          )}
-                                        </td>
-                                        {visibleColumns.map((stage) => (
-                                          <td key={stage} className="px-2 py-2 text-right tabular-nums">
-                                            <RoundCellBadge cell={row.cells[stage] ?? null} />
-                                          </td>
-                                        ))}
-                                        <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
-                                          {Math.round(row.total)}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-neutral-900 shadow-sm">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-neutral-800 bg-black">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-medium text-neutral-300">Team</th>
-                      {visibleColumns.map((stage) => (
-                        <th key={stage} className="px-3 py-3 text-right font-medium text-neutral-300 whitespace-nowrap">
-                          {ROUND_LABELS[stage] ?? stage}
-                        </th>
-                      ))}
-                      <th className="px-4 py-3 text-right font-medium text-neutral-300">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-800">
-                    {[...data.standings]
-                      .sort((a, b) => asOfTotal(b.per_round) - asOfTotal(a.per_round))
-                      .map((entry, i) => {
-                      const rank = i + 1;
-                      const points = roundPointsMap(entry.per_round);
-                      const isExpanded = expandedUsers.has(entry.user_id);
-                      const isLoadingRoster = rosterLoading.has(entry.user_id);
-                      return (
-                        <Fragment key={entry.user_id}>
-                          <tr className={rank === 1 ? 'bg-yellow-400/10' : ''}>
-                            <td className="px-4 py-3">
-                              <button
-                                type="button"
-                                onClick={() => toggleExpand(entry.user_id)}
-                                className="flex items-center gap-1.5 font-medium text-yellow-400 hover:underline text-left"
-                              >
-                                <span className="text-xs text-neutral-500 w-2 shrink-0">{isExpanded ? '▼' : '▶'}</span>
-                                {entry.display_name}
-                              </button>
-                            </td>
-                            {visibleColumns.map((stage) => (
-                              <td key={stage} className="px-3 py-3 text-right text-neutral-300 tabular-nums">
-                                {points.get(stage) ?? 0}
-                              </td>
-                            ))}
-                            <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
-                              {asOfTotal(entry.per_round)}
-                            </td>
-                          </tr>
-                          {isExpanded && isLoadingRoster && (
-                            <tr className="bg-neutral-950">
-                              <td colSpan={visibleColumns.length + 2} className="px-10 py-2 text-xs italic text-neutral-500">
-                                Loading players…
-                              </td>
-                            </tr>
-                          )}
-                          {isExpanded && !isLoadingRoster && mergedRosterRows(entry.user_id).map((row) => (
-                            <tr key={row.player_id} className="bg-neutral-950 border-b border-neutral-900">
-                              <td className="py-2 pl-10 pr-4 text-xs">
-                                <span className={row.is_active ? 'font-medium text-neutral-300' : 'font-medium text-neutral-600'}>
-                                  {row.latest.player?.name ?? '—'}
-                                  {row.latest.player?.teams && (
-                                    <span className="ml-1 font-normal text-neutral-500">
-                                      - {row.latest.player.teams.name}
-                                    </span>
-                                  )}
-                                </span>
-                                <span className="ml-1.5 text-neutral-600">{row.latest.player?.position}</span>
-                                {row.is_bench && (
-                                  <span className="ml-1.5 rounded bg-neutral-800 px-1 py-0.5 text-neutral-500">B</span>
-                                )}
-                                {row.promoted_at_round_stage && (
-                                  <span
-                                    className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500/90"
-                                    title="Promoted from the bench when a starter's team was eliminated"
-                                  >
-                                    ↑ {ROUND_LABELS[row.promoted_at_round_stage] ?? row.promoted_at_round_stage}
-                                  </span>
-                                )}
-                              </td>
-                              {visibleColumns.map((stage) => (
-                                <td key={stage} className="px-3 py-2 text-right text-xs tabular-nums">
-                                  <RoundCellBadge cell={row.cells[stage] ?? null} />
-                                </td>
-                              ))}
-                              <td className="px-4 py-2 text-right text-xs font-medium text-neutral-400 tabular-nums">
-                                {Math.round(row.total)}
-                              </td>
-                            </tr>
                           ))}
-                        </Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                          <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">
+                            {asOfTotal(entry.per_round)}
+                          </td>
+                        </tr>
+                        {isExpanded && isLoadingRoster && (
+                          <tr className="bg-neutral-950">
+                            <td colSpan={visibleColumns.length + 3} className="px-10 py-2 text-xs italic text-neutral-500">
+                              Loading players…
+                            </td>
+                          </tr>
+                        )}
+                        {isExpanded && !isLoadingRoster && slots.length > 0 && (
+                          <tr className="border-b border-neutral-800 bg-neutral-950">
+                            <td />
+                            <td colSpan={visibleColumns.length + 2} className="px-0 pb-2">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="border-b border-neutral-800">
+                                    <th className="py-2 pl-10 pr-3 text-left font-bold text-white">Player</th>
+                                    {visibleColumns.map((stage) => (
+                                      <th key={stage} className="px-2 py-2 text-right font-bold text-white whitespace-nowrap">
+                                        {ROUND_LABELS[stage as RoundStage] ?? stage}
+                                      </th>
+                                    ))}
+                                    <th className="py-2 pl-3 pr-4 text-right font-bold text-white">Total</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {mergedRosterRows(entry.user_id).map((row) => (
+                                    <tr key={row.player_id} className="border-b border-neutral-900 last:border-0">
+                                      <td className="py-2 pl-10 pr-3">
+                                        <PlayerNameCell
+                                          name={row.latest.player?.name ?? '—'}
+                                          position={row.latest.player?.position}
+                                          team={row.latest.player?.teams ?? null}
+                                          cell={currentStage ? row.cells[currentStage] ?? null : null}
+                                        />
+                                        {row.promoted_at_round_stage && (
+                                          <span
+                                            className="ml-1.5 rounded bg-yellow-400/10 px-1 py-0.5 text-yellow-500/90"
+                                            title="Promoted from the bench when a starter's team was eliminated"
+                                          >
+                                            ↑ {ROUND_LABELS[row.promoted_at_round_stage] ?? row.promoted_at_round_stage}
+                                          </span>
+                                        )}
+                                      </td>
+                                      {visibleColumns.map((stage) => (
+                                        <td key={stage} className="px-2 py-2 text-right tabular-nums">
+                                          <RoundCellBadge cell={row.cells[stage] ?? null} />
+                                        </td>
+                                      ))}
+                                      <td className="py-2 pl-3 pr-4 text-right font-medium tabular-nums text-neutral-400">
+                                        {Math.round(row.total)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </div>

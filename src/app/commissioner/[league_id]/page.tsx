@@ -11,6 +11,7 @@ import { DraftOrderGenerator } from '@/components/DraftOrderGenerator';
 import { DraftScheduler } from '@/components/DraftScheduler';
 import { PlayerPositionOverride } from '@/components/PlayerPositionOverride';
 import { BenchOrderOverride } from '@/components/BenchOrderOverride';
+import { PlayerTeamLabel } from '@/components/PlayerTeamLabel';
 import type {
   DraftPick,
   DraftSession,
@@ -1080,7 +1081,7 @@ export default function CommissionerPage() {
                       {players.filter((p) => p.name.toLowerCase().includes(injuredPlayerSearch.toLowerCase())).slice(0, 6).map((p) => (
                         <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
                           onClick={() => { setInjuredPlayerId(p.id); setInjuredPlayerSearch(p.name); }}>
-                          {p.name} <span className="text-neutral-500">({p.position})</span>
+                          <PlayerTeamLabel name={p.name} position={p.position} team={p.teams ?? null} />
                         </li>
                       ))}
                     </ul>
@@ -1103,7 +1104,7 @@ export default function CommissionerPage() {
                       {players.filter((p) => p.name.toLowerCase().includes(subPlayerSearch.toLowerCase())).slice(0, 6).map((p) => (
                         <li key={p.id} className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
                           onClick={() => { setSubPlayerId(p.id); setSubPlayerSearch(p.name); }}>
-                          {p.name} <span className="text-neutral-500">({p.position})</span>
+                          <PlayerTeamLabel name={p.name} position={p.position} team={p.teams ?? null} />
                         </li>
                       ))}
                     </ul>
@@ -1167,7 +1168,7 @@ export default function CommissionerPage() {
                             setScorePlayerSearch(p.name);
                           }}
                         >
-                          {p.name} <span className="text-neutral-500">({p.position})</span>
+                          <PlayerTeamLabel name={p.name} position={p.position} team={p.teams ?? null} />
                         </li>
                       ))}
                     {players.filter((p) => p.name.toLowerCase().includes(scorePlayerSearch.toLowerCase())).length === 0 && (
@@ -1348,12 +1349,11 @@ export default function CommissionerPage() {
                                   className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-neutral-800"
                                 >
                                   <span className="w-10 shrink-0 text-neutral-400">#{pick.pick_number}</span>
-                                  <span className="flex-1 text-neutral-300">
-                                    {player?.name ?? pick.player_id}
-                                    {player && (
-                                      <span className="text-neutral-500">
-                                        {' '}({player.position}{player.teams ? ` · ${player.teams.name}` : ''})
-                                      </span>
+                                  <span className="flex-1">
+                                    {player ? (
+                                      <PlayerTeamLabel name={player.name} position={player.position} team={player.teams ?? null} nameClassName="text-neutral-300" />
+                                    ) : (
+                                      <span className="text-neutral-300">{pick.player_id}</span>
                                     )}
                                   </span>
                                 </li>
@@ -1392,10 +1392,7 @@ export default function CommissionerPage() {
                               onClick={() => { setCorrectReplacementId(p.id); setCorrectStep(3); }}
                               className="cursor-pointer px-3 py-2 text-sm hover:bg-neutral-800"
                             >
-                              {p.name}{' '}
-                              <span className="text-neutral-500">
-                                ({p.position}{p.teams ? ` · ${p.teams.name}` : ''})
-                              </span>
+                              <PlayerTeamLabel name={p.name} position={p.position} team={p.teams ?? null} />
                             </li>
                           ))}
                         {correctAvailable.length === 0 && (

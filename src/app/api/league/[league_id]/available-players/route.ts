@@ -69,7 +69,7 @@ export async function GET(
     // Step 3: query players, excluding drafted IDs and applying filters
     let query = supabase
       .from('players')
-      .select('*, teams(id, name, seed, region)')
+      .select('*, teams(id, name, short_name, seed, region)')
       .eq('season', league.season);
 
     if (excludedPlayerIds.length > 0) {

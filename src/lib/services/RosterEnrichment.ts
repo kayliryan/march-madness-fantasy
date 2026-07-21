@@ -38,7 +38,7 @@ export async function getEnrichedRoster(league_id: string, user_id: string): Pro
     playerIds.length > 0
       ? supabaseAdmin
           .from('players')
-          .select('*, teams(id, name, seed, region, is_eliminated)')
+          .select('*, teams(id, name, short_name, seed, region, is_eliminated)')
           .in('id', playerIds)
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     // players.position is a single row shared by every league in a season — show

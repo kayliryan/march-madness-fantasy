@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { InjuryBadge } from '@/components/InjuryBadge';
-import { TeamBadge } from '@/components/TeamBadge';
+import { PlayerTeamLabel } from '@/components/PlayerTeamLabel';
 import type { Player } from '@/lib/types';
 
 interface PlayerCardProps {
@@ -38,9 +38,8 @@ export function PlayerCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-semibold text-white">{player.name}</p>
-          <p className="text-sm text-neutral-500">{POSITION_LABELS[player.position] ?? player.position}</p>
-          {team && <div className="mt-1.5"><TeamBadge team={team} /></div>}
+          <PlayerTeamLabel name={player.name} team={team ?? null} nameClassName="text-white font-semibold" />
+          <p className="mt-0.5 text-sm text-neutral-500">{POSITION_LABELS[player.position] ?? player.position}</p>
         </div>
         {isDrafted && (
           <span className="shrink-0 rounded-full bg-neutral-800 px-2 py-0.5 text-xs font-semibold text-neutral-400">

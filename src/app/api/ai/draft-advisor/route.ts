@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     // User's current roster in this session
     const { data: mySlots } = await supabaseAdmin
       .from('roster_slots')
-      .select('slot_key, slot_position, is_bench, players(id, name, position, avg_ppg, teams(name, seed))')
+      .select('slot_key, slot_position, is_bench, players(id, name, position, avg_ppg, teams(name, short_name, seed))')
       .eq('league_id', session.league_id)
       .eq('user_id', user.id)
       .eq('is_active', true)
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     const { data: allPlayers } = await supabaseAdmin
       .from('players')
-      .select('id, name, position, avg_ppg, teams(name, seed)')
+      .select('id, name, position, avg_ppg, teams(name, short_name, seed)')
       .order('avg_ppg', { ascending: false })
       .limit(200);
 
