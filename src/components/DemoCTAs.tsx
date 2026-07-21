@@ -14,17 +14,6 @@ import {
 
 type FailureMode = 'capacity' | 'rate_limited' | 'network';
 
-// Always-visible secondary path (Section 1 / Section 7): the static demo
-// standings page requires no provisioning and is the universal fallback, so
-// it must be reachable from idle, loading, welcome-back, and failure states.
-function ViewCompletedSeasonLink() {
-  return (
-    <Link href="/demo/league" className="text-xs text-neutral-500 underline hover:text-neutral-300">
-      Just want to see the data? View a completed season
-    </Link>
-  );
-}
-
 // Bordered amber banner — the same visual language as the "demo league" and
 // "getting started" notices on the commissioner page (border-yellow-400/30 +
 // bg-yellow-400/10). A 429/error is a real state change, not a footnote, so it
@@ -68,7 +57,7 @@ function ProvisionError({ mode }: { mode: FailureMode }) {
   }
 
   return (
-    <div className="mt-2 flex w-full max-w-xl items-start gap-3 rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-4 text-left">
+    <div className="mt-2 flex w-full items-start gap-3 rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-4 text-left">
       <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-400" aria-hidden="true" />
       <p className="text-sm text-yellow-100">{message}</p>
     </div>
@@ -79,7 +68,7 @@ function ProvisionError({ mode }: { mode: FailureMode }) {
 // Gives visitors a sense of what they're about to land in rather than a blank wait.
 function ProvisioningSkeleton() {
   return (
-    <div className="mt-6 w-full max-w-xl mx-auto rounded-lg border border-neutral-800 bg-[#0d0d0d] p-5 text-left">
+    <div className="mt-4 w-full rounded-lg border border-neutral-800 bg-neutral-950 p-5 text-left">
       {/* Page header */}
       <div className="mb-4 h-4 w-32 animate-pulse rounded bg-neutral-800" />
       <div className="mb-6 h-7 w-48 animate-pulse rounded bg-neutral-700" />
@@ -105,11 +94,6 @@ export function DemoCTAs() {
   const { demoSession, setDemoSession } = useDemoSession();
   const [provisioning, setProvisioning] = useState(false);
   const [failure, setFailure] = useState<FailureMode | null>(null);
-  // True until the mount-time restore check (below) resolves. While true, the
-  // primary button keeps its normal idle copy — never a distinct "checking…"
-  // state — but stays disabled so a click can't race the restore and fire a
-  // second, redundant provision call.
-  const [checkingRestore, setCheckingRestore] = useState(true);
 
   // On mount: if a previous provision left a league_id in localStorage,
   // re-validate it against the server before trusting it — the anonymous
@@ -117,15 +101,21 @@ export function DemoCTAs() {
   // browser data cleared, cookies expired). Only on both checks passing do we
   // surface the "welcome back" state; any failure clears the stale value and
   // falls through to the normal provision CTA.
+  //
+  // This runs fully in the background: the primary button renders in its
+  // normal clickable idle state immediately and is never gated on this
+  // check resolving (a stale stored league_id can mean a slow round trip —
+  // network calls plus a cold API route — and a disabled button waiting on
+  // that is a worse experience than the rare double-click race where a user
+  // clicks before this resolves). If it resolves to a valid prior league,
+  // the button swaps to the "Return to your demo league" state after the
+  // fact.
   useEffect(() => {
     let cancelled = false;
 
     async function restore() {
       const stored = readStoredDemoLeague();
-      if (!stored) {
-        setCheckingRestore(false);
-        return;
-      }
+      if (!stored) return;
 
       try {
         const [{ data: userData }, { data: sessionData }] = await Promise.all([
@@ -136,7 +126,6 @@ export function DemoCTAs() {
         const user = userData.user;
         if (!user || !user.is_anonymous) {
           clearStoredDemoLeague();
-          if (!cancelled) setCheckingRestore(false);
           return;
         }
 
@@ -146,7 +135,6 @@ export function DemoCTAs() {
           // up by TTL) all mean the stored value no longer points at
           // anything usable.
           clearStoredDemoLeague();
-          if (!cancelled) setCheckingRestore(false);
           return;
         }
 
@@ -160,11 +148,9 @@ export function DemoCTAs() {
             league_id: stored.league_id,
             draft_session_id: stored.draft_session_id,
           });
-          setCheckingRestore(false);
         }
       } catch {
         clearStoredDemoLeague();
-        if (!cancelled) setCheckingRestore(false);
       }
     }
 
@@ -237,12 +223,12 @@ export function DemoCTAs() {
   const provisioned = !!demoSession?.league_id;
 
   return (
-    <div className="mt-10 flex flex-col items-center gap-3">
+    <div className="mt-5 flex flex-col items-stretch gap-3">
       {provisioned ? (
         <>
           <Link
             href={`/commissioner/${demoSession.league_id}`}
-            className="w-full rounded bg-yellow-400 px-8 py-4 text-base font-black uppercase tracking-wide text-black shadow-lg hover:bg-yellow-300 sm:w-auto"
+            className="w-full rounded bg-yellow-400 px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-black shadow-lg hover:bg-yellow-300"
           >
             Return to your demo league →
           </Link>
@@ -256,8 +242,8 @@ export function DemoCTAs() {
       ) : (
         <button
           onClick={handleTryAsCommissioner}
-          disabled={provisioning || checkingRestore}
-          className={`w-full rounded px-8 py-4 text-base font-black uppercase tracking-wide shadow-lg disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
+          disabled={provisioning}
+          className={`w-full rounded px-4 py-3 text-sm font-black uppercase tracking-wide shadow-lg disabled:cursor-not-allowed disabled:opacity-50 ${
             failure
               ? 'bg-neutral-900 text-yellow-400 ring-2 ring-yellow-400/50 hover:bg-neutral-800'
               : 'bg-yellow-400 text-black hover:bg-yellow-300'
@@ -267,13 +253,9 @@ export function DemoCTAs() {
             ? 'Setting up your league…'
             : failure
               ? 'Try again'
-              : 'Explore as Commissioner — see everything, no signup.'}
+              : 'Enter the completed league →'}
         </button>
       )}
-
-      {/* Failure states already surface their own "view a completed season"
-          fallback link inline (Section 7); avoid showing it twice. */}
-      {!failure && <ViewCompletedSeasonLink />}
 
       {provisioning && <ProvisioningSkeleton />}
       {failure && <ProvisionError mode={failure} />}

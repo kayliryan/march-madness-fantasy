@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import type { GetLeagueResponse } from '@/lib/types';
@@ -53,9 +54,9 @@ export default function AppHeader({ leagueId }: AppHeaderProps) {
     <header className="border-b border-neutral-800 bg-black">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
-          <a href="/dashboard" className="text-sm font-extrabold tracking-wide text-yellow-400">
+          <Link href="/" className="text-sm font-extrabold tracking-wide text-yellow-400">
             MARCH MADNESS FANTASY
-          </a>
+          </Link>
           <nav className="hidden items-center gap-4 sm:flex">
             {NAV_LINKS.map((link) => (
               <a

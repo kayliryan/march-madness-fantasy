@@ -14,18 +14,18 @@ const STACK = [
 const HOW_IT_WORKS = [
   {
     step: '1',
-    title: 'Land as commissioner, instantly',
-    body: 'Click "Explore as Commissioner" and you\'re dropped into a fully-seeded 8-team league — a complete season already drafted and scored through the Elite 8 — no signup.',
+    title: 'Draft Live against AI opponents',
+    body: 'A real-time snake draft — server-enforced pick timers, snake order, Claude-powered advisor — against 4 auto-drafting opponents, then see how your team would have scored in the real 2026 tournament.',
   },
   {
     step: '2',
-    title: 'Run your own live snake draft',
-    body: 'Start a real snake draft against 7 auto-drafting opponents in one click, with the Claude-powered draft advisor in your corner the whole way.',
+    title: 'Explore the commissioner toolkit',
+    body: 'Land straight in a fully-seeded 8-team league with a season already drafted and scored through the Elite 8. Round-by-round scoring, bench overrides, injury subs, an AI-generated standings recap — the exact same tools a real logged-in league uses.',
   },
   {
     step: '3',
-    title: 'Explore the commissioner toolkit',
-    body: 'Round-by-round scoring, bench overrides, injury subs, and an AI-generated standings recap — the exact same commissioner tools a real logged-in league uses, not a stripped-down demo version.',
+    title: 'Or just browse the data',
+    body: 'No provisioning, no session — a static, read-only view of a completed season\'s final standings and rosters.',
   },
 ];
 
@@ -98,10 +98,56 @@ export default function Home() {
         </p>
         <p className="mx-auto mt-3 max-w-xl text-sm text-neutral-600">
           A full-stack project built solo, end to end — real-time draft room, an actual bracket
-          simulation engine, and two Claude-powered AI features. Try the whole thing below, no signup required.
+          simulation engine, and two Claude-powered AI features. Three ways in below, no signup required.
         </p>
 
-        <DemoCTAs />
+        {/* Three parallel, equal-weight entry points — not one primary CTA
+            with two footnotes. Each routes somewhere genuinely different. */}
+        <div className="mt-10 grid grid-cols-1 gap-4 text-left sm:grid-cols-3">
+          <div className="flex flex-col rounded-lg border border-neutral-800 bg-[#0d0d0d] p-6">
+            <Radio className="h-6 w-6 text-yellow-400" aria-hidden="true" />
+            <p className="mt-3 text-sm font-black uppercase tracking-wide text-white">Draft Live</p>
+            <p className="mt-2 flex-1 text-sm text-neutral-500 leading-relaxed">
+              Run a real-time snake draft against AI opponents — then see how your team would
+              have scored in the real 2026 tournament.
+            </p>
+            <Link
+              href="/demo/draft"
+              className="mt-5 w-full rounded bg-yellow-400 px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-black shadow-lg hover:bg-yellow-300"
+            >
+              Start drafting →
+            </Link>
+          </div>
+
+          <div className="flex flex-col rounded-lg border border-neutral-800 bg-[#0d0d0d] p-6">
+            <ShieldCheck className="h-6 w-6 text-yellow-400" aria-hidden="true" />
+            <p className="mt-3 text-sm font-black uppercase tracking-wide text-white">
+              Explore Commissioner Tools
+            </p>
+            <p className="mt-2 flex-1 text-sm text-neutral-500 leading-relaxed">
+              See the full commissioner toolkit — standings, rosters, round-by-round scoring, AI
+              recap, bench management — on a fully-played-out 2026 season.
+            </p>
+            <DemoCTAs />
+          </div>
+
+          <div className="flex flex-col rounded-lg border border-neutral-800 bg-[#0d0d0d] p-6">
+            <TrendingUp className="h-6 w-6 text-yellow-400" aria-hidden="true" />
+            <p className="mt-3 text-sm font-black uppercase tracking-wide text-white">
+              View Completed Season Data
+            </p>
+            <p className="mt-2 flex-1 text-sm text-neutral-500 leading-relaxed">
+              Browse a finished season&apos;s final standings and rosters — read-only, nothing to
+              set up.
+            </p>
+            <Link
+              href="/demo/league"
+              className="mt-5 w-full rounded border border-neutral-700 px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-neutral-200 hover:border-yellow-400 hover:text-yellow-400"
+            >
+              View standings →
+            </Link>
+          </div>
+        </div>
       </main>
 
       {/* What is this project */}
@@ -212,12 +258,6 @@ export default function Home() {
             Create an account
           </Link>{' '}
           and invite your friends.
-        </p>
-        <p className="mt-3 text-xs text-neutral-600">
-          Just want to poke at the draft room by itself?{' '}
-          <Link href="/demo/draft" className="underline hover:text-neutral-400">
-            Try the standalone mock draft
-          </Link>
         </p>
       </div>
     </div>
