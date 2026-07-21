@@ -31,21 +31,22 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // RLS restricts this to leagues the user is a member of (or demo leagues)
-    const { data: league, error: leagueError } = await supabase
-      .from('leagues')
-      .select('*')
-      .eq('id', league_id)
-      .single();
+    // The league row and its member list both key off league_id alone — neither
+    // needs the other's result — so fetch them concurrently. The 404 (league
+    // missing) check is still evaluated before the 403 (not-a-member) check
+    // below, so observable behavior/response priority is unchanged; RLS still
+    // scopes both reads to leagues the user may see (or demo leagues).
+    const [
+      { data: league, error: leagueError },
+      { data: members, error: membersError },
+    ] = await Promise.all([
+      supabase.from('leagues').select('*').eq('id', league_id).single(),
+      supabase.from('league_members').select('*').eq('league_id', league_id),
+    ]);
 
     if (leagueError || !league) {
       return NextResponse.json({ error: 'League not found' }, { status: 404 });
     }
-
-    const { data: members, error: membersError } = await supabase
-      .from('league_members')
-      .select('*')
-      .eq('league_id', league_id);
 
     if (membersError) {
       console.error('Error fetching league members:', membersError);

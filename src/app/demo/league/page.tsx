@@ -94,36 +94,47 @@ export default function DemoLeaguePage() {
         return;
       }
 
+      if (league.season) {
+        setLeagueSeason(league.season);
+      }
+
+      // Once the league gate passes, these three reads are independent — the
+      // archived-season count needs only league.season, the standings snapshots
+      // and the scoring events need only the league id. Run them together instead
+      // of as three sequential round-trips. Both tables are readable anonymously
+      // for demo leagues (is_demo RLS).
+      //
       // Season indicator: the demo seeder creates a prior-season completed
       // draft_sessions stub (seedDemoData.ts step 11) specifically to prove
       // multi-season support — surface it as an "archived seasons" count.
-      // Both tables are readable anonymously for demo leagues (is_demo RLS).
-      if (league.season) {
-        setLeagueSeason(league.season);
-        const { count } = await supabase
-          .from('draft_sessions')
-          .select('id', { count: 'exact', head: true })
+      const [{ count: archivedCount }, { data: snapshots }, { data: events }] = await Promise.all([
+        league.season
+          ? supabase
+              .from('draft_sessions')
+              .select('id', { count: 'exact', head: true })
+              .eq('league_id', DEMO_LEAGUE_ID)
+              .lt('season', league.season)
+          : Promise.resolve({ count: 0 }),
+        supabase
+          .from('leaderboard_snapshots')
+          .select('user_id, total_points')
           .eq('league_id', DEMO_LEAGUE_ID)
-          .lt('season', league.season);
-        setArchivedSeasonCount(count ?? 0);
-      }
+          .order('total_points', { ascending: false }),
+        supabase
+          .from('scoring_events')
+          .select('user_id, round_stage, points_credited')
+          .eq('league_id', DEMO_LEAGUE_ID),
+      ]);
 
-      const { data: snapshots } = await supabase
-        .from('leaderboard_snapshots')
-        .select('user_id, total_points')
-        .eq('league_id', DEMO_LEAGUE_ID)
-        .order('total_points', { ascending: false });
+      if (league.season) {
+        setArchivedSeasonCount(archivedCount ?? 0);
+      }
 
       if (!snapshots?.length) { setLoading(false); return; }
 
       const userIds = snapshots.map((s) => s.user_id);
       const { data: users } = await supabase.from('users').select('id, display_name').in('id', userIds);
       const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, u.display_name]));
-
-      const { data: events } = await supabase
-        .from('scoring_events')
-        .select('user_id, round_stage, points_credited')
-        .eq('league_id', DEMO_LEAGUE_ID);
 
       const perRoundMap: Record<string, Record<string, number>> = {};
       for (const e of (events ?? [])) {
@@ -179,15 +190,26 @@ export default function DemoLeaguePage() {
       const typedSlots = slots as unknown as SlotRaw[];
       const playerIds = [...new Set(typedSlots.map((s) => s.player_id))];
 
+      // Both remaining reads only depend on the roster slots already fetched — the
+      // credited-points lookup keys off user_id, the raw game scores off playerIds —
+      // and neither depends on the other, so fetch them concurrently.
+      //
       // 2. Credited points (scoring_events) for this user — attributed to the specific
       // roster_slot row that earned them (a bench stint and a later promoted starter
       // stint for the same player are different rows with different totals; keying by
       // player_id alone would show the same combined total on both).
-      const { data: events } = await supabase
-        .from('scoring_events')
-        .select('player_id, roster_slot_id, round_stage, points_credited')
-        .eq('league_id', DEMO_LEAGUE_ID)
-        .eq('user_id', user_id);
+      // 3. Raw game points (game_scores) for all player_ids — includes bench and elimination rounds
+      const [{ data: events }, { data: gameScores }] = await Promise.all([
+        supabase
+          .from('scoring_events')
+          .select('player_id, roster_slot_id, round_stage, points_credited')
+          .eq('league_id', DEMO_LEAGUE_ID)
+          .eq('user_id', user_id),
+        supabase
+          .from('game_scores')
+          .select('player_id, round_stage, points')
+          .in('player_id', playerIds),
+      ]);
 
       const countedBySlot: Record<string, Record<string, number>> = {};
       const countedByPlayerFallback: Record<string, Record<string, number>> = {};
@@ -202,12 +224,6 @@ export default function DemoLeaguePage() {
       }
       const slotCountByPlayer: Record<string, number> = {};
       for (const s of typedSlots) slotCountByPlayer[s.player_id] = (slotCountByPlayer[s.player_id] ?? 0) + 1;
-
-      // 3. Raw game points (game_scores) for all player_ids — includes bench and elimination rounds
-      const { data: gameScores } = await supabase
-        .from('game_scores')
-        .select('player_id, round_stage, points')
-        .in('player_id', playerIds);
 
       const rawMap: Record<string, Record<string, number>> = {};
       for (const gs of (gameScores ?? [])) {

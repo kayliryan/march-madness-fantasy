@@ -37,19 +37,36 @@ export async function GET(
       return NextResponse.json({ error: 'Not a member of this league' }, { status: 403 });
     }
 
-    // Fetch all leaderboard snapshots for this league
-    const { data: snapshots } = await supabaseAdmin
-      .from('leaderboard_snapshots')
-      .select('*')
-      .eq('league_id', league_id)
-      .order('total_points', { ascending: false });
-
-    // Fetch per-round breakdown from scoring_events
-    const { data: scoringEvents } = await supabaseAdmin
-      .from('scoring_events')
-      .select('user_id, round_stage, points_credited')
-      .eq('league_id', league_id)
-      .eq('is_stale', false);
+    // These four reads each depend only on league_id (never on each other's
+    // output), so run them concurrently instead of as four sequential round-trips:
+    // the standings snapshots, the per-round scoring events, the stale-events
+    // count (the "scores updating" flag), and the member list.
+    const [
+      { data: snapshots },
+      { data: scoringEvents },
+      { count: staleCount },
+      { data: members },
+    ] = await Promise.all([
+      supabaseAdmin
+        .from('leaderboard_snapshots')
+        .select('*')
+        .eq('league_id', league_id)
+        .order('total_points', { ascending: false }),
+      supabaseAdmin
+        .from('scoring_events')
+        .select('user_id, round_stage, points_credited')
+        .eq('league_id', league_id)
+        .eq('is_stale', false),
+      supabaseAdmin
+        .from('scoring_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('league_id', league_id)
+        .eq('is_stale', true),
+      supabaseAdmin
+        .from('league_members')
+        .select('user_id')
+        .eq('league_id', league_id),
+    ]);
 
     // Group per-round points by user_id
     const perRoundByUser = new Map<string, Map<string, number>>();
@@ -59,21 +76,9 @@ export async function GET(
       roundMap.set(ev.round_stage, (roundMap.get(ev.round_stage) ?? 0) + ev.points_credited);
     }
 
-    // Check if any scoring events are stale (scores still being computed)
-    const { count: staleCount } = await supabaseAdmin
-      .from('scoring_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('league_id', league_id)
-      .eq('is_stale', true);
-
     const scores_updating = (staleCount ?? 0) > 0;
 
-    // Fetch display names for all users in the league
-    const { data: members } = await supabaseAdmin
-      .from('league_members')
-      .select('user_id')
-      .eq('league_id', league_id);
-
+    // Display names for all users in the league (needs memberIds from above)
     const memberIds = (members ?? []).map((m: { user_id: string }) => m.user_id);
     const { data: userRows } = memberIds.length > 0
       ? await supabaseAdmin.from('users').select('id, display_name').in('id', memberIds)

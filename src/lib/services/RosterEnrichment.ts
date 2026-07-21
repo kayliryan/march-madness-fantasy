@@ -25,29 +25,45 @@ export async function getEnrichedRoster(league_id: string, user_id: string): Pro
   const safeSlots = slots ?? [];
 
   const playerIds = [...new Set(safeSlots.map((s: { player_id: string }) => s.player_id))];
-  const { data: players } = playerIds.length > 0
-    ? await supabaseAdmin
-        .from('players')
-        .select('*, teams(id, name, seed, region, is_eliminated)')
-        .in('id', playerIds)
-    : { data: [] };
 
-  // players.position is a single row shared by every league in a season — show
-  // THIS league's override, if any, rather than the raw column.
-  const positionOverrides = await getLeaguePositionOverrides(supabaseAdmin, league_id);
+  // Steps 2–5 only depend on the roster_slots result above (playerIds) or on the
+  // function's own arguments — never on each other — so they run concurrently
+  // instead of as four sequential round-trips.
+  const [
+    { data: players },
+    positionOverrides,
+    { data: scoringEvents },
+    { data: allGameScores },
+  ] = await Promise.all([
+    playerIds.length > 0
+      ? supabaseAdmin
+          .from('players')
+          .select('*, teams(id, name, seed, region, is_eliminated)')
+          .in('id', playerIds)
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    // players.position is a single row shared by every league in a season — show
+    // THIS league's override, if any, rather than the raw column.
+    getLeaguePositionOverrides(supabaseAdmin, league_id),
+    supabaseAdmin
+      .from('scoring_events')
+      .select('player_id, roster_slot_id, round_stage, points_credited')
+      .eq('league_id', league_id)
+      .eq('user_id', user_id)
+      .eq('is_stale', false),
+    playerIds.length > 0
+      ? supabaseAdmin
+          .from('game_scores')
+          .select('player_id, round_stage, points')
+          .in('player_id', playerIds)
+      : Promise.resolve({ data: [] as { player_id: string; round_stage: string; points: number }[] }),
+  ]);
+
   const playerMap = new Map(
     (players ?? []).map((p: { id: string; position: 'G' | 'F' | 'C' }) => [
       p.id,
       applyLeaguePositionOverride(p, positionOverrides),
     ])
   );
-
-  const { data: scoringEvents } = await supabaseAdmin
-    .from('scoring_events')
-    .select('player_id, roster_slot_id, round_stage, points_credited')
-    .eq('league_id', league_id)
-    .eq('user_id', user_id)
-    .eq('is_stale', false);
 
   // Credited points must be attributed to the SPECIFIC roster_slot row that earned
   // them, not just the player — a bench stint and a later promoted starter stint for
@@ -72,13 +88,6 @@ export async function getEnrichedRoster(league_id: string, user_id: string): Pro
     const pid = (s as { player_id: string }).player_id;
     slotCountByPlayer.set(pid, (slotCountByPlayer.get(pid) ?? 0) + 1);
   }
-
-  const { data: allGameScores } = playerIds.length > 0
-    ? await supabaseAdmin
-        .from('game_scores')
-        .select('player_id, round_stage, points')
-        .in('player_id', playerIds)
-    : { data: [] };
 
   const gameScoresByPlayer = new Map<string, { round_stage: string; points: number }[]>();
   for (const gs of (allGameScores ?? [])) {

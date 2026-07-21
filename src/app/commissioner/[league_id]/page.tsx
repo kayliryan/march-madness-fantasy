@@ -229,37 +229,32 @@ export default function CommissionerPage() {
       setMembers(leagueData.members);
       setCurrentMember(leagueData.current_member);
 
-      // Member display names for labels (best-effort; falls back to id)
+      // Member display names and the existing draft session both depend only on
+      // the league response above (userIds / league.season), not on each other —
+      // fetch them concurrently.
       const userIds = leagueData.members.map((m) => m.user_id);
-      const { data: users } = await supabase
-        .from('users')
-        .select('id, display_name')
-        .in('id', userIds);
+      const [{ data: users }, { data: session }] = await Promise.all([
+        // Member display names for labels (best-effort; falls back to id)
+        supabase.from('users').select('id, display_name').in('id', userIds),
+        // Existing draft session to prefill schedule/order — scoped to the league's
+        // active season. Without this, the demo seed's "previous season" stub (created
+        // after the real session, purely to surface a season-switcher link) has a later
+        // created_at and would win the "most recent" pick instead of the real one.
+        supabase
+          .from('draft_sessions')
+          .select('*')
+          .eq('league_id', leagueId)
+          .eq('season', leagueData.league.season)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
       if (users) {
         setMemberLabels(
           Object.fromEntries(users.map((u) => [u.id, u.display_name]))
         );
       }
-
-      // Player pool for the position-override tool
-      const playersRes = await fetch('/api/players?sort=name');
-      if (playersRes.ok) {
-        const playersData: GetPlayersResponse = await playersRes.json();
-        setPlayers(playersData.players);
-      }
-
-      // Existing draft session to prefill schedule/order — scoped to the league's
-      // active season. Without this, the demo seed's "previous season" stub (created
-      // after the real session, purely to surface a season-switcher link) has a later
-      // created_at and would win the "most recent" pick instead of the real one.
-      const { data: session } = await supabase
-        .from('draft_sessions')
-        .select('*')
-        .eq('league_id', leagueId)
-        .eq('season', leagueData.league.season)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
       if (session) setDraftSession(session as DraftSession);
 
       setLoading(false);
@@ -267,6 +262,25 @@ export default function CommissionerPage() {
 
     load();
   }, [leagueId, router]);
+
+  // Player pool for the position-override / injury-sub / manual-score / swap tools.
+  // This is a 402KB, unpaginated fetch (720 players + joined teams) that depends on
+  // NOTHING from the league load, and none of its consumers reference `players` until
+  // the user actually interacts with one of those tools. Fetching it here — outside
+  // the `loading` gate above — keeps it off the critical path so the page paints as
+  // soon as the league data is ready, while `players` streams in a beat later.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const playersRes = await fetch('/api/players?sort=name');
+      if (cancelled || !playersRes.ok) return;
+      const playersData: GetPlayersResponse = await playersRes.json();
+      if (!cancelled) setPlayers(playersData.players);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSaveOrder(orderedUserIds: string[]) {
     if (!league) return;

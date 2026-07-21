@@ -59,27 +59,63 @@ export async function GET(
       return NextResponse.json({ error: 'Not a member of this league' }, { status: 403 });
     }
 
-    // Every roster_slots row this league has ever had — including released/bench
-    // history — so a player who moved from bench to starter (or was released)
-    // still resolves to exactly one row per round via buildRoundEntries().
-    const { data: slotRows } = await supabaseAdmin
-      .from('roster_slots')
-      .select('id, user_id, player_id, is_bench, acquired_at_round_stage, released_at_round_stage')
-      .eq('league_id', league_id);
+    // First wave — everything that depends only on league_id (not on the set of
+    // player_ids the roster produces): roster history, this league's position
+    // overrides, scoring events, and the member list. None depend on each other.
+    const [
+      { data: slotRows },
+      positionOverrides,
+      { data: scoringEvents },
+      { data: memberRows },
+    ] = await Promise.all([
+      // Every roster_slots row this league has ever had — including released/bench
+      // history — so a player who moved from bench to starter (or was released)
+      // still resolves to exactly one row per round via buildRoundEntries().
+      supabaseAdmin
+        .from('roster_slots')
+        .select('id, user_id, player_id, is_bench, acquired_at_round_stage, released_at_round_stage')
+        .eq('league_id', league_id),
+      // players.position is shared across every league in a season — show THIS
+      // league's override, if any, rather than the raw column.
+      getLeaguePositionOverrides(supabaseAdmin, league_id),
+      supabaseAdmin
+        .from('scoring_events')
+        .select('user_id, player_id, roster_slot_id, round_stage, points_credited')
+        .eq('league_id', league_id)
+        .eq('is_stale', false),
+      // Display names for every league member, not just those with scoring
+      // events — a bench-only member with zero counted points still has rows.
+      supabaseAdmin
+        .from('league_members')
+        .select('user_id')
+        .eq('league_id', league_id),
+    ]);
 
     const slots = slotRows ?? [];
     const playerIds = [...new Set(slots.map((s: { player_id: string }) => s.player_id))];
+    const memberIds = [...new Set((memberRows ?? []).map((m: { user_id: string }) => m.user_id))];
 
-    const { data: players } = playerIds.length > 0
-      ? await supabaseAdmin
-          .from('players')
-          .select('id, name, position, teams ( name, seed )')
-          .in('id', playerIds)
-      : { data: [] };
+    // Second wave — the two player-keyed lookups (players, game_scores) need
+    // playerIds from the roster query above; the user display-name lookup needs
+    // memberIds. All three are mutually independent, so run them together.
+    const [{ data: players }, { data: gameScores }, { data: userRows }] = await Promise.all([
+      playerIds.length > 0
+        ? supabaseAdmin
+            .from('players')
+            .select('id, name, position, teams ( name, seed )')
+            .in('id', playerIds)
+        : Promise.resolve({ data: [] as unknown[] }),
+      playerIds.length > 0
+        ? supabaseAdmin
+            .from('game_scores')
+            .select('player_id, round_stage, points')
+            .in('player_id', playerIds)
+        : Promise.resolve({ data: [] as { player_id: string; round_stage: string; points: number }[] }),
+      memberIds.length > 0
+        ? supabaseAdmin.from('users').select('id, display_name').in('id', memberIds)
+        : Promise.resolve({ data: [] as { id: string; display_name: string }[] }),
+    ]);
 
-    // players.position is shared across every league in a season — show THIS
-    // league's override, if any, rather than the raw column.
-    const positionOverrides = await getLeaguePositionOverrides(supabaseAdmin, league_id);
     const playerMap = new Map(
       ((players ?? []) as unknown as {
         id: string;
@@ -97,29 +133,6 @@ export async function GET(
       ])
     );
 
-    const { data: gameScores } = playerIds.length > 0
-      ? await supabaseAdmin
-          .from('game_scores')
-          .select('player_id, round_stage, points')
-          .in('player_id', playerIds)
-      : { data: [] };
-
-    const { data: scoringEvents } = await supabaseAdmin
-      .from('scoring_events')
-      .select('user_id, player_id, roster_slot_id, round_stage, points_credited')
-      .eq('league_id', league_id)
-      .eq('is_stale', false);
-
-    // Display names for every league member, not just those with scoring
-    // events — a bench-only member with zero counted points still has rows.
-    const { data: memberRows } = await supabaseAdmin
-      .from('league_members')
-      .select('user_id')
-      .eq('league_id', league_id);
-    const memberIds = [...new Set((memberRows ?? []).map((m: { user_id: string }) => m.user_id))];
-    const { data: userRows } = memberIds.length > 0
-      ? await supabaseAdmin.from('users').select('id, display_name').in('id', memberIds)
-      : { data: [] };
     const displayNames = new Map(
       (userRows ?? []).map((u: { id: string; display_name: string }) => [u.id, u.display_name])
     );
