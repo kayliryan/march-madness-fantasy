@@ -14,17 +14,37 @@ function debugLog(...args: unknown[]): void {
   if (DEBUG) console.log(...args);
 }
 
-const AI_MEMBER_NAMES = [
+/**
+ * Frozen seed strings used ONLY to derive the shared pool's 7 stable ids — never
+ * change these, and never derive ids from AI_MEMBER_NAMES below. Historically the
+ * ids WERE derived directly from the display names (uuidv5('demo-ai-pool:' + name)),
+ * which meant renaming a bot coupled pool *identity* to pool *display text*. This
+ * array is the original 7 name strings that produced the ids already baked into
+ * every already-provisioned demo league's league_members rows and into the 7 real
+ * auth users created for the pool. Keep it exactly as-is forever — it is
+ * effectively a versioned, immutable "pool epoch 1" key, not display copy.
+ * Changing display names now only requires editing AI_MEMBER_NAMES below.
+ */
+const AI_MEMBER_POOL_ID_SEEDS = [
   'Coach Bot', 'Draft King', 'Bracket Buster', 'Rim Protector',
   'Three Point Specialist', 'Paint Enforcer', 'Full Court Press',
+] as const;
+
+/** Display names shown to users for the 7 shared AI opponents. Safe to change —
+ *  unlike AI_MEMBER_POOL_ID_SEEDS above, this array carries no identity meaning. */
+const AI_MEMBER_NAMES = [
+  'Marcus Bell', 'Derek Simmons', 'Alicia Torres', 'Priya Nair',
+  'Jordan Reyes', 'Sam Whitfield', 'Nina Park',
 ] as const;
 
 /**
  * Global shared AI-member pool: ONE set of 7 AI auth users, reused by every demo
  * league, instead of 7 fresh GoTrue admin.createUser calls per provision (which
  * cost ~300-800ms each in production even in parallel). Ids are deterministic —
- * uuidv5('demo-ai-pool:' + name) — independent of the commissioner, so every
- * server instance computes the same 7 ids.
+ * uuidv5('demo-ai-pool:' + seed) over the frozen seeds above — independent of the
+ * commissioner AND independent of the current display names, so every server
+ * instance computes the same 7 ids and renaming AI_MEMBER_NAMES can never spin up
+ * a second pool.
  *
  * These users are PERMANENT INFRASTRUCTURE:
  *  - provisioning failure paths must never delete them (other live demo leagues
@@ -33,8 +53,8 @@ const AI_MEMBER_NAMES = [
  *    auth-user deletion (legacy per-commissioner AI users from old leagues still
  *    get cleaned up there).
  */
-export const AI_MEMBER_POOL_IDS: readonly string[] = AI_MEMBER_NAMES.map((name) =>
-  uuidv5(`demo-ai-pool:${name}`, DEMO_MEMBER_NAMESPACE),
+export const AI_MEMBER_POOL_IDS: readonly string[] = AI_MEMBER_POOL_ID_SEEDS.map((seed) =>
+  uuidv5(`demo-ai-pool:${seed}`, DEMO_MEMBER_NAMESPACE),
 );
 
 /** GoTrue duplicate-user errors mean another provision raced us to create the same
