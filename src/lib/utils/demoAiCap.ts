@@ -35,8 +35,11 @@ export const DEMO_CONCURRENT_LEAGUE_CAP = 50;
 
 // Layer 2 — per-IP provision rate:
 //   Cost per provision: seed writes + up to $1.00 AI (Layer 1 ceiling) ≈ $1.01/session.
-//   Tolerable daily spend per IP: $2.00. $2.00 / $1.01 ≈ 2 provisions.
-//   Bumped to 5 to tolerate corporate NAT (multiple real reviewers sharing one IP).
+//   Tolerable daily spend per IP: $15.00 — raised from the original $2.00 launch-week
+//   estimate now that the site is in active interview-season use: a single IP
+//   legitimately re-provisions many times a day (Kayli iterating/dogfooding, Claude
+//   Code's own browser-automation testing, and reviewers re-running the demo), not
+//   just one-and-done candidate evaluation. $15.00 / $1.01 ≈ 14.85, rounded to 15.
 //
 //   NOTE: IP-based rate limiting has known gaps in both directions:
 //   - False positives: corporate NAT puts many real reviewers behind one IP, potentially
@@ -44,7 +47,7 @@ export const DEMO_CONCURRENT_LEAGUE_CAP = 50;
 //   - Easily bypassed: a motivated abuser can trivially rotate IPs via VPN or proxies.
 //   This is why the concurrent-league cap (above), not the IP limit, is the actual
 //   spend backstop for this feature. The IP limit is a secondary, best-effort signal.
-export const DEMO_PROVISION_PER_IP_PER_DAY = 5;
+export const DEMO_PROVISION_PER_IP_PER_DAY = 15;
 
 // Layer 3 — global daily AI-call cap across all demo sessions:
 //   Anthropic account is loaded with a hard $5.00/day budget (auto-reload off) for

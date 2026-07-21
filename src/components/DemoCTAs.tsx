@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import {
   useDemoSession,
@@ -24,40 +25,53 @@ function ViewCompletedSeasonLink() {
   );
 }
 
+// Bordered amber banner — the same visual language as the "demo league" and
+// "getting started" notices on the commissioner page (border-yellow-400/30 +
+// bg-yellow-400/10). A 429/error is a real state change, not a footnote, so it
+// gets a card + icon instead of a muted line of text easy to miss below the
+// button.
 function ProvisionError({ mode }: { mode: FailureMode }) {
   const fallback = (
-    <Link href="/demo/league" className="underline hover:text-yellow-400">
+    <Link href="/demo/league" className="underline hover:text-yellow-200">
       view a completed season instead
     </Link>
   );
 
+  let message: ReactNode;
   if (mode === 'capacity') {
-    return (
-      <p className="text-sm text-neutral-400">
+    message = (
+      <>
         {"We're at capacity for live demos right now. Try again in a moment, or "}
         {fallback}.
-      </p>
+      </>
     );
-  }
-  if (mode === 'rate_limited') {
-    return (
-      <p className="text-sm text-neutral-400">
+  } else if (mode === 'rate_limited') {
+    message = (
+      <>
         {"You've reached the demo limit for your network today. You can still "}
         {fallback}.
-      </p>
+      </>
+    );
+  } else {
+    message = (
+      <>
+        Something went wrong —{' '}
+        <button
+          onClick={() => window.location.reload()}
+          className="underline hover:text-yellow-200"
+        >
+          try again
+        </button>
+        , or {fallback}.
+      </>
     );
   }
+
   return (
-    <p className="text-sm text-neutral-400">
-      Something went wrong —{' '}
-      <button
-        onClick={() => window.location.reload()}
-        className="underline hover:text-yellow-400"
-      >
-        try again
-      </button>
-      , or {fallback}.
-    </p>
+    <div className="mt-2 flex w-full max-w-xl items-start gap-3 rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-4 text-left">
+      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-400" aria-hidden="true" />
+      <p className="text-sm text-yellow-100">{message}</p>
+    </div>
   );
 }
 
@@ -243,9 +257,17 @@ export function DemoCTAs() {
         <button
           onClick={handleTryAsCommissioner}
           disabled={provisioning || checkingRestore}
-          className="w-full rounded bg-yellow-400 px-8 py-4 text-base font-black uppercase tracking-wide text-black shadow-lg hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          className={`w-full rounded px-8 py-4 text-base font-black uppercase tracking-wide shadow-lg disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
+            failure
+              ? 'bg-neutral-900 text-yellow-400 ring-2 ring-yellow-400/50 hover:bg-neutral-800'
+              : 'bg-yellow-400 text-black hover:bg-yellow-300'
+          }`}
         >
-          {provisioning ? 'Setting up your league…' : 'Explore as Commissioner — see everything, no signup.'}
+          {provisioning
+            ? 'Setting up your league…'
+            : failure
+              ? 'Try again'
+              : 'Explore as Commissioner — see everything, no signup.'}
         </button>
       )}
 
